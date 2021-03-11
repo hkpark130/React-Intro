@@ -16,14 +16,16 @@ import Github from './components/Github';
 function App() {
   return (
     <Router>
-      <ul>
-       <li><Link to="/">Intro</Link></li>
-       <li><Link to="/Spring/">Spring</Link></li>
-       <li><Link to="/Kotlin/">Kotlin</Link></li>
-       <li><Link to="/Python/">Python</Link></li>
-       <li><Link to="/Redmine/">Redmine</Link></li>
-       <li><Link to="/Github/">Github</Link></li>
-     </ul>
+      <div class="sidebar">
+        <ul>
+          <li><Link to="/">Intro</Link></li>
+          <li><Link to="/Spring/">Spring</Link></li>
+          <li><Link to="/Kotlin/">Kotlin</Link></li>
+          <li><Link to="/Python/">Python</Link></li>
+          <li><Link to="/Redmine/">Redmine</Link></li>
+          <li><Link to="/Github/">Github</Link></li>
+        </ul>
+      </div>
      <Route exact path="/" component={Intro} />
      <Route path="/Spring/" component={Spring} />
      <Route path="/Kotlin/"  component={Kotlin} />
