@@ -2,15 +2,18 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 /*
-메뉴바 유닛테스트
-npm test
-package.json에 「"scripts"->"test"」
+-메뉴바 유닛테스트-
+
+테스트 명령어: npm test
+package.json에 ("scripts"->"test")
+getAllByText: 여러개 표시될 때
+getByText: 한 개일때
 */
 
 test('intro 메뉴바 테스트', () => {
   render(<App />);
-  const linkElement = screen.getByText(/Intro/);
-  expect(linkElement).toBeInTheDocument();
+  const linkElement = screen.getAllByText(/Intro/);
+  expect(linkElement[0]).toBeInTheDocument();
 });
 
 test('Spring 메뉴바 테스트', () => {
@@ -39,6 +42,6 @@ test('Redmine 메뉴바 테스트', () => {
 
 test('Github 메뉴바 테스트', () => {
   render(<App />);
-  const linkElement = screen.getByText(/Github/);
-  expect(linkElement).toBeInTheDocument();
+  const linkElement = screen.getAllByText(/Github/);
+  expect(linkElement[0]).toBeInTheDocument();
 });
