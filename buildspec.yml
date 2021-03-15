@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+   commands:
+     - echo Entering install phase...
+     - echo Nothing to do now
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - sudo docker-compose -f production.yml up -d --build
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      # - sudo docker-compose push
+
+artifacts:
+  files:
+     - "./**/*"
