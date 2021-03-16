@@ -11,11 +11,12 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - sudo docker-compose -f production.yml up -d --build
+      - docker-compose -f production.yml up -d --build
   post_build:
     commands:
       - echo Build completed on `date`
-      # - sudo docker-compose push
+      # - docker-compose push
+# docker 사용하려면 aws codebuild에서 권한 체크 해줘야 함
 
 artifacts:
   files:
