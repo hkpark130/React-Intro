@@ -7,7 +7,7 @@ function Intro() {
 
             인트로 페이지 소스코드는&nbsp;
             <a href='https://github.com/hkpark130/React-Intro'>
-                <u>여기 (Github React-Intro Repository)</u>
+                <u>https://github.com/hkpark130/React-Intro</u>
             </a>
             를 확인해주세요.
         </div>
