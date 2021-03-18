@@ -13,7 +13,7 @@
     "web-vitals": "^1.1.0"
   },
   "scripts": {
-    "start_prod": "HTTPS=true SSL_CRT_FILE=$CERTFILE SSL_KEY_FILE=$KEYFILE react-scripts start",
+    "start_prod": "HTTPS=true SSL_CRT_FILE=./cert/fullchain.pem SSL_KEY_FILE=./cert/privkey.pem react-scripts start",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
