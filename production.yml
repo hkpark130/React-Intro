@@ -2,11 +2,10 @@ version: '3'
 services:
   node:
     build: .
+    container_name: 'react-intro'
     volumes:
       - .:/app #로컬과 컨테이너 동기
-      - $CERTFILE:/app/cert/fullchain.pem #ssl 중간 증명서
-      - $KEYFILE:/app/cert/privkey.pem #ssl 키 증명서
-    command: sh -c "npm run start_prod"
+    command: sh -c "npm install && npm run start_prod"
     ports:
       - "443:3000"
     stdin_open: true
