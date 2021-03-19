@@ -5,7 +5,6 @@ phases:
    commands:
      - echo Entering install phase...
     # - echo Nothing to do now
-     - npm install
   pre_build:
     commands:
       - echo Nothing to do in the pre_build phase...
@@ -22,4 +21,8 @@ phases:
 # s3 업로드
 artifacts:
   files:
-     - "./**/*"
+     - "**/*"
+
+cache:
+  paths:
+    - '/root/.npm/caches/**/*'
