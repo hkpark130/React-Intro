@@ -14,7 +14,7 @@ function Spring() {
                 />
             </div>
 
-            <a href='#'>
+            <a href='https://hkpark130.p-e.kr:8100/'>
                 <h2>서버로 이동</h2>
             </a>
         </div>

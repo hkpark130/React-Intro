@@ -14,17 +14,16 @@ a {
 
 .component {
   left: 200px;
-  position: fixed;
-  transition: left .3s;
+  position: relative;
 }
 
 
 .sidebar {
+  top: 0px;
   background-color: #d3d3d3;
   height: 100%;
   width: 180px;
-  position: fixed;
-  transition: left .3s;
+  position: absolute;
 }
 
 .sidebar > ul li {
