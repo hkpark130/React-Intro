@@ -7,6 +7,24 @@ function Spring() {
             <h1>Spring</h1>
 
             <div>
+                <div>
+                    <pre>
+                        <ul>
+                            <li>
+                                <b>개발환경:</b> Docker
+                            </li>
+                            <li>
+                                <b>백엔드:</b> Spring Boot
+                            </li>
+                            <li>
+                                <b>DB:</b> AWS RDS
+                            </li>
+                            <li>
+                            <b>CD:</b> AWS CodePipeline (CodeDeploy)
+                            </li>
+                        </ul> 
+                    </pre>
+                </div>
                 <img
                     src={ imgSpring }
                     width='256'
