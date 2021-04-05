@@ -1,12 +1,6 @@
 body {
   margin: 0;
 }
-ul,
-li {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
 
 a {
     text-decoration: none;
@@ -14,16 +8,17 @@ a {
 
 .component {
   left: 200px;
+  width: 1050px;
   position: relative;
 }
-
 
 .sidebar {
   top: 0px;
   background-color: #d3d3d3;
   height: 100%;
   width: 180px;
-  position: absolute;
+  position: fixed;
+  z-index: 1;
 }
 
 .sidebar > ul li {
@@ -34,6 +29,8 @@ a {
   font-weight: bold;
   text-align: center;
   padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
 .sidebar ul > li > a {
@@ -43,11 +40,14 @@ a {
   white-space: nowrap;
 }
 
-.sidebar:hover {
-  left: 0;
-}
-
 .sidebar ul > li:hover > a {
   color: white;
   background-color: black;
+}
+
+pre {
+  padding:10px;
+  overflow: auto;
+  white-space: pre-wrap;
+  background-color: rgb(224, 224, 224);
 }
