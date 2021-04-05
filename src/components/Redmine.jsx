@@ -1,5 +1,6 @@
 import React from 'react';
 import imgRedmine from '../images/redmine.jpg';
+import imgRedmineDia from '../images/redmine-dia.jpg';
 
 function Redmine() {
     return(
@@ -7,10 +8,20 @@ function Redmine() {
             <h1>Redmine</h1>
             
             <div>
+                Github의 각 브랜치의 커밋 내용에는 해당 수정사항의 상세 내용을 기재해놓은 레드마인이 있는 링크를 가리킵니다.
+                <br/><br/>
+            </div>
+
+            <div>
                 <img
                     src={ imgRedmine }
-                    width='128'
-                    height='128'
+                />
+            </div>
+
+            <div>
+                <h1>서버 구성도</h1>
+                <img
+                    src={ imgRedmineDia }
                 />
             </div>
 
