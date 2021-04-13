@@ -51,3 +51,9 @@ pre {
   white-space: pre-wrap;
   background-color: rgb(224, 224, 224);
 }
+
+h1 {
+  border-bottom:thick double gray;
+  border-image: linear-gradient(to right, gray 50%, white 70%);
+  border-image-slice: 1;
+}
