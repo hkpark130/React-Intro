@@ -2,6 +2,7 @@ version: "3.8"
 services:
   node:
     build: .
+    working_dir: /app
     volumes:
       - .:/app #로컬과 컨테이너 동기
     command: sh -c "npm start"
