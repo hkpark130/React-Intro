@@ -5,7 +5,8 @@ function Python() {
     return(
         <div class="component">
             <h1>Python</h1>
-            채팅 봇(lstm), 집 값 예측(신경망) 기획중
+            채팅 봇(lstm), 집 값 예측(신경망) 기획중 <br/>
+            독학중이라 accuracy가 낮습니다..
             <div>
                 <pre>
                     <ul>
