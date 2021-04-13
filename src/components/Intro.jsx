@@ -7,7 +7,10 @@ function Intro() {
         <div class="component">
             <h1>인트로</h1>
             <div>
-                안녕하세요. 시간날 때 혼자서 개발중입니다.
+                안녕하세요. <br/>
+                해당 페이지는 인트로 페이지로써 각각의 프로젝트에 접속하기 전 페이지 입니다. <br/>
+                
+                <p>시간 날 때마다 혼자서 개발중입니다. <br/>제 이메일: hkpark130@naver.com</p>
             </div>
             <div>
                 <pre>
