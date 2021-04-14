@@ -1,29 +1,32 @@
 import React from 'react';
-import imgKotlin from '../images/kotlin.png';
+import img1 from '../images/index.jpg';
 
 function Kotlin() {
     return(
         <div class="component">
             <h1>Kotlin</h1>
-            Kotlin을 이용하여 Todo List 앱 개발을 기획하고 있습니다.
+            Kotlin을 이용하여 Todo List 앱을 기획하였습니다.<br/>
+            데이터는 안드로이드의 Preference를 이용하여 저장하고 있습니다.<br/><br/>
+            비행기 내에서 출입국 신고서를 작성할 때 항상 여권번호와 해당 국가 체류주소를 까먹어서 <br/>
+            네트워크가 필요없는 간단한 메모장을 만들자라고 생각하였고 해당 프로젝트를 개발하게 되었습니다.
+            
 
-            <h1>프로젝트 링크</h1>
-            <a href='#'>
-                <h2>서버로 이동</h2>
-            </a>
+            <div>
+                <h1>해당 프로젝트 Github 주소</h1>
+                Todo List 앱 소스코드는&nbsp;
+                <a href='https://github.com/hkpark130/TodoList-Kotlin'>
+                    <u>https://github.com/hkpark130/TodoList-Kotlin</u>
+                </a>
+                를 확인해주세요.<br/><br/>
+            </div>
             
             <div>
                 <img
-                    src={ imgKotlin }
-                    width='512'
-                    height='128'
+                    src={ img1 }
+                    width='729'
+                    height='709'
                 />
             </div>
-            <pre>
-                할 것들<br/>
-                To do list 앱 코틀린으로 만들기<br/>
-                데이터는 DB사용하지 않고 폰에 저장하기
-            </pre>
         </div>
     );
 }
