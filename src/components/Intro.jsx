@@ -5,7 +5,7 @@ import imgIntroDia from '../images/intro-dia.jpg';
 function Intro() {
     return(
         <div class="component">
-            <h1>인트로</h1>
+            <h1>인트로 (React)</h1>
             <div>
                 안녕하세요. <br/>
                 해당 페이지는 인트로 페이지로써 각각의 프로젝트에 접속하기 전 페이지 입니다. <br/>

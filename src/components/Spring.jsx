@@ -40,7 +40,7 @@ function Spring() {
 
             <div>
                 <h1>해당 프로젝트 Github 주소</h1>
-                인트로 페이지 소스코드는&nbsp;
+                스프링 블로그 소스코드는&nbsp;
                 <a href='https://github.com/hkpark130/Spring-Blog'>
                     <u>https://github.com/hkpark130/Spring-Blog</u>
                 </a>
