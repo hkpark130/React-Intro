@@ -57,3 +57,8 @@ h1 {
   border-image: linear-gradient(to right, gray 50%, white 70%);
   border-image-slice: 1;
 }
+
+.border {
+  margin: 5px;
+  border-style: groove;
+}

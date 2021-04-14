@@ -19,9 +19,9 @@ function App() {
       <div class="sidebar">
         <ul>
           <li><Link to="/">Intro</Link></li>
-          <li><Link to="/Spring/">Spring (블로그)</Link></li>
-          <li><Link to="/Kotlin/">Kotlin (투두리스트)</Link></li>
-          <li><Link to="/Python/">Python <br></br>(집 값 예측, 챗 봇)</Link></li>
+          <li><Link to="/Spring/">Spring Blog</Link></li>
+          <li><Link to="/Kotlin/">Todo List</Link></li>
+          <li><Link to="/Python/">ML<br></br>(집 값 예측, 챗 봇)</Link></li>
           <li><Link to="/Redmine/">Redmine</Link></li>
           <li><Link to="/Github/">Github</Link></li>
         </ul>
