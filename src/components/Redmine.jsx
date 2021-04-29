@@ -20,7 +20,7 @@ function Redmine() {
 
             <h1>프로젝트 링크</h1>
             <a href='https://hkpark130.p-e.kr:8080/'>
-                <h2>Redmine 서버로 이동</h2>
+                <h2>Redmine 페이지로 이동</h2>
             </a>
 
             <div>

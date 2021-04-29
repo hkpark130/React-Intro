@@ -1,11 +1,11 @@
 import React from 'react';
-import imgPython from '../images/python.png';
+import imgPython from '../images/ML.jpg';
 
 function Python() {
     return(
         <div class="component">
             <h1>Python</h1>
-            채팅 봇(lstm), 집 값 예측(신경망) 기획중 <br/>
+            「채팅 봇(LSTM), 도쿄 23구 집 값 예측(신경망)」 프로젝트를 기획하여 만들어 보았습니다. <br/>
             독학중이라 accuracy가 낮습니다..
             <div>
                 <pre>
@@ -17,7 +17,10 @@ function Python() {
                             <b>백엔드:</b> Laravel8
                         </li>
                         <li>
-                            <b>학습모델:</b> Keras or Tensorflow
+                            <b>NoSQL DB:</b> Redis
+                        </li>
+                        <li>
+                            <b>학습모델:</b> Tensorflow
                         </li>
                     </ul> 
                 </pre>
@@ -25,21 +28,20 @@ function Python() {
 
             <h1>프로젝트 링크</h1>
             <a href='https://hkpark130.p-e.kr:8200/'>
-                <h2>서버로 이동</h2>
+                <h2>머신러닝 페이지로 이동</h2>
             </a>
 
-            <div>
+            <h1>서버 구성도</h1>
                 <img
                     src={ imgPython }
-                    width='230'
-                    height='128'
+                    width='770'
+                    height='502'
                 />
-            </div>
+
             <pre>
-                할 것들<br/>
-                도쿄 23구 집 값 예측 (크롤링으로 학습 데이터 모으기, dense신경망으로 모델구축)<br/>
-                챗 봇 (LSTM으로 모델 구축, mecab 형태소분석 사용, 학습 데이터...)<br/>
-                프로토타입 만들고 서버 구성도 및 인트로 페이지 수정
+                앞으로 할 것들<br/>
+                <del>1. 집 값 예측(dense Neural Network)</del><br/>
+                2. 챗 봇 (LSTM 모델구축, mecab 형태소분석 사용, 학습 데이터 구하기...)<br/>
             </pre>
 
             <div>
