@@ -4,7 +4,7 @@ import imgSpring from '../images/spring-dia.png';
 function Spring() {
     return(
         <div class="component">
-            <h1>Spring</h1>
+            <h1>스프링 블로그 (Spring Boot)</h1>
                 Spring Boot를 이용하여 웹을 만들어보았습니다.<br/>
                 사용했던 기술들을 정리하고 공유하기 위한 블로그를 기획하였습니다.
                 <div>

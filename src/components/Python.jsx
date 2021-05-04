@@ -4,7 +4,7 @@ import imgPython from '../images/ML.jpg';
 function Python() {
     return(
         <div class="component">
-            <h1>Python</h1>
+            <h1>머신러닝 (Python)</h1>
             「채팅 봇(LSTM), 도쿄 23구 집 값 예측(신경망)」 프로젝트를 기획하여 만들어 보았습니다. <br/>
             독학중이라 accuracy가 낮습니다..
             <div>
@@ -34,8 +34,8 @@ function Python() {
             <h1>서버 구성도</h1>
                 <img
                     src={ imgPython }
-                    width='770'
-                    height='502'
+                    width='900'
+                    height='580'
                 />
 
             <pre>
