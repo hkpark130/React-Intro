@@ -10,4 +10,4 @@ then
 fi
 
 cd /home/ec2-user/build
-docker-compose -f /home/ec2-user/build/production.yml up -d --build
+sudo docker-compose -f /home/ec2-user/build/production.yml up -d --build
