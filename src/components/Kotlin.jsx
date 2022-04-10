@@ -1,5 +1,6 @@
 import React from 'react';
 import img1 from '../images/index.jpg';
+import imgMovePage from '../images/movepage.jpg';
 
 function Kotlin() {
     return(
@@ -15,7 +16,14 @@ function Kotlin() {
                 <h1>해당 프로젝트 Github 주소</h1>
                 Todo List 앱 소스코드는&nbsp;
                 <a href='https://github.com/hkpark130/TodoList-Kotlin'>
-                    <u>https://github.com/hkpark130/TodoList-Kotlin</u>
+                    <u>
+                        <img
+                            src={ imgMovePage }
+                            width='18'
+                            height='18'
+                        />
+                        https://github.com/hkpark130/TodoList-Kotlin
+                    </u>
                 </a>
                 를 확인해주세요.<br/><br/>
             </div>
