@@ -1,5 +1,6 @@
 import React from 'react';
 import imgGithub from '../images/github.png';
+import imgMovePage from '../images/movepage.jpg';
 
 function Github() {
     return(
@@ -15,7 +16,14 @@ function Github() {
             </div>
 
             <a href='https://github.com/hkpark130'>
-                <h2>Github 서버로 이동</h2>
+                <h2>
+                    <img
+                        src={ imgMovePage }
+                        width='18'
+                        height='18'
+                    />{" "}
+                    Github 서버로 이동
+                </h2>
             </a>
         </div>
         

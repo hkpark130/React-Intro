@@ -1,5 +1,6 @@
 import React from 'react';
 import imgSpring from '../images/spring-dia.png';
+import imgMovePage from '../images/movepage.jpg';
 
 function Spring() {
     return(
@@ -28,7 +29,14 @@ function Spring() {
 
                 <h1>프로젝트 링크</h1>
                 <a href='https://hkpark130.p-e.kr:8100/'>
-                    <h2>스프링 블로그 페이지로 이동</h2>
+                    <h2>
+                        <img
+                            src={ imgMovePage }
+                            width='18'
+                            height='18'
+                        />{" "}
+                        스프링 블로그 페이지로 이동
+                    </h2>
                 </a>
 
                 <h1>서버 구성도</h1>
@@ -42,7 +50,14 @@ function Spring() {
                 <h1>해당 프로젝트 Github 주소</h1>
                 스프링 블로그 소스코드는&nbsp;
                 <a href='https://github.com/hkpark130/Spring-Blog'>
-                    <u>https://github.com/hkpark130/Spring-Blog</u>
+                    <u>
+                        <img
+                            src={ imgMovePage }
+                            width='18'
+                            height='18'
+                        />
+                        https://github.com/hkpark130/Spring-Blog
+                    </u>
                 </a>
                 를 확인해주세요.<br/><br/>
             </div>
