@@ -1,6 +1,7 @@
 import React from 'react';
 import imgPipeline from '../images/pipeline.jpg';
 import imgIntroDia from '../images/intro-dia.jpg';
+import imgMovePage from '../images/movepage.jpg';
 
 function Intro() {
     return(
@@ -34,12 +35,6 @@ function Intro() {
                     width='1000'
                     height='1105'
                 />
-                <div>
-                    <u>
-                    사실 S3와 CodeBuild까지 사용할 필요는 없었지만 비용 문제로 
-                    소스 커밋 빈도가 낮은 리액트 프로젝트에만 적용하여 공부해보기로 하였습니다.
-                    </u>
-                </div>
             </div>
 
             <div>
@@ -53,7 +48,14 @@ function Intro() {
                 <h1>해당 프로젝트 Github 주소</h1>
                 인트로 페이지 소스코드는&nbsp;
                 <a href='https://github.com/hkpark130/React-Intro'>
-                    <u>https://github.com/hkpark130/React-Intro</u>
+                    <u>
+                        <img
+                            src={ imgMovePage }
+                            width='18'
+                            height='18'
+                        />
+                        https://github.com/hkpark130/React-Intro
+                    </u>
                 </a>
                 를 확인해주세요.<br/><br/>
             </div>

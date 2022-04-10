@@ -1,6 +1,7 @@
 import React from 'react';
 import imgRedmine from '../images/redmine.jpg';
 import imgRedmineDia from '../images/redmine-dia.jpg';
+import imgMovePage from '../images/movepage.jpg';
 
 function Redmine() {
     return(
@@ -20,7 +21,14 @@ function Redmine() {
 
             <h1>프로젝트 링크</h1>
             <a href='https://hkpark130.p-e.kr:8080/'>
-                <h2>Redmine 페이지로 이동</h2>
+                <h2>
+                    <img
+                        src={ imgMovePage }
+                        width='18'
+                        height='18'
+                    />{" "}
+                    Redmine 페이지로 이동
+                </h2>
             </a>
 
             <div>

@@ -16,6 +16,12 @@ test('intro 메뉴바 테스트', () => {
   expect(linkElement[0]).toBeInTheDocument();
 });
 
+test('Golang 메뉴바 테스트', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/Golang/);
+  expect(linkElement).toBeInTheDocument();
+});
+
 test('Spring 메뉴바 테스트', () => {
   render(<App />);
   const linkElement = screen.getByText(/Spring/);
