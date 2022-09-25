@@ -9,6 +9,7 @@ import Golang from './components/Golang';
 import Spring from './components/Spring';
 import Kotlin from './components/Kotlin';
 import Python from './components/Python';
+import Terraform from './components/Terraform';
 import Redmine from './components/Redmine';
 import Github from './components/Github';
 
@@ -24,6 +25,7 @@ function App() {
           <li><Link to="/Spring/">Spring Blog</Link></li>
           <li><Link to="/Kotlin/">Todo List</Link></li>
           <li><Link to="/Python/">ML<br></br>(집 값 예측)</Link></li>
+          <li><Link to="/Terraform/">Terraform</Link></li>
           <li><Link to="/Redmine/">Redmine</Link></li>
           <li><Link to="/Github/">Github</Link></li>
         </ul>
@@ -33,6 +35,7 @@ function App() {
      <Route path="/Spring/" component={Spring} />
      <Route path="/Kotlin/"  component={Kotlin} />
      <Route path="/Python/"  component={Python} />
+     <Route path="/Terraform/" component={Terraform} />
      <Route path="/Redmine/"  component={Redmine} />
      <Route path="/Github/"  component={Github} />
    </Router>
