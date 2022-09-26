@@ -49,7 +49,7 @@ function Golang() {
                 <img
                     src={ imgJwt }
                     width='1000'
-                    height='540'
+                    height='630'
                 />
 
                 <h1>서버 구성도</h1>
