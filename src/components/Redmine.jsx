@@ -6,7 +6,7 @@ import imgMovePage from '../images/movepage.jpg';
 function Redmine() {
     return(
         <div class="component">
-            <h1>Redmine</h1>
+            <h1><strike>Redmine</strike><br></br>(EC2 메모리 사양상 현재는 사용하지 않습니다.)</h1>
             
             <div>
                 태스크 관리 페이지입니다. <br/>

@@ -22,7 +22,7 @@ function Intro() {
                             <b>프론트엔드:</b> React
                         </li>
                         <li>
-                            <b>CD:</b> AWS CodePipeline (S3, CodeBuild, CodeDeploy)
+                            <b>CD:</b> AWS CodePipeline (S3, CodeDeploy)
                         </li>
                     </ul> 
                 </pre>
@@ -32,8 +32,8 @@ function Intro() {
                 <h1>코드 파이프라인</h1>
                 <img
                     src={ imgPipeline }
-                    width='1000'
-                    height='1105'
+                    width='1050'
+                    height='680'
                 />
             </div>
 
