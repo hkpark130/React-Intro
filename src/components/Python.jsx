@@ -29,7 +29,7 @@ function Python() {
             </div>
 
             <h1>프로젝트 링크</h1>
-            <a href='https://hkpark130.p-e.kr:8200/'>
+            <a href='https://hkpark130.p-e.kr:8200/' target='_blank'>
                 <h2>
                     <img
                         src={ imgMovePage }
@@ -50,7 +50,7 @@ function Python() {
             <div>
                 <h1>해당 프로젝트 Github 주소</h1>
                 ML(Laravel) 소스코드는&nbsp;
-                <a href='https://github.com/hkpark130/Predict-Home-Laravel'>
+                <a href='https://github.com/hkpark130/Predict-Home-Laravel' target='_blank'>
                     <u>
                         <img
                             src={ imgMovePage }
@@ -62,7 +62,7 @@ function Python() {
                 </a>
                 를 확인해주세요.<br/>
                 ML(Tornado) 소스코드는&nbsp;
-                <a href='https://github.com/hkpark130/Predict-Home-API'>
+                <a href='https://github.com/hkpark130/Predict-Home-API' target='_blank'>
                     <u>
                         <img
                             src={ imgMovePage }

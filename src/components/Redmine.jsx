@@ -20,7 +20,7 @@ function Redmine() {
             </div>
 
             <h1>프로젝트 링크</h1>
-            <a href='https://hkpark130.p-e.kr:8080/'>
+            <a href='https://hkpark130.p-e.kr:8080/' target='_blank'>
                 <h2>
                     <img
                         src={ imgMovePage }

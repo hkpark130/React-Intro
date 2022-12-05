@@ -20,6 +20,7 @@ function App() {
   return (
     <Router>
       <div class="sidebar">
+        <input id="referrer" type="hidden" value="Intro"></input>
         <ul>
           <li id="Intro" onClick={() => SidebarColor("Intro")}><Link to="/">Intro</Link></li>
           <li id="Golang" onClick={() => SidebarColor("Golang")}><Link to="/Golang/">Golang JWT</Link></li>

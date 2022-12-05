@@ -11,7 +11,7 @@ function Terraform() {
                     <ul>
                         <li>
                             <b>CICD:</b> Github Actions 
-                            <a href='https://github.com/hkpark130/terraform/tree/main/.github/workflows'>(workflows 코드)</a>
+                            <a href='https://github.com/hkpark130/terraform/tree/main/.github/workflows' target='_blank'>(workflows 코드)</a>
                         </li>
                         <li>
                             <b>Provider:</b> AWS
@@ -31,7 +31,7 @@ function Terraform() {
             <div>
                 <h1>해당 프로젝트 Github 주소</h1>
                 Terraform 소스코드는&nbsp;
-                <a href='https://github.com/hkpark130/terraform'>
+                <a href='https://github.com/hkpark130/terraform' target='_blank'>
                     <u>
                         <img
                             src={ imgMovePage }

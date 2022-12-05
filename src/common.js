@@ -1,9 +1,8 @@
 function SidebarColor(id) {
-  var sidebarList = document.querySelectorAll(".sidebar > ul > li")
-  for (var i = 0; i < sidebarList.length; i++) {
-    document.querySelectorAll(".sidebar > ul > li")[i].style.color = "black"
-    document.querySelectorAll(".sidebar > ul > li")[i].style.background = 'rgb(' + [211,211,211].join(',') + ')'
-  }
+  var referrer = document.getElementById("referrer")
+  document.getElementById(referrer.value).style.color = "black"
+  document.getElementById(referrer.value).style.background = 'rgb(' + [211,211,211].join(',') + ')'
+  referrer.value = id
 
   document.getElementById(id).style.color="white"
   document.getElementById(id).style.background="black"
