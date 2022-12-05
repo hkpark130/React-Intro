@@ -34,7 +34,7 @@ function Golang() {
                 </div>
 
                 <h1>프로젝트 링크</h1>
-                <a href='https://hkpark130.p-e.kr:8300/'>
+                <a href='https://hkpark130.p-e.kr:8300/' target='_blank'>
                     <h2>
                         <img
                             src={ imgMovePage }
@@ -62,7 +62,7 @@ function Golang() {
             <div>
                 <h1>해당 프로젝트 Github 주소</h1>
                 스프링 블로그 소스코드는&nbsp;
-                <a href='https://github.com/hkpark130/go-jwt'>
+                <a href='https://github.com/hkpark130/go-jwt' target='_blank'>
                     <u>
                         <img
                             src={ imgMovePage }

@@ -15,7 +15,7 @@ function Kotlin() {
             <div>
                 <h1>해당 프로젝트 Github 주소</h1>
                 Todo List 앱 소스코드는&nbsp;
-                <a href='https://github.com/hkpark130/TodoList-Kotlin'>
+                <a href='https://github.com/hkpark130/TodoList-Kotlin' target='_blank'>
                     <u>
                         <img
                             src={ imgMovePage }
