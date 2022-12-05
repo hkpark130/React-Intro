@@ -12,6 +12,7 @@ import Python from './components/Python';
 import Terraform from './components/Terraform';
 import Redmine from './components/Redmine';
 import Github from './components/Github';
+import SidebarColor from './common.js';
 
 //const fs = require('fs');
 
@@ -20,14 +21,14 @@ function App() {
     <Router>
       <div class="sidebar">
         <ul>
-          <li><Link to="/">Intro</Link></li>
-          <li><Link to="/Golang/">Golang JWT</Link></li>
-          <li><Link to="/Spring/">Spring Blog</Link></li>
-          <li><Link to="/Kotlin/">Todo List</Link></li>
-          <li><Link to="/Python/">ML<br></br>(집 값 예측)</Link></li>
-          <li><Link to="/Terraform/">Terraform</Link></li>
-          <li><Link to="/Redmine/">Redmine</Link></li>
-          <li><Link to="/Github/">Github</Link></li>
+          <li id="Intro" onClick={() => SidebarColor("Intro")}><Link to="/">Intro</Link></li>
+          <li id="Golang" onClick={() => SidebarColor("Golang")}><Link to="/Golang/">Golang JWT</Link></li>
+          <li id="Spring" onClick={() => SidebarColor("Spring")}><Link to="/Spring/">Spring Blog</Link></li>
+          <li id="Kotlin" onClick={() => SidebarColor("Kotlin")}><Link to="/Kotlin/">Todo List</Link></li>
+          <li id="Python" onClick={() => SidebarColor("Python")}><Link to="/Python/">ML<br></br>(집 값 예측)</Link></li>
+          <li id="Terraform" onClick={() => SidebarColor("Terraform")}><Link to="/Terraform/">Terraform</Link></li>
+          <li id="Redmine" onClick={() => SidebarColor("Redmine")}><Link to="/Redmine/">Redmine</Link></li>
+          <li id="Github" onClick={() => SidebarColor("Github")}><Link to="/Github/">Github</Link></li>
         </ul>
       </div>
      <Route exact path="/" component={Intro} />
