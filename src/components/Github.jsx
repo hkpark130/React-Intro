@@ -15,7 +15,7 @@ function Github() {
                 />
             </div>
 
-            <a href='https://github.com/hkpark130'>
+            <a href='https://github.com/hkpark130' target='_blank'>
                 <h2>
                     <img
                         src={ imgMovePage }

@@ -18,7 +18,7 @@ function Spring() {
                                 <b>백엔드:</b> Spring Boot
                             </li>
                             <li>
-                                <b>DB:</b> AWS RDS
+                                <b>DB:</b> MySQL
                             </li>
                             <li>
                             <b>CD:</b> AWS CodePipeline (CodeDeploy)
@@ -28,7 +28,7 @@ function Spring() {
                 </div>
 
                 <h1>프로젝트 링크</h1>
-                <a href='https://hkpark130.p-e.kr:8100/'>
+                <a href='https://hkpark130.p-e.kr:8100/' target='_blank'>
                     <h2>
                         <img
                             src={ imgMovePage }
@@ -42,14 +42,14 @@ function Spring() {
                 <h1>서버 구성도</h1>
                 <img
                     src={ imgSpring }
-                    width='800'
+                    width='600'
                     height='431'
                 />
 
             <div>
                 <h1>해당 프로젝트 Github 주소</h1>
                 스프링 블로그 소스코드는&nbsp;
-                <a href='https://github.com/hkpark130/Spring-Blog'>
+                <a href='https://github.com/hkpark130/Spring-Blog' target='_blank'>
                     <u>
                         <img
                             src={ imgMovePage }
