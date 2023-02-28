@@ -29,7 +29,7 @@ function App() {
           <li id="Python" onClick={() => SidebarColor("Python")}><Link to="/Python/">ML<br></br>(집 값 예측)</Link></li>
           <li id="Terraform" onClick={() => SidebarColor("Terraform")}><Link to="/Terraform/">Terraform</Link></li>
           <li id="Redmine" onClick={() => SidebarColor("Redmine")}><Link to="/Redmine/">Redmine</Link></li>
-          <li id="Github" onClick={() => SidebarColor("Github")}><Link to="/Github/">Github</Link></li>
+          <li id="Github" onClick={() => SidebarColor("Github")}><Link to="/Github/">Profile</Link></li>
         </ul>
       </div>
      <Route exact path="/" component={Intro} />
