@@ -1,5 +1,9 @@
 import React from 'react';
 import imgMovePage from '../images/movepage.jpg';
+import imgGithubActionsApply from '../images/github-actions-apply.jpg';
+import imgGithubActionsPlan from '../images/github-actions-plan.jpg';
+import imgGithubActionsBot from '../images/github-actions-bot.jpg';
+import imgGithubActions from '../images/github-actions.jpg';
 
 function Terraform() {
     return(
@@ -18,6 +22,32 @@ function Terraform() {
                         </li>
                     </ul> 
                 </pre>
+            </div>
+
+            <div>
+                <h1>Github Actions</h1>
+                main 브랜치에 PR 생성하면 Github Actions에서도 Plan 명령어를 실행후 bot으로 결과 출력<br></br>
+                <img
+                    src={ imgGithubActionsPlan }
+                    width='300'
+                    height='137'
+                /><br></br>
+                release 브랜치에 push하면 apply 명령어 실행후 bot으로 결과 출력<br></br>
+                <img
+                    src={ imgGithubActionsApply }
+                    width='309'
+                    height='138'
+                /><br></br>
+                <img
+                    src={ imgGithubActionsBot }
+                    width='800'
+                    height='552'
+                />
+                <img
+                    src={ imgGithubActions }
+                    width='900'
+                    height='488'
+                />
             </div>
 
             <div>
