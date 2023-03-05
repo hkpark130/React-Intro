@@ -1,5 +1,4 @@
 import React from 'react';
-import imgGithub from '../images/github.png';
 import imgMovePage from '../images/movepage.jpg';
 import imgAws from '../images/certification.jpeg';
 import imgHanbit from '../images/hanbit.jpeg';
@@ -42,12 +41,12 @@ function Github() {
                 <img
                     src={ imgHanbit }
                     width='900'
-                    height='600'
+                    height='506'
                 />
                 <img
                     src={ imgIdea }
                     width='900'
-                    height='600'
+                    height='506'
                 />
             </div>
         </div>
