@@ -28,6 +28,12 @@ test('Spring 메뉴바 테스트', () => {
   expect(linkElement).toBeInTheDocument();
 });
 
+test('Opensearch 메뉴바 테스트', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/Opensearch/);
+  expect(linkElement).toBeInTheDocument();
+});
+
 test('Kotlin 메뉴바 테스트', () => {
   render(<App />);
   const linkElement = screen.getByText(/Kotlin/);
