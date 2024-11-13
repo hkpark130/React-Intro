@@ -1,6 +1,7 @@
 import React from 'react';
 import imgMovePage from '../images/movepage.jpg';
 import imgAws from '../images/certification.jpeg';
+import imgCka from '../images/cka.jpg';
 import imgHanbit from '../images/hanbit.jpeg';
 import imgIdea from '../images/idea.jpeg';
 
@@ -32,6 +33,9 @@ function Github() {
             <div>
                 <h1>자격증</h1>
                 <img
+                    src={ imgCka }
+                />
+                <img
                     src={ imgAws }
                 />
             </div>
@@ -50,8 +54,6 @@ function Github() {
                 />
             </div>
         </div>
-
-       
         
     );
 }
