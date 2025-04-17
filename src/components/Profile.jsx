@@ -1,5 +1,4 @@
-// src/components/projects/Python.jsx
-import React from 'react';
+import React from 'react'
 import {
   Box,
   Typography,
@@ -8,18 +7,10 @@ import {
   Button,
   CardContent,
   CardActions,
-  Divider,
   Container
 } from '@mui/material';
-import { motion } from 'framer-motion';
-import TitleSection from '@/components/section/TitleSection';
 
-export default function Python() {
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
-  };
-
+export default function Profile() {
   return (
     <Container 
       maxWidth="md" 
@@ -38,15 +29,12 @@ export default function Python() {
           mb: { xs: 3, sm: 4 }
         }}
       >
-        <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-          <HeroSection />
-          <Divider sx={{ my: { xs: 2, sm: 3 } }} />
-
+        <Box justifyContent="center" display="flex" flexWrap="wrap" gap={2}>
           <Card sx={{ width: 300 }}>
             <CardContent>
-              <Typography variant="h5">Python Project</Typography>
+              <Typography variant="h5">Spring Boot Project</Typography>
               <Typography variant="body2">
-                파이썬 기반 데이터 분석 및 ETL 파이프라인 예제입니다.
+                서버 사이드 애플리케이션용 스프링 부트 예제
               </Typography>
             </CardContent>
             <CardActions>
@@ -55,18 +43,24 @@ export default function Python() {
               </Button>
             </CardActions>
           </Card>
-        </motion.div>
+
+          <Card sx={{ width: 300 }}>
+            <CardContent>
+              <Typography variant="h5">Python Project</Typography>
+              <Typography variant="body2">
+                파이썬을 사용한 데이터 분석/크롤링/ETL 파이프라인 프로젝트
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button size="small" href="https://github.com/..." target="_blank">
+                GitHub
+              </Button>
+            </CardActions>
+          </Card>
+
+          {/* 필요한 만큼 Card 또는 컴포넌트를 추가 */}
+        </Box>
       </Paper>
     </Container>
-  );
-}
-
-function HeroSection() {
-  return (
-    <TitleSection
-        title="파"
-        subtitle="이"
-        description="썬"
-      />
-  );
+  )
 }
