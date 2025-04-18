@@ -6,6 +6,7 @@ import Profile from './components/Profile'
 import NotFound from './components/NotFound'
 import SpringBoot from './components/SpringBoot'
 import Python from './components/Python'
+import Go from './components/Go'
 import './index.css';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/springboot" element={<SpringBoot />} />
         <Route path="/python" element={<Python />} />
 
+        <Route path="/go" element={<Go />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

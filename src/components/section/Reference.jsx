@@ -14,8 +14,8 @@ import { Link as RouterLink } from 'react-router-dom';
 export default function Reference({ spaLinks, externalLinks }) {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-      <Typography variant="h4" gutterBottom>
-        Reference
+      <Typography variant="h5" gutterBottom>
+        🔗 Reference
       </Typography>
 
       {spaLinks.map(({ prefix, to, label }, idx) => (
