@@ -7,7 +7,9 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-  Box
+  Box,
+  Divider,
+  Avatar
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import StorageIcon from '@mui/icons-material/Storage';
@@ -15,7 +17,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
 
 export default function Sidebar() {
-  const drawerWidth = 200;
+  const drawerWidth = 240; // 약간 더 넓게 변경
   const { pathname } = useLocation();
 
   const items = [
@@ -29,7 +31,12 @@ export default function Sidebar() {
           component="img"
           src="/logo/spring-boot.png"
           alt="Spring Boot"
-          sx={{ width: 28, height: 24 }}
+          style={{ width: '24px', height: '24px' }}
+          sx={{ 
+            width: 28, 
+            height: 24,
+            objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
+          }}
         />
       )
     },
@@ -40,7 +47,6 @@ export default function Sidebar() {
       secondary: '(집 값 예측)',
       icon: <PrecisionManufacturingIcon />
     },
-
     { to: '/profile', primary: 'Profile', secondary: '', icon: <BadgeIcon /> }
   ];
 
@@ -49,24 +55,58 @@ export default function Sidebar() {
       variant="permanent"
       sx={{
         width: drawerWidth,
+        flexShrink: 0,
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
-          background: 'linear-gradient(180deg,rgba(227, 227, 227, 0.26) 0%,rgba(206, 206, 206, 0.84) 100%)',
-          color: 'black'
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: 'none'
         }
       }}
     >
-      <Typography
-        variant="h6"
-        textAlign="center"
-        mt={2}
-        sx={{ fontWeight: 'bold' }}
+      {/* 프로필 영역 */}
+      <Box 
+        sx={{ 
+          py: 3, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          background: 'linear-gradient(to right, #4776E6, #8E54E9)',
+          color: 'white'
+        }}
       >
-        박현경 Portfolio
-      </Typography>
-
-      <List>
+        <Avatar
+          sx={{ 
+            width: 80, 
+            height: 80, 
+            mb: 2, 
+            boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+            border: '3px solid white'
+          }}
+          alt="박현경"
+          src="/logo/profile.jpg" // 프로필 이미지 경로 (없으면 이니셜 표시됨)
+        >
+          P
+        </Avatar>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 'bold',
+            textShadow: '0 1px 3px rgba(0,0,0,0.2)'
+          }}
+        >
+          박현경 Portfolio
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+          DevOps Engineer
+        </Typography>
+      </Box>
+      
+      <Divider sx={{ mx: 2 }} />
+      
+      {/* 메뉴 영역 */}
+      <List sx={{ pt: 2, px: 1 }}>
         {items.map(({ to, primary, secondary, icon }) => {
           const selected = pathname === to;
           return (
@@ -76,60 +116,77 @@ export default function Sidebar() {
               to={to}
               selected={selected}
               sx={{
-                textAlign: 'center',
-                pl: 1.3,
+                my: 0.5,
+                borderRadius: 2,
                 '&.Mui-selected': {
-                  backgroundColor: '#E3F2FD',
-                  color: '#1976D2',
+                  backgroundColor: 'primary.main',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark',
+                  },
                   '& .MuiListItemIcon-root': {
-                    color: '#1976D2'
+                    color: 'white'
                   },
-                  '& .MuiListItemText-primary': {
-                    color: '#1976D2'
-                  },
-                  '& .MuiListItemText-secondary': {
-                    color: '#1976D2'
+                  '& .MuiListItemText-primary, & .MuiListItemText-secondary': {
+                    color: 'white'
                   }
                 },
                 '&:hover': {
-                  backgroundColor: 'rgba(0,0,0,0.04)'
+                  backgroundColor: selected ? 'primary.dark' : 'rgba(0,0,0,0.04)',
+                  transform: 'translateY(-2px)',
+                  transition: 'transform 0.2s ease-in-out'
                 },
-                '& .MuiListItemIcon-root': {
-                  minWidth: 5,
-                  mr: 0.8
-                }
+                transition: 'all 0.2s ease-in-out'
               }}
             >
-              <ListItemIcon sx={{ color: selected ? '#1976D2' : 'black' }}>
-                {React.cloneElement(icon, { fontSize: 'medium' })}
+              <ListItemIcon 
+                sx={{ 
+                  color: selected ? 'white' : 'primary.main',
+                  minWidth: 40
+                }}
+              >
+                {React.cloneElement(icon, { 
+                  fontSize: 'medium',
+                  sx: { filter: selected ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' : 'none' }
+                })}
               </ListItemIcon>
 
               <ListItemText
                 primary={primary}
                 secondary={secondary || null}
-                slotProps={{
-                  primary: {
-                    sx: {
-                      fontSize: '1.2rem',
-                      fontWeight: 'bold',
-                      lineHeight: secondary ? 1.1 : 1.5
-                    }
-                  },
-                  secondary: {
-                    sx: {
-                      fontSize: '1.2rem',
-                      fontWeight: 'bold',
-                      color: 'black',
-                      lineHeight: 1
-                    }
-                  }
+                primaryTypographyProps={{
+                  fontWeight: 'bold',
+                  fontSize: '0.95rem',
+                  letterSpacing: '0.4px'
                 }}
-                
+                secondaryTypographyProps={{
+                  fontSize: '0.8rem',
+                  color: selected ? 'white' : 'text.secondary',
+                }}
               />
             </ListItemButton>
           );
         })}
       </List>
+      
+      <Box 
+        component="div" 
+        sx={{ 
+          mt: 'auto', 
+          mb: 2, 
+          mx: 2, 
+          p: 2, 
+          borderRadius: 2,
+          bgcolor: 'rgba(0, 0, 0, 0.04)',
+          textAlign: 'center',
+          fontSize: '0.75rem'
+        }}
+      >
+        <Typography variant="caption" color="text.secondary">
+          박현경<br />
+          Portfolio
+        </Typography>
+      </Box>
     </Drawer>
   );
 }
