@@ -9,7 +9,10 @@ import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { fetchPost, deletePost, updatePost, fetchComments, createComment, updateComment, deleteComment, verifyCommentPassword } from '../api/api';
+import { 
+  fetchPost, deletePost, updatePost, fetchComments, createComment, 
+  updateGuestComment, updateUserComment, deleteGuestComment, deleteUserComment
+} from '../api/api';
 import { isAuthenticated, getCurrentUser } from '../api/auth';
 import Login from './Login';
 
@@ -29,18 +32,16 @@ export default function BlogDetail() {
   const [guestName, setGuestName] = useState('');
   const [commentPassword, setCommentPassword] = useState('');
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  
+  // 댓글 상태 관리
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedCommentContent, setEditedCommentContent] = useState('');
-  const [commentToDelete, setCommentToDelete] = useState(null);
-  
-  // 상태 변수 추가
-  const [commentToEdit, setCommentToEdit] = useState(null);
-  const [editPasswordDialogOpen, setEditPasswordDialogOpen] = useState(false);
   const [editPassword, setEditPassword] = useState('');
+  const [commentToDeleteId, setCommentToDeleteId] = useState(null); 
+  const [deletePassword, setDeletePassword] = useState('');
   
-  // 현재 로그인한 사용자 정보 (실제 인증 상태에서 가져옴)
+  // 현재 로그인한 사용자 정보
   const currentUser = getCurrentUser();
-  console.log(currentUser, comments); // 확인용
   
   // 인증 상태 확인 함수
   const isAuth = () => {
@@ -51,30 +52,28 @@ export default function BlogDetail() {
     loadPostDetails();
   }, [id]);
   
-  // loadPostDetails 함수 수정
-const loadPostDetails = async () => {
-  try {
-    setLoading(true);
-    const postResponse = await fetchPost(id);
-    setPost(postResponse.data);
-    
-    // 댓글 불러오기
-    const commentsResponse = await fetchComments(id);
-    const commentsData = commentsResponse.data.comments || [];
-    
-    // 디버깅: 댓글 데이터 구조 확인
-    console.log('댓글 데이터:', commentsData);
-    
-    setComments(commentsData);
-    setError(null);
-  } catch (error) {
-    console.error('게시글 또는 댓글을 불러오는 중 오류 발생:', error);
-    setError('게시글을 불러올 수 없습니다.');
-  } finally {
-    setLoading(false);
-  }
-};
+  // 게시글 및 댓글 불러오기
+  const loadPostDetails = async () => {
+    try {
+      setLoading(true);
+      const postResponse = await fetchPost(id);
+      setPost(postResponse.data);
+      
+      // 댓글 불러오기
+      const commentsResponse = await fetchComments(id);
+      const commentsData = commentsResponse.data.comments || [];
+      
+      setComments(commentsData);
+      setError(null);
+    } catch (error) {
+      console.error('게시글 또는 댓글을 불러오는 중 오류 발생:', error);
+      setError('게시글을 불러올 수 없습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
+  // 게시글 삭제
   const handleDeletePost = async () => {
     try {
       setLoading(true);
@@ -89,6 +88,7 @@ const loadPostDetails = async () => {
     }
   };
   
+  // 게시글 수정
   const handleUpdatePost = async () => {
     if (!editedPost.title || !editedPost.content) {
       return;
@@ -107,57 +107,52 @@ const loadPostDetails = async () => {
     }
   };
   
-  // handleAddComment 함수 수정
-const handleAddComment = async () => {
-  if (!newComment.trim()) {
-    return;
-  }
-  
-  try {
-    let commentData = { content: newComment };
-    
-    // 비로그인 상태라면 게스트 댓글로 처리
-    if (!isAuth()) {
-      commentData = {
-        ...commentData,
-        guestName: guestName || '익명' // 이름이 없으면 '익명'으로 설정
-      };
-      
-      // 비밀번호는 선택 사항 - 입력된 경우에만 추가
-      if (commentPassword) {
-        commentData.password = commentPassword;
-      }
-      // 비밀번호가 없어도 게스트 댓글 작성 가능
+  // 댓글 작성
+  const handleAddComment = async () => {
+    if (!newComment.trim()) {
+      return;
     }
     
-    await createComment(id, commentData);
-    setNewComment('');
-    setGuestName('');
-    setCommentPassword('');
-    
-    // 댓글을 다시 불러옵니다
-    const commentsResponse = await fetchComments(id);
-    setComments(commentsResponse.data.comments || []);
-    setError(null);
-  } catch (error) {
-    console.error('댓글 작성 중 오류 발생:', error);
-    setError('댓글을 작성할 수 없습니다.');
-  }
-};
+    try {
+      let commentData = { content: newComment };
+      
+      // 비로그인 상태라면 게스트 댓글로 처리
+      if (!isAuth()) {
+        commentData = {
+          ...commentData,
+          guestName: guestName || '익명' // 이름이 없으면 '익명'으로 설정
+        };
+        
+        // 비밀번호는 선택 사항 - 입력된 경우에만 추가
+        if (commentPassword) {
+          commentData.password = commentPassword;
+        }
+      }
+      
+      await createComment(id, commentData);
+      setNewComment('');
+      setGuestName('');
+      setCommentPassword('');
+      
+      // 댓글을 다시 불러옵니다
+      await loadPostDetails();
+    } catch (error) {
+      console.error('댓글 작성 중 오류 발생:', error);
+      setError('댓글을 작성할 수 없습니다.');
+    }
+  };
   
   const openEditDialog = () => {
     setEditedPost({ title: post.title, content: post.content });
     setIsEditDialogOpen(true);
   };
   
-  // 페이지 유지하며 목록으로 돌아가기
+  // 목록으로 돌아가기
   const handleBackToList = () => {
-    // URL에서 이전 페이지 정보 추출
     const params = new URLSearchParams(location.search);
     const pageParam = params.get('page') || '1';
     const searchParam = params.get('fromSearch');
     
-    // 검색 상태를 유지하여 목록으로 이동
     const returnParams = new URLSearchParams();
     returnParams.set('page', pageParam);
     
@@ -169,106 +164,96 @@ const handleAddComment = async () => {
   };
   
   // 댓글 수정 시작 함수
-const handleEditComment = (commentId) => {
-  const comment = comments.find(c => c.id === commentId);
-  if (!comment) return;
-  
-  // 게스트 댓글은 비밀번호 확인 필요
-  if (comment.isGuest) {
-    setCommentToEdit({ id: commentId, content: comment.content });
-    setEditPassword('');
-    setEditPasswordDialogOpen(true);
-  } 
-  // 로그인한 사용자의 댓글이거나 관리자는 즉시 수정 가능
-  else if (currentUser && (
-    currentUser.username === comment.author || 
-    currentUser.isAdmin
-  )) {
-    setEditingCommentId(commentId);
+  const handleEditComment = (comment) => {
+    setEditingCommentId(comment.id);
     setEditedCommentContent(comment.content);
-  }
-};
+    setEditPassword(''); // 비밀번호 초기화
+  };
 
-  const handleUpdateComment = async (commentId) => {
+  // 게스트 댓글 수정 완료 함수
+  const handleUpdateGuestComment = async (commentId) => {
     if (!editedCommentContent.trim()) return;
-  
+    
     try {
-      await updateComment(id, commentId, { 
-        content: editedCommentContent 
+      // 관리자인 경우 isAdmin 플래그 추가
+      const isAdmin = currentUser?.isAdmin || false;
+      
+      await updateGuestComment(id, commentId, { 
+        content: editedCommentContent,
+        password: editPassword,
+        isAdmin: isAdmin
       });
       
       // 댓글 목록 다시 로드
-      const commentsResponse = await fetchComments(id);
-      setComments(commentsResponse.data.comments || []);
       setEditingCommentId(null);
-      setError(null);
+      setEditPassword('');
+      await loadPostDetails();
+    } catch (error) {
+      console.error('게스트 댓글 수정 중 오류 발생:', error);
+      setError('비밀번호가 일치하지 않거나 댓글을 수정할 수 없습니다.');
+    }
+  };
+  
+  // 로그인 사용자 댓글 수정 완료 함수
+  const handleUpdateUserComment = async (commentId) => {
+    if (!editedCommentContent.trim()) return;
+    
+    try {
+      await updateUserComment(id, commentId, { 
+        content: editedCommentContent
+      });
+      
+      // 댓글 목록 다시 로드
+      setEditingCommentId(null);
+      await loadPostDetails();
     } catch (error) {
       console.error('댓글 수정 중 오류 발생:', error);
       setError('댓글을 수정할 수 없습니다.');
     }
   };
 
-// 댓글 삭제 함수
-const handleDeleteComment = (commentId) => {
-  const comment = comments.find(c => c.id === commentId);
-  if (!comment) return;
-  
-  // 게스트 댓글은 비밀번호 확인 필요
-  if (comment.isGuest) {
-    setCommentToDelete(comment);
-    setCommentPassword('');
-  } 
-  // 로그인한 사용자의 댓글이거나 관리자는 즉시 삭제 가능
-  else if (currentUser && (
-    currentUser.username === comment.author || 
-    currentUser.isAdmin
-  )) {
-    // 삭제 확인 다이얼로그 추가
-    setCommentToDelete(comment);
-  }
-};
+  // 댓글 삭제 시작 함수
+  const handleDeleteClick = (comment) => {
+    setCommentToDeleteId(comment.id);
+    setDeletePassword('');
+  };
 
-  const handleConfirmDeleteComment = async () => {
-    if (!commentToDelete) return;
-  
+  // 게스트 댓글 삭제 함수
+  const handleDeleteGuestComment = async (commentId) => {
     try {
-      const commentId = commentToDelete.id;
-      if (commentToDelete.isGuest && !commentPassword) {
-        setError('비밀번호를 입력해주세요.');
-        return;
-      }
-
-      await deleteComment(id, commentId, commentToDelete.isGuest ? commentPassword : null);
+      // CommentRequestDto 형식으로 변경
+      const isAdmin = currentUser?.isAdmin || false;
+      
+      await deleteGuestComment(id, commentId, {
+        password: deletePassword,
+        isAdmin: isAdmin
+      });
       
       // 댓글 목록 다시 로드
-      const commentsResponse = await fetchComments(id);
-      setComments(commentsResponse.data.comments || []);
-      setCommentToDelete(null);
-      setCommentPassword('');
-      setError(null);
+      setCommentToDeleteId(null);
+      setDeletePassword('');
+      await loadPostDetails();
+    } catch (error) {
+      console.error('게스트 댓글 삭제 중 오류 발생:', error);
+      setError('비밀번호가 일치하지 않거나 댓글을 삭제할 수 없습니다.');
+    }
+  };
+  
+  // 로그인 사용자 댓글 삭제 함수
+  const handleDeleteUserComment = async (commentId) => {
+    try {
+      await deleteUserComment(id, commentId);
+      
+      // 댓글 목록 다시 로드
+      setCommentToDeleteId(null);
+      await loadPostDetails();
     } catch (error) {
       console.error('댓글 삭제 중 오류 발생:', error);
       setError('댓글을 삭제할 수 없습니다.');
     }
   };
 
-  // 비밀번호 확인 후 수정 모드로 전환
-  const handleConfirmEditPassword = async () => {
-    try {
-      // 백엔드에서 비밀번호 확인 API 호출
-      await verifyCommentPassword(id, commentToEdit.id, editPassword);
-      
-      // 비밀번호 확인 성공하면 수정 모드로
-      setEditingCommentId(commentToEdit.id);
-      setEditedCommentContent(commentToEdit.content);
-      setEditPasswordDialogOpen(false);
-      setEditPassword('');
-    } catch (error) {
-      console.error('댓글 비밀번호 확인 실패:', error);
-      setError('비밀번호가 일치하지 않습니다.');
-    }
-  };
-
+  // 로딩 중 표시
   if (loading && !post) {
     return (
       <Container sx={{ display: 'flex', justifyContent: 'center', pt: 10 }}>
@@ -277,6 +262,7 @@ const handleDeleteComment = (commentId) => {
     );
   }
   
+  // 에러 표시
   if (error) {
     return (
       <Container>
@@ -287,6 +273,7 @@ const handleDeleteComment = (commentId) => {
     );
   }
   
+  // 게시글 없음
   if (!post) {
     return (
       <Container>
@@ -296,6 +283,7 @@ const handleDeleteComment = (commentId) => {
     );
   }
   
+  // 메인 렌더링
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
@@ -331,6 +319,7 @@ const handleDeleteComment = (commentId) => {
           )}
         </Box>
         
+        {/* 게시글 본문 */}
         <Paper
           elevation={3}
           sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 4 }}
@@ -429,6 +418,7 @@ const handleDeleteComment = (commentId) => {
             {comments.length > 0 ? (
               comments.map((comment) => (
                 <Box key={comment.id} sx={{ mb: 2, pb: 2, borderBottom: '1px solid #eee' }}>
+                  {/* 댓글 헤더 */}
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Chip 
@@ -450,15 +440,15 @@ const handleDeleteComment = (commentId) => {
                       <Box>
                         <IconButton 
                           size="small" 
-                          onClick={() => handleEditComment(comment.id)}
-                          title={comment.isGuest ? "비밀번호 필요" : "댓글 수정"}
+                          onClick={() => handleEditComment(comment)}
+                          title={comment.guest ? "비밀번호 필요" : "댓글 수정"}
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
                         <IconButton 
                           size="small" 
-                          onClick={() => handleDeleteComment(comment.id)}
-                          title={comment.isGuest ? "비밀번호 필요" : "댓글 삭제"}
+                          onClick={() => handleDeleteClick(comment)}
+                          title={comment.guest ? "비밀번호 필요" : "댓글 삭제"}
                           color="error"
                         >
                           <DeleteIcon fontSize="small" />
@@ -467,6 +457,7 @@ const handleDeleteComment = (commentId) => {
                     )}
                   </Box>
                   
+                  {/* 댓글 수정 모드 */}
                   {editingCommentId === comment.id ? (
                     <Box sx={{ mt: 1 }}>
                       <TextField
@@ -477,50 +468,91 @@ const handleDeleteComment = (commentId) => {
                         onChange={(e) => setEditedCommentContent(e.target.value)}
                         sx={{ mb: 1 }}
                       />
+                      
+                      {/* 게스트 댓글인 경우 비밀번호 입력란 표시 (다이얼로그 없이 직접 입력) */}
+                      {comment.guest && !currentUser?.isAdmin && (
+                        <TextField
+                          type="password"
+                          label="비밀번호"
+                          size="small"
+                          fullWidth
+                          value={editPassword}
+                          onChange={(e) => setEditPassword(e.target.value)}
+                          sx={{ mb: 1 }}
+                          placeholder="댓글 작성 시 입력한 비밀번호"
+                        />
+                      )}
+                      
                       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                         <Button 
                           size="small" 
-                          onClick={() => setEditingCommentId(null)}
+                          onClick={() => {
+                            setEditingCommentId(null);
+                            setEditPassword('');
+                          }}
                         >
                           취소
                         </Button>
                         <Button 
                           size="small" 
                           variant="contained"
-                          onClick={() => handleUpdateComment(comment.id)}
+                          onClick={() => comment.guest 
+                            ? handleUpdateGuestComment(comment.id) 
+                            : handleUpdateUserComment(comment.id)
+                          }
                         >
                           수정완료
                         </Button>
                       </Box>
                     </Box>
+                  ) : commentToDeleteId === comment.id ? (
+                    // 댓글 삭제 UI (다이얼로그 없이 인라인 표시)
+                    <Box sx={{ mt: 1, p: 2, bgcolor: '#ffebee', borderRadius: 1 }}>
+                      <Typography variant="body2" gutterBottom>
+                        이 댓글을 정말 삭제하시겠습니까?
+                      </Typography>
+                      
+                      {/* 게스트 댓글인 경우 비밀번호 입력란 표시 */}
+                      {comment.guest && !currentUser?.isAdmin && (
+                        <TextField
+                          type="password"
+                          label="비밀번호"
+                          size="small"
+                          fullWidth
+                          value={deletePassword}
+                          onChange={(e) => setDeletePassword(e.target.value)}
+                          sx={{ my: 1 }}
+                          placeholder="댓글 작성 시 입력한 비밀번호"
+                        />
+                      )}
+                      
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+                        <Button 
+                          size="small"
+                          onClick={() => {
+                            setCommentToDeleteId(null);
+                            setDeletePassword('');
+                          }}
+                        >
+                          취소
+                        </Button>
+                        <Button 
+                          size="small"
+                          variant="contained"
+                          color="error"
+                          onClick={() => comment.guest 
+                            ? handleDeleteGuestComment(comment.id) 
+                            : handleDeleteUserComment(comment.id)
+                          }
+                        >
+                          삭제
+                        </Button>
+                      </Box>
+                    </Box>
                   ) : (
+                    // 일반 댓글 내용 표시
                     <Typography variant="body2">{comment.content}</Typography>
                   )}
-                  
-                  {/* 게스트 댓글 삭제 시 비밀번호 입력 다이얼로그 */}
-                  <Dialog open={!!commentToDelete && commentToDelete.isGuest} onClose={() => setCommentToDelete(null)}>
-                    <DialogTitle>댓글 삭제</DialogTitle>
-                    <DialogContent>
-                      <TextField 
-                        type="password"
-                        label="비밀번호"
-                        fullWidth
-                        margin="dense"
-                        value={commentPassword}
-                        onChange={(e) => setCommentPassword(e.target.value)}
-                      />
-                    </DialogContent>
-                    <DialogActions>
-                      <Button onClick={() => setCommentToDelete(null)}>취소</Button>
-                      <Button 
-                        color="error"
-                        variant="contained"
-                        onClick={handleConfirmDeleteComment}
-                      >
-                        삭제
-                      </Button>
-                    </DialogActions>
-                  </Dialog>
                 </Box>
               ))
             ) : (
@@ -579,35 +611,6 @@ const handleDeleteComment = (commentId) => {
         open={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 
       />
-
-      {/* 게스트 댓글 수정 시 비밀번호 확인 다이얼로그 */}
-      <Dialog open={editPasswordDialogOpen} onClose={() => setEditPasswordDialogOpen(false)}>
-        <DialogTitle>댓글 수정</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" gutterBottom>
-            게스트 댓글을 수정하려면 작성 시 입력한 비밀번호가 필요합니다.
-          </Typography>
-          <TextField 
-            type="password"
-            label="비밀번호"
-            fullWidth
-            margin="dense"
-            value={editPassword}
-            onChange={(e) => setEditPassword(e.target.value)}
-            autoFocus
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditPasswordDialogOpen(false)}>취소</Button>
-          <Button 
-            color="primary"
-            variant="contained"
-            onClick={handleConfirmEditPassword}
-          >
-            확인
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 }

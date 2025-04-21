@@ -20,6 +20,15 @@ export default function Sidebar() {
   const drawerWidth = 240; // 약간 더 넓게 변경
   const { pathname } = useLocation();
 
+  const isPathSelected = (path) => {
+    if (path === '/') {
+      // 홈(/)의 경우 정확히 일치할 때만 선택으로 처리
+      return pathname === path;
+    }
+    // 다른 경로는 시작 부분이 일치하면 선택으로 처리
+    return pathname.startsWith(path);
+  };
+
   const items = [
     { to: '/', primary: 'Intro', secondary: '', icon: <HomeIcon /> },
     {
@@ -45,7 +54,19 @@ export default function Sidebar() {
       to: '/python',
       primary: 'ML',
       secondary: '(집 값 예측)',
-      icon: <PrecisionManufacturingIcon />
+      icon: (
+        <Box
+          component="img"
+          src="/logo/tensorflow.png"
+          alt="Spring Boot"
+          style={{ width: '24px', height: '24px' }}
+          sx={{ 
+            width: 28, 
+            height: 24,
+            objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
+          }}
+        />
+      )
     },
     { to: '/profile', primary: 'Profile', secondary: '', icon: <BadgeIcon /> }
   ];
@@ -96,7 +117,7 @@ export default function Sidebar() {
             textShadow: '0 1px 3px rgba(0,0,0,0.2)'
           }}
         >
-          박현경 Portfolio
+          {/* 박현경 Portfolio */}
         </Typography>
         <Typography variant="body2" sx={{ opacity: 0.9 }}>
           DevOps Engineer
@@ -108,7 +129,7 @@ export default function Sidebar() {
       {/* 메뉴 영역 */}
       <List sx={{ pt: 2, px: 1 }}>
         {items.map(({ to, primary, secondary, icon }) => {
-          const selected = pathname === to;
+          const selected = isPathSelected(to);
           return (
             <ListItemButton
               key={to}
@@ -190,8 +211,8 @@ export default function Sidebar() {
         }}
       >
         <Typography variant="caption" color="text.secondary">
-          박현경<br />
-          Portfolio
+          {/* 박현경<br />
+          Portfolio */}
         </Typography>
       </Box>
     </Drawer>

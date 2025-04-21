@@ -58,7 +58,6 @@ export const getCurrentUser = () => {
   
   try {
     const decoded = jwtDecode(token);
-    console.log("디코딩된 토큰:", decoded); // 디버깅용
     
     // 토큰에서 권한 정보 확인하는 부분 수정
     // 역할/권한 정보는 아래 중 하나의 형태일 수 있음
