@@ -1,51 +1,78 @@
 import React, { useState, useEffect } from 'react';
-import { createPost, fetchCategories } from '../api/api';
-import { 
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import {
   Typography, Container, Box, Button,
   Paper, CircularProgress, Alert,
   FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { fetchPost, updatePost, fetchCategories } from '../api/api';
 import TitleSection from './section/TitleSection';
 import MarkdownEditor from './markdown/MarkdownEditor';
 
-export default function CreatePost() {
-  const [post, setPost] = useState({ title: '', content: '', categoryId: '' });
+export default function EditPost() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const [post, setPost] = useState({ 
+    title: '', 
+    content: '', 
+    categoryId: null // ID를 명시적으로 null로 초기화
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
-  const navigate = useNavigate();
+  const [initialLoading, setInitialLoading] = useState(true);
   
-  // 카테고리 목록 로드
+  // 카테고리 목록 로드 및 게시글 내용 가져오기
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetchCategories();
-        setCategories(response.data || []);
+        setInitialLoading(true);
         
-        // 카테고리가 있으면 첫번째 카테고리를 기본값으로 설정
-        if (response.data && response.data.length > 0) {
-          setPost(prev => ({ ...prev, categoryId: response.data[0].id }));
-        }
-      } catch (error) {
-        console.error('카테고리를 불러오는 중 오류 발생:', error);
-        setError('카테고리 정보를 불러올 수 없습니다.');
+        // 카테고리 목록 가져오기
+        const categoriesResponse = await fetchCategories();
+        setCategories(categoriesResponse.data || []);
+        
+        // 게시글 내용 가져오기
+        const postResponse = await fetchPost(id);
+        const postData = postResponse.data;
+        
+        // 현재 게시글의 카테고리 ID 찾기
+        const categoryObj = categoriesResponse.data.find(cat => cat.name === postData.category);
+        const categoryId = categoryObj ? categoryObj.id : null;
+        
+        // 게시글 정보 세팅 (카테고리 ID 포함)
+        setPost({ 
+          title: postData.title || '',
+          content: postData.content || '',
+          categoryId: categoryId // 카테고리 ID 설정
+        });
+        
+        setError(null);
+      } catch (err) {
+        console.error('게시글 정보를 불러오는 중 오류 발생:', err);
+        setError('게시글을 불러올 수 없습니다.');
+      } finally {
+        setInitialLoading(false);
       }
     };
     
-    loadCategories();
-  }, []);
+    loadData();
+  }, [id]);
   
+  // 입력 필드 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPost(prevPost => ({ ...prevPost, [name]: value }));
+    setPost(prev => ({ ...prev, [name]: value }));
   };
-
-  // 마크다운 에디터 콘텐츠 변경 핸들러
+  
+  // 콘텐츠 변경 핸들러 (마크다운 에디터용)
   const handleContentChange = (newContent) => {
     setPost(prev => ({ ...prev, content: newContent }));
   };
   
+  // 제출 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -56,22 +83,38 @@ export default function CreatePost() {
     
     try {
       setLoading(true);
-      await createPost(post);
-      navigate('/blog');
+      await updatePost(id, post);
+      
+      // URL 쿼리 파라미터 유지하여 상세 페이지로 리다이렉트
+      const queryParams = new URLSearchParams(location.search).toString();
+      const redirectPath = queryParams ? `/blog/${id}?${queryParams}` : `/blog/${id}`;
+      navigate(redirectPath);
     } catch (err) {
-      console.error('게시글 저장 실패', err);
-      setError('게시글을 저장하는 중 오류가 발생했습니다. 다시 시도해주세요.');
+      console.error('게시글 수정 실패:', err);
+      setError('게시글을 수정하는 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
   };
   
+  // 취소 핸들러
+  const handleCancel = () => {
+    // URL 쿼리 파라미터 유지하여 상세 페이지로 리다이렉트
+    const queryParams = new URLSearchParams(location.search).toString();
+    const redirectPath = queryParams ? `/blog/${id}?${queryParams}` : `/blog/${id}`;
+    navigate(redirectPath);
+  };
+  
+  if (initialLoading) {
+    return (
+      <Container sx={{ display: 'flex', justifyContent: 'center', pt: 10 }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+  
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <TitleSection 
-        title="새 게시글 작성" 
-        subtitle="마크다운 문법을 활용하여 블로그에 새 글을 작성합니다"
-      />
       
       <Paper elevation={2} sx={{ p: 3, mt: 4 }}>
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
@@ -107,7 +150,7 @@ export default function CreatePost() {
             <FormControl fullWidth required>
               <Select
                 name="categoryId"
-                value={post.categoryId}
+                value={post.categoryId || ''}
                 onChange={handleChange}
                 displayEmpty
               >
@@ -129,10 +172,10 @@ export default function CreatePost() {
             <MarkdownEditor value={post.content} onChange={handleContentChange} />
           </Box>
           
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
             <Button 
               variant="outlined"
-              onClick={() => navigate('/blog')}
+              onClick={handleCancel}
               disabled={loading}
             >
               취소
@@ -145,7 +188,7 @@ export default function CreatePost() {
               disabled={loading}
               startIcon={loading && <CircularProgress size={20} color="inherit" />}
             >
-              {loading ? '저장 중...' : '게시하기'}
+              {loading ? '수정 중...' : '수정완료'}
             </Button>
           </Box>
         </form>

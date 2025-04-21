@@ -59,7 +59,7 @@ export default function Sidebar() {
           component="img"
           src="/logo/tensorflow.png"
           alt="Spring Boot"
-          style={{ width: '24px', height: '24px' }}
+          style={{ width: '32px', height: '32px' }}
           sx={{ 
             width: 28, 
             height: 24,

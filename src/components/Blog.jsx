@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { fetchPosts } from '../api/api';
+import { fetchPosts, fetchCategories } from '../api/api';
 import { isAuthenticated, getCurrentUser, logout } from '../api/auth';
 import { 
   Typography, Container, Button, CircularProgress, Pagination, Box,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Stack, TextField, InputAdornment, IconButton
+  Stack, TextField, InputAdornment, IconButton,
+  Menu, MenuItem, ListItemText, FormControl, Select, Tooltip
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import Login from './Login';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -27,6 +30,10 @@ export default function Blog() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   
+  // 카테고리 관련 상태
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  
   const navigate = useNavigate();
   const location = useLocation();
   const postsPerPage = 10; // 테이블에서는 페이지당 10개가 더 적합
@@ -38,6 +45,31 @@ export default function Blog() {
     } else {
       setUser(null);
     }
+  }, []);
+  
+  // 카테고리 목록 로드
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await fetchCategories();
+        let categoriesData = response.data || [];
+        
+        // 카테고리 우선순위 설정: "ALL"이 첫 번째, "Work"가 두 번째로 오도록 정렬
+        categoriesData = categoriesData.sort((a, b) => {
+          if (a.name === "ALL") return -1;
+          if (b.name === "ALL") return 1;
+          if (a.name === "Work Experience") return -1;
+          if (b.name === "Work Experience") return 1;
+          return a.name.localeCompare(b.name); // 나머지는 알파벳 순
+        });
+        
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('카테고리를 불러오는 중 오류 발생:', error);
+      }
+    };
+    
+    loadCategories();
   }, []);
   
   // URL에서 페이지 정보와 검색어 가져오기
@@ -55,6 +87,14 @@ export default function Blog() {
     setSearchTerm(searchParam || "");
     setIsSearching(isSearchActive);
     
+    // 카테고리 정보 가져오기
+    const categoryParam = params.get('categoryId');
+    if (categoryParam) {
+      setSelectedCategoryId(categoryParam);
+    } else {
+      setSelectedCategoryId("");
+    }
+    
     // URL 파라미터 기반으로 즉시 게시글 로드
     const loadInitialPosts = async () => {
       try {
@@ -62,8 +102,12 @@ export default function Blog() {
         const offset = (currentPage - 1) * postsPerPage;
         let response;
         
-        if (searchParam) {
+        if (searchParam && categoryParam) {
+          response = await fetchPosts(offset, postsPerPage, searchParam, categoryParam);
+        } else if (searchParam) {
           response = await fetchPosts(offset, postsPerPage, searchParam);
+        } else if (categoryParam) {
+          response = await fetchPosts(offset, postsPerPage, null, categoryParam);
         } else {
           response = await fetchPosts(offset, postsPerPage);
         }
@@ -79,7 +123,7 @@ export default function Blog() {
     };
     
     loadInitialPosts();
-  }, [location.search, postsPerPage, page]);
+  }, [location.search, postsPerPage]);
   
   useEffect(() => {
     if (searchTerm) {
@@ -93,8 +137,12 @@ export default function Blog() {
       const offset = (page - 1) * postsPerPage;
       let response;
       
-      if (searchTerm && isSearching) {
+      if (searchTerm && isSearching && selectedCategoryId) {
+        response = await fetchPosts(offset, postsPerPage, searchTerm, selectedCategoryId);
+      } else if (searchTerm && isSearching) {
         response = await fetchPosts(offset, postsPerPage, searchTerm);
+      } else if (selectedCategoryId) {
+        response = await fetchPosts(offset, postsPerPage, null, selectedCategoryId);
       } else {
         response = await fetchPosts(offset, postsPerPage);
       }
@@ -122,6 +170,11 @@ export default function Blog() {
         params.set('fromSearch', searchTerm);
       }
       
+      // 카테고리 필터가 있으면 URL에 유지
+      if (selectedCategoryId) {
+        params.set('categoryId', selectedCategoryId);
+      }
+      
       navigate(`/blog/${postId}?${params.toString()}`);
     } catch (error) {
       console.error('게시글 상세 정보를 불러오는 중 오류 발생:', error);
@@ -140,8 +193,35 @@ export default function Blog() {
       params.set('search', searchTerm);
     }
     
+    // 카테고리 필터가 있으면 URL에 유지
+    if (selectedCategoryId) {
+      params.set('categoryId', selectedCategoryId);
+    }
+    
     navigate(`/blog?${params.toString()}`);
     setPage(value);
+  };
+  
+  // 카테고리 변경 핸들러
+  const handleCategoryChange = (event) => {
+    const categoryId = event.target.value;
+    setSelectedCategoryId(categoryId);
+    
+    // 페이지를 1로 리셋하고 새로운 URL 구성
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    
+    // 검색어가 있으면 유지
+    if (searchTerm && isSearching) {
+      params.set('search', searchTerm);
+    }
+    
+    // 선택한 카테고리가 있으면 URL에 추가
+    if (categoryId) {
+      params.set('categoryId', categoryId);
+    }
+    
+    navigate(`/blog?${params.toString()}`);
   };
   
   const handleCreatePost = () => {
@@ -170,6 +250,12 @@ export default function Blog() {
       params.set('search', searchTerm);
     }
     params.set('page', '1'); // 검색 시 첫 페이지로 이동
+    
+    // 카테고리 필터가 있으면 URL에 유지
+    if (selectedCategoryId) {
+      params.set('categoryId', selectedCategoryId);
+    }
+    
     navigate(`/blog?${params.toString()}`);
   };
   
@@ -180,8 +266,24 @@ export default function Blog() {
     
     // 검색 취소 시 검색어 파라미터 제거하고 현재 페이지 유지
     const params = new URLSearchParams();
-    params.set('page', page.toString());
+    params.set('page', '1');
+    
+    // 카테고리 필터가 있으면 URL에 유지
+    if (selectedCategoryId) {
+      params.set('categoryId', selectedCategoryId);
+    }
+    
     navigate(`/blog?${params.toString()}`);
+  };
+
+  // 모든 필터 초기화 함수
+  const handleResetAllFilters = () => {
+    setSearchTerm("");
+    setIsSearching(false);
+    setSelectedCategoryId("");
+    
+    // 모든 필터와 페이지를 초기 상태로 리셋
+    navigate('/blog');
   };
 
   if (error) {
@@ -268,6 +370,27 @@ export default function Blog() {
         </form>
       </Box>
 
+      {/* 카테고리 드롭다운 메뉴 */}
+      <Box sx={{ mb: 3 }}>
+        <FormControl fullWidth size="small">
+          <Select
+            value={selectedCategoryId}
+            onChange={handleCategoryChange}
+            displayEmpty
+            IconComponent={ArrowDropDownIcon}
+          >
+            <MenuItem value="">
+              <ListItemText primary="ALL" />
+            </MenuItem>
+            {categories.map((category) => (
+              <MenuItem key={category.id} value={category.id}>
+                <ListItemText primary={category.name} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+
       <Stack 
         direction="row" 
         spacing={2} 
@@ -277,6 +400,14 @@ export default function Blog() {
           justifyContent: 'flex-end'
         }}
       >
+        <Tooltip title="필터 초기화">
+          <Button 
+            onClick={handleResetAllFilters}
+            startIcon={<RestartAltIcon />}
+          >
+            필터 초기화
+          </Button>
+        </Tooltip>
         <Button 
           variant="contained" 
           onClick={handleCreatePost}

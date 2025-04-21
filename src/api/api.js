@@ -18,12 +18,21 @@ api.interceptors.request.use(config => {
     return config;
 }, error => Promise.reject(error));
 
-// 게시글 목록 가져오기 함수 수정 (검색 기능 추가)
-export const fetchPosts = async (offset = 0, limit = 10, searchTerm = '') => {
+// 회원가입 함수 추가
+export const register = async (userData) => {
+  return await api.post('/users/register', userData);
+};
+
+// 게시글 목록 가져오기 함수 수정 (검색 기능, 카테고리 필터링 추가)
+export const fetchPosts = async (offset = 0, limit = 10, searchTerm = '', categoryId = '') => {
   let url = `/posts?offset=${offset}&limit=${limit}`;
   
   if (searchTerm) {
     url += `&search=${encodeURIComponent(searchTerm)}`;
+  }
+  
+  if (categoryId) {
+    url += `&categoryId=${categoryId}`;
   }
   
   return await api.get(url);

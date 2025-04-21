@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Dialog, Box, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -22,22 +22,72 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
  */
 export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const [modalSize, setModalSize] = useState({ width: 'auto', height: 'auto' });
+  const imageBoxRef = useRef(null); // 이미지 컨테이너 참조 추가
+  
+  const handleOpen = (e) => {
+    // 이벤트 객체가 있는 경우 (클릭에 의한 호출)
+    if (e) {
+      e.preventDefault(); // 기본 동작 방지
+      e.stopPropagation(); // 버블링 방지
+    }
+    setOpen(true);
+  };
+  
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  // 이미지 로드 시 모달 사이즈를 조정하는 함수
+  const handleImageLoad = () => {
+    if (imageBoxRef.current && imageBoxRef.current.naturalWidth) {
+      const img = imageBoxRef.current;
+      const naturalWidth = img.naturalWidth;
+      const naturalHeight = img.naturalHeight;
+      // 이미지 크기에 기반하여 모달 크기 설정 (50px 더 크게)
+      setModalSize({
+        width: `${Math.min(naturalWidth + 100, window.innerWidth * 0.85)}px`, // 창 너비의 85%를 넘지 않도록
+        height: `${Math.min(naturalHeight + 100, window.innerHeight * 0.85)}px` // 창 높이의 85%를 넘지 않도록
+      });
+    }
+  };
+
+  // 클릭 이벤트 직접 바인딩을 위한 useEffect
+  useEffect(() => {
+    const imageElement = imageBoxRef.current;
+    if (imageElement) {      
+      // 클릭 이벤트 핸들러 등록
+      const clickHandler = (e) => handleOpen(e);
+      imageElement.addEventListener('click', clickHandler);
+      handleImageLoad();
+      
+      // 클린업 함수
+      return () => {
+        if (imageElement) {
+          imageElement.removeEventListener('click', clickHandler);
+        }
+      };
+    }
+  }, []);  // 컴포넌트 마운트시 한 번만 실행
 
   return (
     <>
       <Box
+        ref={imageBoxRef} // 참조 추가
         component="img"
         src={imageSrc}
         alt={altText}
-        onClick={handleOpen}
+        // onClick={handleOpen} - 이벤트 리스너로 대체
         sx={{
-          width: '100%',
-          objectFit: 'cover',
+          maxWidth: 'calc(100%)',
+          width: 'auto', // 원래 이미지 크기 유지
+          height: 'auto', // 비율 유지
+          margin: '25px', // 상하좌우 여백 추가
+          objectFit: 'contain',
           borderRadius: 2,
           border: '2px solid #ddd',
-          cursor: 'url(/zoom-in.svg) 12 12, zoom-in',
+          cursor: 'zoom-in',
+          boxSizing: 'border-box',
           '&:hover': {
             filter: 'brightness(0.85)',
             '&::after': {
@@ -68,16 +118,21 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
       <Dialog
         open={open}
         onClose={handleClose}
-        fullWidth
-        maxWidth="lg"
+        maxWidth={false} // 자체 maxWidth 사용
         scroll="body"
         slotProps={{
           paper: {
             sx: {
-              height: 'auto',
-              maxHeight: '90vh',  // 브라우저 창 높이의 90% 유지
-              p: 0,
+              width: modalSize.width,   // 동적으로 계산된 너비
+              height: modalSize.height,  // 동적으로 계산된 높이
+              maxWidth: '85vw', // 브라우저 창 너비의 85%로 제한
+              maxHeight: '85vh', // 브라우저 창 높이의 85%로 조정
+              minWidth: '300px',  // 최소 크기 설정
+              minHeight: '200px', // 최소 크기 설정
+              p: 1,
               overflow: 'hidden', // 스크롤바 제거
+              margin: '20px', // 모달 주변 여백 추가
+              boxSizing: 'content-box', // 패딩과 보더가 너비에 추가됨
             }
           }
         }}
@@ -116,9 +171,8 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
             maxScale={5}
             wheel={{ step: 0.1 }}
             panning={{ disabled: false, velocityDisabled: false }}
-            // limitToBounds={false}
             limitToBounds={true}         // 경계 제한 활성화
-            boundaryRatio={0.2}          // 이미지가 화면 밖으로 나갈 수 있는 비율 (0.8 = 최대 20%만 나갈 수 있음)
+            boundaryRatio={0.8}          // 경계 비율 조정 - 더 많은 이동 허용
             
             alignmentAnimation={{ 
               disabled: true,            // 정렬 애니메이션 비활성화
@@ -197,8 +251,10 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
                     src={imageSrc}
                     alt={altText}
                     sx={{ 
+                      width: 'auto',   // 원래 이미지 크기 유지
+                      height: 'auto',   // 원래 이미지 크기 유지
                       maxWidth: '100%',
-                      maxHeight: '90vh', // 기본 이미지 높이 제한
+                      maxHeight: '75vh',
                       objectFit: 'contain',
                       '&:active': { cursor: 'grabbing' }
                     }}

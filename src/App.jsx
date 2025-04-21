@@ -11,6 +11,7 @@ import './index.css';
 import Blog from './components/Blog'
 import BlogDetail from './components/BlogDetail'
 import CreatePost from './components/CreatePost'
+import EditPost from './components/EditPost' // EditPost 컴포넌트 추가
 import ProtectedRoute from './components/ProtectedRoute';
 import { Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -33,6 +34,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CreatePost />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/blog/edit/:id" 
+            element={
+              <ProtectedRoute>
+                <EditPost />
               </ProtectedRoute>
             } 
           />
