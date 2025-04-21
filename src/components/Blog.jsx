@@ -79,7 +79,7 @@ export default function Blog() {
     };
     
     loadInitialPosts();
-  }, [location.search, postsPerPage]);
+  }, [location.search, postsPerPage, page]);
   
   useEffect(() => {
     if (searchTerm) {

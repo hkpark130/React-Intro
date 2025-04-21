@@ -37,25 +37,20 @@ export const updatePost = (id, postData) => api.put(`/posts/${id}`, postData);
 export const fetchComments = postId => api.get(`/posts/${postId}/comments`);
 export const createComment = (postId, commentData) => api.post(`/posts/${postId}/comments`, commentData);
 
-// 댓글 삭제 함수 추가
-export const deleteComment = async (postId, commentId, password = null) => {
-  const token = localStorage.getItem("accessToken");
-  const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  
-  let url = `/posts/${postId}/comments/${commentId}`;
-  if (password) {
-    url += `?password=${encodeURIComponent(password)}`;
-  }
-  
-  return await api.delete(url, { headers });
+export const updateGuestComment = async (postId, commentId, data) => {
+  return await api.put(`/posts/${postId}/comments/${commentId}/guest`, data);
 };
 
-// 댓글 수정 함수 추가
-export const updateComment = async (postId, commentId, data) => {
-  const token = localStorage.getItem("accessToken");
-  const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  
-  return await api.put(`/posts/${postId}/comments/${commentId}`, data, { headers });
+export const updateUserComment = async (postId, commentId, data) => {
+  return await api.put(`/posts/${postId}/comments/${commentId}`, data);
+};
+
+export const deleteGuestComment = async (postId, commentId, data) => {
+  return await api.delete(`/posts/${postId}/comments/${commentId}/guest`, {data: data});
+};
+
+export const deleteUserComment = async (postId, commentId) => {
+  return await api.delete(`/posts/${postId}/comments/${commentId}`);
 };
 
 // 댓글 비밀번호 확인
