@@ -154,14 +154,21 @@ export default function Sidebar() {
               <ListItemText
                 primary={primary}
                 secondary={secondary || null}
-                primaryTypographyProps={{
-                  fontWeight: 'bold',
-                  fontSize: '0.95rem',
-                  letterSpacing: '0.4px'
-                }}
-                secondaryTypographyProps={{
-                  fontSize: '0.8rem',
-                  color: selected ? 'white' : 'text.secondary',
+                style={{ textAlign: 'center' }}
+                slotProps={{
+                  primary: {
+                    sx: { 
+                      fontWeight: 'bold',
+                      fontSize: '0.95rem',
+                      letterSpacing: '0.4px'
+                    }
+                  },
+                  secondary: {
+                    sx: { 
+                      fontSize: '0.89.5rem',
+                      color: selected ? 'white' : 'black'
+                    }
+                  }
                 }}
               />
             </ListItemButton>
