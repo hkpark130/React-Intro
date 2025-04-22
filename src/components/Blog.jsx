@@ -290,7 +290,7 @@ export default function Blog() {
     return (
       <Container>
         <Typography variant="h6" color="error">{error}</Typography>
-        <Button variant="contained" onClick={loadPosts}>다시 시도</Button>
+        <Button variant="contained" onClick={handleResetAllFilters()}>다시 시도</Button>
       </Container>
     );
   }
@@ -378,13 +378,54 @@ export default function Blog() {
             onChange={handleCategoryChange}
             displayEmpty
             IconComponent={ArrowDropDownIcon}
+            renderValue={(selected) => {
+              const category = categories.find(c => String(c.id) === String(selected));
+              const categoryName = category ? category.name : "ALL";
+            
+              return (
+                <Typography
+                  component="span"
+                  sx={{
+                    color: categoryName === "Work Experience" ? 'success.main' : 'inherit'
+                  }}
+                >
+                  {categoryName}
+                </Typography>
+              );
+            }}
           >
             <MenuItem value="">
               <ListItemText primary="ALL" />
             </MenuItem>
             {categories.map((category) => (
-              <MenuItem key={category.id} value={category.id}>
-                <ListItemText primary={category.name} />
+              <MenuItem 
+                key={category.id} 
+                value={category.id}
+                sx={{
+                  // 더 연한 녹색 배경 (투명도 높임)
+                  bgcolor: category.name === "Work Experience" ? 'rgba(76, 175, 80, 0.08)' : 'inherit',
+                  '&:hover': {
+                    bgcolor: category.name === "Work Experience" ? 'rgba(76, 175, 80, 0.15)' : '',
+                  },
+                  '&.Mui-selected': {
+                    bgcolor: category.name === "Work Experience" ? 'rgba(76, 175, 80, 0.12)' : '',
+                    '&:hover': {
+                      bgcolor: category.name === "Work Experience" ? 'rgba(76, 175, 80, 0.2)' : '',
+                    }
+                  }
+                }}
+              >
+                <ListItemText 
+                  primary={category.name} 
+                  slotProps={{
+                    primary: {
+                      sx: { 
+                        fontWeight: category.name === "Work Experience" ? 'medium' : 'normal',
+                        color: category.name === "Work Experience" ? 'success.main' : 'inherit',
+                      }
+                    }
+                  }}
+                />
               </MenuItem>
             ))}
           </Select>

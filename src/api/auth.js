@@ -6,7 +6,6 @@ let timeoutRef = null;
 export const login = async (username, password) => {
     const res = await api.post("/users/login", { username, password });
     localStorage.setItem("accessToken", res.data.accessToken);
-  
     scheduleTokenRefresh(res.data.accessToken);
 };
 

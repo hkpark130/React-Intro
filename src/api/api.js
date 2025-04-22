@@ -74,4 +74,4 @@ export const createCategory = categoryData => api.post('/categories', categoryDa
 export const deleteCategory = id => api.delete(`/categories/${id}`);
 export const updateCategory = (id, categoryData) => api.put(`/categories/${id}`, categoryData);
 
-
+export const notionConvert = (data) => api.post('/notion/convert', data);

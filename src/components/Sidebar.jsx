@@ -68,6 +68,19 @@ export default function Sidebar() {
         />
       )
     },
+    { to: '/terraform', primary: 'Terraform', secondary: '', icon: (
+      <Box
+        component="img"
+        src="/logo/terraform.png"
+        alt="Spring Boot"
+        style={{ width: '30px', height: '30px' }}
+        sx={{ 
+          width: 30, 
+          height: 30,
+          objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
+        }}
+      />
+    ) },
     { to: '/profile', primary: 'Profile', secondary: '', icon: <BadgeIcon /> }
   ];
 

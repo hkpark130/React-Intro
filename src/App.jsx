@@ -1,4 +1,4 @@
-import React from 'react'
+import { React, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './Layout'
 import Intro from './components/Intro'
@@ -7,6 +7,7 @@ import NotFound from './components/NotFound'
 import SpringBoot from './components/SpringBoot'
 import Python from './components/Python'
 import Go from './components/Go'
+import Terraform from './components/Terraform'
 import './index.css';
 import Blog from './components/Blog'
 import BlogDetail from './components/BlogDetail'
@@ -16,8 +17,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import Sidebar from './components/Sidebar';
+import { scheduleTokenRefresh } from '@/api/auth';
 
 function App() {
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    scheduleTokenRefresh(accessToken);
+  }, []);
+
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -46,6 +53,7 @@ function App() {
             } 
           />
           <Route path="/go" element={<Go />} />
+          <Route path="/terraform" element={<Terraform />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

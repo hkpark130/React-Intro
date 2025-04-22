@@ -6,7 +6,6 @@ import {
   FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import TitleSection from './section/TitleSection';
 import MarkdownEditor from './markdown/MarkdownEditor';
 
 export default function CreatePost() {
@@ -67,12 +66,7 @@ export default function CreatePost() {
   };
   
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <TitleSection 
-        title="새 게시글 작성" 
-        subtitle="마크다운 문법을 활용하여 블로그에 새 글을 작성합니다"
-      />
-      
+    <Container maxWidth="lg" sx={{ py: 4 }}>      
       <Paper elevation={2} sx={{ p: 3, mt: 4 }}>
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
         

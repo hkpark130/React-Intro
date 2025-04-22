@@ -6,7 +6,6 @@ import {
   FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import { fetchPost, updatePost, fetchCategories } from '../api/api';
-import TitleSection from './section/TitleSection';
 import MarkdownEditor from './markdown/MarkdownEditor';
 
 export default function EditPost() {
