@@ -4,15 +4,15 @@ import { Box, Typography, TextField, Button, Paper, Tab, Tabs, Divider, Alert, C
 import CodeIcon from '@mui/icons-material/Code';
 import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
-import { notionConvert } from '@/api/api.js';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 export default function MarkdownEditor({ value, onChange }) {
   const [tabValue, setTabValue] = useState(0);
-  const [notionUrlInput, setNotionUrlInput] = useState('');
-  const [notionTokenInput, setNotionTokenInput] = useState('');
+  const [notionUrl, setNotionUrl] = useState('');
   const [showNotionInput, setShowNotionInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isNotionPreview, setIsNotionPreview] = useState(false);
   const textareaRef = useRef(null);
 
   const handleTabChange = (_, newValue) => setTabValue(newValue);
@@ -38,47 +38,48 @@ export default function MarkdownEditor({ value, onChange }) {
   const handleContentChange = (e) => {
     const newValue = e.target.value;
     onChange(newValue);
+    if (isNotionPreview) {
+      setIsNotionPreview(false);
+    }
   };
 
-  // 노션 관련 자동 감지 제거
-  const handlePaste = () => {
-    // 기본 붙여넣기 동작만 허용
+  const handleNotionUrlChange = (e) => {
+    setNotionUrl(e.target.value);
+    setError('');
   };
 
-  const fetchNotionContent = async (url, token) => {
+  const handleNotionPreviewToggle = () => {
+    if (!notionUrl.trim()) {
+      setError('노션 페이지 URL을 입력해주세요.');
+      return;
+    }
+
+    // URL 형식 체크
     try {
-      setIsLoading(true);
-      setError('');
-      const response = await notionConvert({ url, token });
-
-      if (typeof response === 'string') return response;
-      if (typeof response?.data === 'string') return response.data;
-      return JSON.stringify(response);
+      new URL(notionUrl);
     } catch (err) {
-      console.error('노션 변환 오류:', err);
-      setError(err.response?.data?.message || '노션 콘텐츠를 가져오는 중 오류가 발생했습니다.');
-      return null;
-    } finally {
-      setIsLoading(false);
+      setError('유효한 URL 형식이 아닙니다.');
+      return;
     }
+
+    if (tabValue !== 1) {
+      setTabValue(1); // 미리보기 탭으로 전환
+    }
+    
+    setIsNotionPreview(true);
+    onChange(notionUrl); // 노션 URL을 컨텐츠로 설정
   };
 
-  const handleNotionUrlSubmit = async () => {
-    if (!notionUrlInput.trim()) {
-      return setError('노션 URL을 입력해주세요.');
-    }
-
-    if (!notionTokenInput.trim()) {
-      return setError('노션 통합 토큰을 입력해주세요.');
-    }
-
-    const markdown = await fetchNotionContent(notionUrlInput, notionTokenInput);
-    if (markdown) {
-      insertAtCursor(markdown); // 기존 문자열에 삽입
-      setNotionUrlInput('');
-      setNotionTokenInput('');
-      setShowNotionInput(false);
-      setTabValue(1);
+  const handlePaste = (e) => {
+    // URL 패턴 체크 (노션 URL 자동 감지)
+    const pastedText = e.clipboardData.getData('text');
+    if (pastedText && pastedText.match(/https:\/\/(www\.)?notion\.so\//i)) {
+      if (window.confirm('노션 URL을 감지했습니다. 노션 페이지로 미리보기하시겠습니까?')) {
+        e.preventDefault(); // 붙여넣기 기본 동작 방지
+        setNotionUrl(pastedText);
+        setShowNotionInput(true);
+        handleNotionPreviewToggle();
+      }
     }
   };
 
@@ -91,14 +92,14 @@ export default function MarkdownEditor({ value, onChange }) {
         </Tabs>
       </Box>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+
       {tabValue === 0 && (
         <Box>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-              {error}
-            </Alert>
-          )}
-
           <TextField
             inputRef={textareaRef}
             value={value}
@@ -134,12 +135,12 @@ export default function MarkdownEditor({ value, onChange }) {
             <Button
               size="small"
               variant="outlined"
-              color="info"
-              startIcon={<LinkIcon />}
+              color={showNotionInput ? "primary" : "info"}
+              startIcon={<DescriptionIcon />}
               onClick={() => setShowNotionInput(prev => !prev)}
               disabled={isLoading}
             >
-              Notion URL
+              Notion 페이지 삽입
             </Button>
           </Box>
 
@@ -150,26 +151,19 @@ export default function MarkdownEditor({ value, onChange }) {
                 label="Notion 페이지 URL"
                 size="small"
                 sx={{ mb: 1 }}
-                value={notionUrlInput}
-                onChange={(e) => setNotionUrlInput(e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="Notion 통합 토큰"
-                size="small"
-                type="password"
-                sx={{ mb: 1 }}
-                value={notionTokenInput}
-                onChange={(e) => setNotionTokenInput(e.target.value)}
+                value={notionUrl}
+                onChange={handleNotionUrlChange}
+                placeholder="https://www.notion.so/페이지ID"
+                helperText="예: https://www.notion.so/username/067dd719a912471ea9a3ac10710e7fdf"
               />
               <Button
                 variant="contained"
                 size="small"
-                onClick={handleNotionUrlSubmit}
-                disabled={isLoading || !notionUrlInput.trim() || !notionTokenInput.trim()}
+                onClick={handleNotionPreviewToggle}
+                disabled={isLoading || !notionUrl.trim()}
                 startIcon={isLoading && <CircularProgress size={16} />}
               >
-                {isLoading ? '변환 중...' : 'Notion 콘텐츠 가져오기'}
+                {isLoading ? '로딩 중...' : '노션 페이지 미리보기'}
               </Button>
             </Box>
           )}
@@ -198,8 +192,12 @@ export default function MarkdownEditor({ value, onChange }) {
         >
           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
             미리보기
+            {isNotionPreview && " (노션 페이지)"}
           </Typography>
-          <MarkdownRenderer content={value} />
+          <MarkdownRenderer 
+            content={value} 
+            isNotionPage={isNotionPreview} 
+          />
         </Paper>
       )}
     </Box>

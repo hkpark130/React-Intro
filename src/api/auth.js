@@ -83,22 +83,34 @@ export const getCurrentUser = () => {
 };
 
 export function scheduleTokenRefresh(token) {
-    const payload = jwtDecode(token);
-    const exp = payload.exp * 1000;
-    const now = Date.now();
-    const timeToRefresh = exp - now - 60 * 1000; // 1분 전
-  
-    if (timeoutRef) {
-      clearTimeout(timeoutRef);  // 기존 타이머 제거
+    // 토큰이 null, undefined 또는 문자열이 아닐 경우의 예외 처리
+    if (!token || typeof token !== 'string') {
+      console.error("유효하지 않은 토큰 형식입니다.");
+      return;
     }
-  
-    if (timeToRefresh > 0) {
-      timeoutRef = setTimeout(() => {
-        refreshAccessToken().catch(() => {
-          console.error("자동 토큰 갱신 실패");
-        });
-      }, timeToRefresh);
-    } else {
-      console.warn("이미 토큰 만료임 (refresh 시도 안 함)");
+    
+    try {
+      const payload = jwtDecode(token);
+      const exp = payload.exp * 1000;
+      const now = Date.now();
+      const timeToRefresh = exp - now - 60 * 1000; // 1분 전
+    
+      if (timeoutRef) {
+        clearTimeout(timeoutRef);  // 기존 타이머 제거
+      }
+    
+      if (timeToRefresh > 0) {
+        timeoutRef = setTimeout(() => {
+          refreshAccessToken().catch(() => {
+            console.error("자동 토큰 갱신 실패");
+          });
+        }, timeToRefresh);
+      } else {
+        console.warn("이미 토큰 만료임 (refresh 시도 안 함)");
+      }
+    } catch (error) {
+      console.error("토큰 디코딩 중 오류 발생:", error.message);
+      // 유효하지 않은 토큰이면 localStorage에서 제거
+      localStorage.removeItem("accessToken");
     }
 }
