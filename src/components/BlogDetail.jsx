@@ -397,7 +397,7 @@ export default function BlogDetail() {
           
           {/* 마크다운으로 렌더링된 게시글 내용 */}
           <Box sx={{ 
-            mb: 4,
+            mb: 1,
             overflow: 'hidden',   // 내용이 넘치면 숨김
             width: '100%',        // 너비 100%
             '& img': {            // 이미지에 대한 스타일

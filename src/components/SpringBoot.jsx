@@ -24,7 +24,7 @@ const sectionVariant = {
   visible: (i = 1) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.2 },
+    transition: { delay: i * 0.05 },
   }),
 };
 
@@ -97,9 +97,10 @@ function HeroSection() {
 function TechStackSection() {
   const techStacks = [
     {
-      category: '개발환경',
+      category: '인프라',
       labels: [
         { label: 'Docker', color: 'info' },
+        { label: 'AWS EC2', color: 'warning' }
       ],
     },
     {

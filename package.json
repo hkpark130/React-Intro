@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@fsegurai/marked-extended-tables": "^15.1.0",
     "@mui/icons-material": "^7.0.2",
     "@mui/material": "^7.0.2",
     "@notionhq/client": "^2.3.0",
@@ -19,6 +20,10 @@
     "framer-motion": "^12.7.3",
     "jwt-decode": "^4.0.0",
     "katex": "^0.16.22",
+    "markdown-it": "^14.1.0",
+    "markdown-it-container": "^4.0.0",
+    "marked": "^15.0.9",
+    "marked-extended-tables": "^2.0.1",
     "notion-client": "^7.3.0",
     "notion-to-md": "^3.1.8",
     "prismjs": "^1.30.0",
@@ -30,8 +35,15 @@
     "react-router-dom": "^7.5.0",
     "react-syntax-highlighter": "^15.6.1",
     "react-zoom-pan-pinch": "^3.7.0",
+    "rehype-highlight": "^7.0.2",
     "rehype-raw": "^7.0.0",
-    "remark-gfm": "^4.0.1"
+    "remark-contributors": "^7.0.0",
+    "remark-directive": "^4.0.0",
+    "remark-extended-table": "^2.0.3",
+    "remark-gfm": "^4.0.1",
+    "remark-git-contributors": "^5.1.0",
+    "remark-grid-tables": "^2.2.2",
+    "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

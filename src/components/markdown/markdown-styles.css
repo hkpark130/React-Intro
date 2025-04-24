@@ -1,0 +1,28 @@
+code:not(pre code) {
+    box-sizing: border-box;
+    color: rgb(232, 62, 140);
+    display: inline;
+    font-family: SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        "Liberation Mono",
+        "Courier New",
+        monospace;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+    overflow-wrap: break-word;
+    text-align: left;
+    text-size-adjust: 100%;
+    width: auto;
+}
+
+/* pre code {
+    padding: 0;
+    background-color: transparent;
+    color: black;
+    border-radius: 0;
+    font-size: large;
+} */

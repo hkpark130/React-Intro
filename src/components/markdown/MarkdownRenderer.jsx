@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
+// import remarkGfm from 'remark-gfm';
+import { marked } from 'marked';
 import ZoomableImageModal from '../section/ZoomableImageModal';
 import CodeAccordion from '../section/CodeAccordion';
 import { Box, Alert, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { NotionRenderer as ReactNotionX } from 'react-notion-x';
 
 // react-notion-x 컴포넌트 스타일
-import 'react-notion-x/src/styles.css';
+import './markdown-styles.css';
 
 const ALLOWED_COMPONENTS = ["ZoomableImageModal", "CodeAccordion"];
 const COMPONENT_MAP = {
@@ -42,7 +42,7 @@ const processCustomComponents = (markdown) => {
 
 // HTML 태그 보안 처리
 const sanitizeUnknownTags = (markdown) => {
-  const allowedTags = 'custom|p|div|span|h[1-6]|a|ul|ol|li|pre|code|em|strong|br|hr|blockquote|table|thead|tbody|tr|th|td|img|figure|figcaption|details|summary';
+  const allowedTags = 'custom|p|div|span|h[1-6]|a|ul|ol|li|pre|code|em|strong|br|hr|blockquote|table|thead|tbody|tr|th|td|img|figure|figcaption|details|summary|video|source|u|small|mark';
 
   return markdown.replace(
     new RegExp(`<(?!\\/?(?:${allowedTags})\\b)([a-zA-Z][\\w\\d-]*)([^>]*)>`, 'g'),
@@ -50,129 +50,28 @@ const sanitizeUnknownTags = (markdown) => {
   );
 };
 
-// 노션 페이지 ID 추출
-const extractNotionPageId = (urlOrId) => {
-  if (!urlOrId) return null;
-  
-  // 이미 ID 형태인 경우
-  if (/^[a-zA-Z0-9-]+$/.test(urlOrId)) {
-    return urlOrId.replace(/-/g, '');
-  }
-  
-  // URL에서 ID 추출
-  try {
-    const url = new URL(urlOrId);
-    const pathname = url.pathname;
-    
-    // notion.so URL 형식
-    if (url.hostname.includes('notion.so')) {
-      // 마지막 경로 세그먼트 추출
-      const segments = pathname.split('/').filter(Boolean);
-      const lastSegment = segments[segments.length - 1];
-      
-      // ID 형식 확인 (UUID 형식 또는 대시 포함 ID)
-      if (lastSegment && (lastSegment.length === 32 || lastSegment.includes('-'))) {
-        return lastSegment.replace(/-/g, '');
-      }
-    }
-  } catch (err) {
-    console.error('노션 URL 파싱 오류:', err);
-  }
-  
-  return null;
-};
-
-// Splitbee의 공개 Notion API를 사용하여 노션 페이지 가져오기
-const fetchNotionPage = async (pageId) => {
-  if (!pageId) return null;
-
-  try {
-    // Splitbee의 공개 Notion API 사용
-    const response = await fetch(`https://notion-api.splitbee.io/v1/page/${pageId}`);
-    
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('노션 API 오류:', error);
-    throw new Error('노션 페이지를 불러오는 중 오류가 발생했습니다.');
-  }
-};
-
-// 마크다운 전처리 함수 추가
 const preprocessMarkdown = (content) => {
   if (!content || typeof content !== 'string') return '';
   
-  let processed = content;
-  
-  // 테이블이 올바르게 렌더링되도록 테이블 앞뒤에 줄바꿈 추가
-  processed = processed.replace(
-    /(\n?)(\|[^\n]*\|)(\n?)/g,
-    (match, beforeNewline, tableLine, afterNewline) => {
-      // 테이블 행 앞뒤에 충분한 개행 확보
-      const before = beforeNewline ? beforeNewline : '\n';
-      const after = afterNewline ? afterNewline : '\n';
-      return `${before}${tableLine}${after}`;
-    }
-  );
-  
-  // 과도한 줄바꿈 정규화
-  processed = processed.replace(/\n\n\n+/g, '\n\n');
-  
-  // 헤더 앞에 충분한 공백 추가
-  processed = processed.replace(
-    /(\n?)#{1,6}\s+/g,
-    (match, newline) => {
-      return newline ? `\n\n${match.substring(newline.length)}` : `\n\n${match}`;
-    }
-  );
-  
+  let processed = content;  
   return processed;
 };
 
-export default function MarkdownRenderer({ content, isNotionPage = false }) {
+export default function MarkdownRenderer({ content }) {
   const [processedContent, setProcessedContent] = useState("");
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [notionData, setNotionData] = useState(null);
-  
-  // 노션 페이지 데이터 가져오기
   useEffect(() => {
-    const loadNotionPage = async () => {
-      if (!isNotionPage || !content) return;
-      
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const pageId = extractNotionPageId(content);
-        if (!pageId) {
-          throw new Error('유효한 노션 페이지 ID를 찾을 수 없습니다.');
-        }
-        
-        // Splitbee API를 통해 노션 데이터 가져오기
-        const blockMap = await fetchNotionPage(pageId);
-        setNotionData(blockMap);
-        setError(null);
-      } catch (err) {
-        console.error('노션 페이지 로딩 오류:', err);
-        setError('노션 페이지를 불러오는 중 오류가 발생했습니다: ' + err.message);
-        setNotionData(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // marked 옵션 설정
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      smartLists: false,
+      xhtml: false
+    });
     
-    if (isNotionPage) {
-      loadNotionPage();
-    } else {
-      processMarkdownContent();
-    }
-  }, [content, isNotionPage]);
-  
+    processMarkdownContent();
+  }, [content]);
+
   // 일반 마크다운 처리
   const processMarkdownContent = () => {
     try {
@@ -195,8 +94,8 @@ export default function MarkdownRenderer({ content, isNotionPage = false }) {
   // 테이블 렌더링 커스텀 컴포넌트
   const TableComponent = ({ children, ...props }) => {
     return (
-      <TableContainer component={Paper} sx={{ my: 2 }}>
-        <Table size="small" sx={{ minWidth: 500 }}>
+      <TableContainer >
+        <Table sx={{ minWidth: 500, width: 'auto' }} {...props}>
           {children}
         </Table>
       </TableContainer>
@@ -214,7 +113,7 @@ export default function MarkdownRenderer({ content, isNotionPage = false }) {
   };
 
   // 테이블 행 렌더링 커스텀 컴포넌트
-  const TableRowComponent = ({ children, isHeader }) => {
+  const TableRowComponent = ({ children }) => {
     return <TableRow sx={{ '&:nth-of-type(even)': { bgcolor: 'rgba(0,0,0,0.02)' } }}>{children}</TableRow>;
   };
 
@@ -259,69 +158,108 @@ export default function MarkdownRenderer({ content, isNotionPage = false }) {
     th: (props) => <TableCellComponent isHeader={true} {...props} />,
     td: TableCellComponent,
     
-    // 기본 요소 스타일링
-    code: ({ children, ...props }) => (
-      <code
-        style={{
-          wordBreak: 'break-word',
-          whiteSpace: 'pre-wrap',
-          overflowWrap: 'break-word'
-        }}
-        {...props}
-      >
-        {children}
-      </code>
-    ),
-    
-    // 이미지 스타일링 추가
-    img: ({ src, alt, ...props }) => (
-      <img 
-        src={src} 
-        alt={alt || ''} 
-        style={{ maxWidth: '100%', height: 'auto' }}
-        {...props}
-      />
+    // 밑줄 태그 처리 추가
+    u: ({ children }) => (
+      <span style={{ textDecoration: 'underline' }}>{children}</span>
     ),
     
     // 줄바꿈 처리 개선
     p: ({ children }) => (
-      <p style={{ marginBottom: '1rem' }}>{children}</p>
+      <p style={{ marginTop: '0', marginBottom: '0' }}>{children}</p>
     ),
     
     // 헤더 스타일링 개선
-    h1: ({ children }) => <h1 style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>{children}</h1>,
-    h2: ({ children }) => <h2 style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>{children}</h2>,
-    h3: ({ children }) => <h3 style={{ marginTop: '1.2rem', marginBottom: '0.8rem' }}>{children}</h3>,
-    h4: ({ children }) => <h4 style={{ marginTop: '1rem', marginBottom: '0.6rem' }}>{children}</h4>,
-    h5: ({ children }) => <h5 style={{ marginTop: '0.8rem', marginBottom: '0.5rem' }}>{children}</h5>,
-    h6: ({ children }) => <h6 style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}>{children}</h6>
+    h1: ({ children }) => <h1 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h1>,
+    h2: ({ children }) => <h2 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h2>,
+    h3: ({ children }) => <h3 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h3>,
+    h4: ({ children }) => <h4 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h4>,
+    h5: ({ children }) => <h5 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h5>,
+    h6: ({ children }) => <h6 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h6>,
+
+    pre: ({ children }) => (
+      <pre style={{ marginTop: '0', marginBottom: '0', backgroundColor: 'rgb(224, 224, 224)', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
+        <code style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
+          {children}
+        </code>
+      </pre>
+    ),
+
+    mark: ({ children }) => (
+      <span style={{ 
+        backgroundColor: '#ffff00', 
+        padding: '0.1em 0.2em',
+        borderRadius: '0.2em'
+      }}>
+        {children}
+      </span>
+    ),
+
+    // 비디오 요소 처리 추가
+    video: ({ children, ...props }) => {
+      return (
+        <Box sx={{ mb: 1 }}>
+          <video 
+            style={{ height: 'auto', borderRadius: '4px' }}
+            {...props}
+          >
+            {children}
+          </video>
+        </Box>
+      );
+    },
+    
+    source: (props) => <source {...props} />,
+
+    small: ({ children }) => (
+      <span style={{ fontSize: '0.8em' }}>{children}</span>
+    ),
+
+    // ul 목록 스타일링 추가
+    ul: ({ children }) => (
+      <ul style={{ 
+        marginTop: '0', 
+        marginBottom: '0',
+        paddingLeft: '20px', 
+        paddingTop: '0',
+        paddingBottom: '0',
+        lineHeight: '0.3',
+        listStylePosition: 'outside' 
+      }}>
+        {children}
+      </ul>
+    ),
+
+    ol: ({ children }) => (
+      <ol style={{ 
+        marginTop: '0', 
+        marginBottom: '0',
+        paddingLeft: '20px', 
+        paddingTop: '0',
+        paddingBottom: '0',
+        lineHeight: '0.3',
+        listStylePosition: 'outside' 
+      }}>
+        {children}
+      </ol>
+    ),
+
+    // li 항목 스타일링 추가
+    li: ({ children }) => (
+      <li style={{ 
+        marginTop: '0', 
+        marginBottom: '0',
+        paddingTop: '0',
+        paddingBottom: '0',
+        lineHeight: '1.3'
+      }}>
+        {children}
+      </li>
+    ),
   };
-  
-  // 로딩 중 표시
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress size={30} />
-      </Box>
-    );
-  }
 
   // 에러 표시
   if (error) {
     return <Alert severity="warning" sx={{ mb: 2 }}>{error}</Alert>;
-  }
-  
-  // 노션 페이지 렌더링
-  if (isNotionPage && notionData) {
-    return (
-      <Box className="notion-renderer" sx={{ wordBreak: 'break-word' }}>
-        <ReactNotionX
-          blockMap={notionData}
-          fullPage={false}
-          darkMode={false}
-        />
-      </Box>
-    );
   }
 
   // 일반 마크다운 렌더링
@@ -335,11 +273,11 @@ export default function MarkdownRenderer({ content, isNotionPage = false }) {
     }} className="markdown-body">
       <ReactMarkdown 
         rehypePlugins={[rehypeRaw]}
-        remarkPlugins={[remarkGfm]}
+        // remarkPlugins={[remarkGfm]} // 이거 rehypeRaw와 충돌함
         components={components}
         skipHtml={false}
       >
-        {processedContent}
+        {marked(processedContent)}
       </ReactMarkdown>
     </Box>
   );
