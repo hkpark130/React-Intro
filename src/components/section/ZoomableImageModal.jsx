@@ -82,7 +82,7 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
           maxWidth: 'calc(100%)',
           width: 'auto', // 원래 이미지 크기 유지
           height: 'auto', // 비율 유지
-          margin: '25px', // 상하좌우 여백 추가
+          margin: '2px', // 상하좌우 여백 추가
           objectFit: 'contain',
           borderRadius: 2,
           border: '2px solid #ddd',

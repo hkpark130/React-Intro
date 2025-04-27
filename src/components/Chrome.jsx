@@ -18,6 +18,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import ExtensionIcon from '@mui/icons-material/Extension';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import CodeIcon from '@mui/icons-material/Code';
+import WebIcon from '@mui/icons-material/Web';
 
 /* =======================
    섹션 애니메이션 Variants 정의
@@ -142,7 +143,7 @@ function OverviewSection() {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
       <Typography variant="h5" gutterBottom>
-        📌 프로젝트 개요
+        <WebIcon color="primary" /> 프로젝트 개요
       </Typography>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
         사내 업무 생산성 향상을 위해 개발한 크롬 확장 프로그램입니다. 자주 사용하는 내부 시스템들에 대한 접근성을 높이고, 
@@ -170,9 +171,6 @@ function FeaturesSection() {
       </Stack>
       
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          🚀 기능 스택
-        </Typography>
         <Box component="ul" sx={{ pl: 2, mb: 2 }}>
           <Typography component="li" sx={{ mb: 0.5 }}>
             <strong>Dashboard:</strong> 내부 시스템 통합 접근 대시보드
@@ -288,7 +286,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       </Typography>
 
       <Typography variant="h6" gutterBottom>
-        🏗️ 시스템 아키텍처
+        🖥️ 시스템 아키텍처
       </Typography>
       <ZoomableImageModal
         imageSrc="/images/chrome-extension-architecture.jpg"

@@ -15,7 +15,7 @@ import TechStack from '@/components/section/TechStack';
 import Reference from '@/components/section/Reference';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import ArchitectureIcon from '@mui/icons-material/Architecture';
+import WebIcon from '@mui/icons-material/Web';
 
 /* =======================
    섹션 애니메이션 Variants 정의
@@ -90,7 +90,7 @@ function HeroSection() {
     <TitleSection
       title="JWT 인증 시스템 (Golang)"
       subtitle="Go 언어를 이용한 JWT 인증 서비스 개발"
-      description="Redis + PostgreSQL + Docker + Clean Architecture"
+      description="Redis + PostgreSQL + Clean Architecture"
     />
   );
 }
@@ -98,10 +98,17 @@ function HeroSection() {
 function TechStackSection() {
   const techStacks = [
     {
+      category: '인프라',
+      labels: [
+        { label: 'Docker', color: 'info' },
+        { label: 'AWS EC2', color: 'warning' },
+        { label: 'Apache [프론트 엔드]', color: 'error' },
+      ],
+    },
+    {
       category: '백엔드',
       labels: [
         { label: 'Go', color: 'info' },
-        { label: 'Gin', color: 'primary' }
       ],
     },
     {
@@ -118,14 +125,6 @@ function TechStackSection() {
         { label: 'PostgreSQL', color: 'primary' },
       ],
     },
-    {
-      category: '인프라',
-      labels: [
-        { label: 'Docker', color: 'info' },
-        { label: 'AWS EC2', color: 'warning' },
-        { label: 'Apache', color: 'error' },
-      ],
-    },
   ];
 
   return (
@@ -137,7 +136,7 @@ function OverviewSection() {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
       <Typography variant="h5" gutterBottom>
-        📌 프로젝트 개요
+        <WebIcon color="primary" /> 프로젝트 개요
       </Typography>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
         Go 언어를 이용하여 JWT 인증 인증 서비스를 구현한 프로젝트입니다. Access Token과 Refresh Token을 활용하여 안전하고 효율적인 사용자 인증 시스템을 제공합니다.
@@ -150,49 +149,35 @@ function OverviewSection() {
 }
 
 function ImplementationSection() {
-  const authHandlerCode = `// AuthHandler는 인증 관련 핸들러를 정의합니다
-type AuthHandler struct {
-    authUsecase domain.AuthUsecase
-}
+  const authHandlerCode = `// 토큰 생성 로직입니다. Header와 Payload, signature 포함한 토큰을 발급합니다.
+func IssueToken(payload *Payload) (string, error) {
+	jwt := &Jwt{Alg: "HS256", SecretKey: os.Getenv("SECRET_KEY")}
 
-// Login 핸들러 - 사용자 로그인 처리
-func (h *AuthHandler) Login(c *gin.Context) {
-    var loginRequest domain.LoginRequest
-    if err := c.ShouldBindJSON(&loginRequest); err != nil {
-        c.JSON(http.StatusBadRequest, domain.ErrorResponse{Message: err.Error()})
-        return
-    }
+	jsonHeader, err := json.Marshal(Header{
+		Typ: "JWT",
+		Alg: jwt.Alg,
+	})
+	if err != nil {
+		log.Panicln("json encode error: %w ", err)
+	}
 
-    // 사용자 정보 확인 및 토큰 생성
-    accessToken, refreshToken, err := h.authUsecase.Login(loginRequest)
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Message: err.Error()})
-        return
-    }
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		log.Panicln("json encode error: %w ", err)
+	}
 
-    // 쿠키에 토큰 저장
-    setTokenCookies(c, accessToken, refreshToken)
-    c.JSON(http.StatusOK, domain.SuccessResponse{Message: "로그인 성공"})
-}
+	msg := strings.Join([]string{
+		base64.RawURLEncoding.EncodeToString(jsonHeader),
+		base64.RawURLEncoding.EncodeToString(jsonPayload)}, ".")
 
-// RefreshToken 핸들러 - 만료된 액세스 토큰 갱신
-func (h *AuthHandler) RefreshToken(c *gin.Context) {
-    refreshToken, err := c.Cookie("refresh_token")
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Message: "인증 정보가 없습니다"})
-        return
-    }
+	signature := hmac256(msg, jwt.SecretKey)
 
-    // 새 액세스 토큰 발급
-    newAccessToken, err := h.authUsecase.RefreshToken(refreshToken)
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Message: err.Error()})
-        return
-    }
+	token := strings.Join([]string{
+		base64.RawURLEncoding.EncodeToString(jsonHeader),
+		base64.RawURLEncoding.EncodeToString(jsonPayload),
+		signature}, ".")
 
-    // 새 액세스 토큰을 쿠키에 설정
-    setAccessTokenCookie(c, newAccessToken)
-    c.JSON(http.StatusOK, domain.SuccessResponse{Message: "토큰이 갱신되었습니다"})
+	return token, err
 }`;
 
   return (
@@ -214,39 +199,56 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
         Redis는 토큰 저장소로 활용되어 빠른 조회와 검증이 가능하며, PostgreSQL은 사용자 정보를 저장합니다. 클린 아키텍처 패턴을 적용하여 도메인, 유스케이스, 인터페이스 계층이 명확히 분리되어 있습니다.
       </Typography>
 
-      <Typography variant="h5" gutterBottom sx={{ mt: 3 }}>
-        🏗️ JWT 인증 처리 흐름
-      </Typography>
-      <ZoomableImageModal
-        imageSrc="/images/jwt-flow.jpg"
-        altText="JWT 인증 처리 흐름"
-        caption="JWT 인증 처리 흐름도 - 클라이언트와 서버 간 인증 프로세스"
-        sx={{ border: '2px solid #ddd', borderRadius: 2 }}
-      />
-      
       <Stack 
         direction="row" 
         spacing={1.5} 
         alignItems="center"
-        sx={{ mt: 3 }}
       >
-        <ArchitectureIcon />
+        <AccountTreeIcon />
         <Typography variant="h6" gutterBottom>
-          클린 아키텍처 구조
+          JWT 인증 처리 흐름
         </Typography>
       </Stack>
       <ZoomableImageModal
-        imageSrc="/images/go-clean-architecture.jpg"
-        altText="클린 아키텍처 구조"
-        caption="Domain, UseCase, Handler로 구분된 클린 아키텍처 구조"
+        imageSrc="/images/go-jwt-flow.png"
+        altText="JWT 인증 처리 흐름"
+        caption="🔼 클릭 후 스크롤하면 확대/축소, 드래그하면 이미지 이동 가능합니다."
         sx={{ border: '2px solid #ddd', borderRadius: 2 }}
       />
+
+      <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+        📂 클린 아키텍처 구조
+      </Typography>
+      <ZoomableImageModal
+        imageSrc="/images/clean.png"
+        altText="클린 아키텍처 구조"
+        caption="gorm.DB 인터페이스에 의존하여 어댑터만 변경하면 PostSQL에서 MySQL로 전환하기 쉽도록 구현하였습니다."
+        sx={{ border: '2px solid #ddd', borderRadius: 2 }}
+      />
+      <Box 
+        component="pre" 
+        sx={{ 
+          p: 0, 
+          borderRadius: 2, 
+          bgcolor: 'grey.100',
+          overflowX: 'auto',
+          fontSize: '0.9em',
+          fontFamily: 'monospace'
+        }}
+      >
+        {`api/
+  ├── domain/       # 도메인 모델과 인터페이스 정의
+  ├── repository/   # 데이터 접근 계층
+  ├── handlers/     # 비즈니스 로직 및 요청 처리
+  ├── middleware/   # 인증 및 검증 로직
+  └── adapter/      # 외부 시스템 연결 (DB, Redis)`}
+      </Box>
 
       <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
         🖥️ 서버 구성도
       </Typography>
       <ZoomableImageModal
-        imageSrc="/images/go-server-structure.jpg"
+        imageSrc="/images/go.png"
         altText="서버 구성도"
         caption="Docker 컨테이너 기반의 서버 구성도"
         sx={{ border: '2px solid #ddd', borderRadius: 2 }}
@@ -254,7 +256,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
       <motion.div variants={sectionVariant} custom={3.5} style={{ marginTop: 16 }}>
         <CodeAccordion 
-          title="인증 핸들러 코드 예시"
+          title="토큰 발급 코드"
           codeString={authHandlerCode} 
           language="go"
         />
@@ -267,17 +269,18 @@ function ReferenceSection() {
   return (
       <Reference
         spaLinks={[
-          {
-            prefix: '블로그 페이지:',
-            to: '/blog',
-            label: '"Golang JWT" 관련 포스트'
-          }
         ]}
         externalLinks={[
           {
             prefix: 'GitHub:',
             href: 'https://github.com/hkpark130/go-jwt',
             label: 'https://github.com/hkpark130/go-jwt'
+          },
+          {
+            prefix: '실제 프로젝트 페이지:',
+            href: 'https://hkpark130.p-e.kr:8300',
+            label: 'https://hkpark130.p-e.kr:8300',
+            highlighted: true
           }
         ]}
       />

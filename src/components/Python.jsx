@@ -14,8 +14,7 @@ import ZoomableImageModal from '@/components/section/ZoomableImageModal';
 import TechStack from '@/components/section/TechStack';
 import Reference from '@/components/section/Reference';
 import BuildIcon from '@mui/icons-material/Build';
-import StorageIcon from '@mui/icons-material/Storage';
-import LinkIcon from '@mui/icons-material/Link';
+import WebIcon from '@mui/icons-material/Web';
 
 /* =======================
    섹션 애니메이션 Variants 정의
@@ -137,7 +136,7 @@ function OverviewSection() {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
       <Typography variant="h5" gutterBottom>
-        📌 프로젝트 개요
+        <WebIcon color="primary" /> 프로젝트 개요
       </Typography>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
         "도쿄 23구 집 값 예측(선형회귀)" 프로젝트를 기획하여 만들어 보았습니다. 
@@ -181,9 +180,8 @@ function ServerStructureSection() {
         spacing={1.5} 
         alignItems="center"
       >
-        <StorageIcon />
         <Typography variant="h5" gutterBottom>
-          서버 구성도
+          🖥️ 서버 구성도
         </Typography>
       </Stack>
       <Typography variant="body1" component="p" sx={{ mb: 2.5 }}>

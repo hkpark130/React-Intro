@@ -15,6 +15,7 @@ import TechStack from '@/components/section/TechStack';
 import Reference from '@/components/section/Reference';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import WebIcon from '@mui/icons-material/Web';
 
 /* =======================
    섹션 애니메이션 Variants 정의
@@ -133,7 +134,7 @@ function OverviewSection() {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
       <Typography variant="h5" gutterBottom>
-        📌 프로젝트 개요
+        <WebIcon color="primary" /> 프로젝트 개요
       </Typography>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
         스프링 부트로 만든 간단한 블로그 페이지입니다. Amazon EC2 환경에서 Docker 컨테이너로 배포하고, MySQL을 이용해 포스팅 데이터를 관리합니다.
@@ -182,7 +183,7 @@ public class PostController {
       </Typography>
 
       <Typography variant="h5" gutterBottom>
-        🏗️ 프로젝트 아키텍쳐
+        🖥️ 프로젝트 아키텍쳐
       </Typography>
       <ZoomableImageModal
         imageSrc="/images/spring-blog.jpg"

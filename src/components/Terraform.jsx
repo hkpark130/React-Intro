@@ -19,6 +19,7 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import WorkIcon from '@mui/icons-material/Work';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import WebIcon from '@mui/icons-material/Web';
 
 /* =======================
    섹션 애니메이션 Variants 정의
@@ -135,7 +136,7 @@ function OverviewSection() {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
       <Typography variant="h5" gutterBottom>
-        📌 프로젝트 개요
+        <WebIcon color="primary" /> 프로젝트 개요
       </Typography>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
         각 프로젝트의 인프라 리소스를 Terraform으로 관리하도록 하였습니다. 

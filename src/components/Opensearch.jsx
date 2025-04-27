@@ -5,7 +5,9 @@ import {
   Divider,
   Paper,
   Container,
-  Stack
+  Stack,
+  Alert,
+  Button 
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import TitleSection from '@/components/section/TitleSection';
@@ -16,6 +18,7 @@ import Reference from '@/components/section/Reference';
 import BuildIcon from '@mui/icons-material/Build';
 import StorageIcon from '@mui/icons-material/Storage';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import WebIcon from '@mui/icons-material/Web';
 
 /* =======================
    섹션 애니메이션 Variants 정의
@@ -87,11 +90,16 @@ export default function Opensearch() {
 
 function HeroSection() {
   return (
-    <TitleSection
-      title="오픈서치 대시보드 (OpenSearch DashBoard)"
-      subtitle="Docker 기반의 로그 모니터링 시스템 구축"
-      description="Docker + Packetbeat + Logstash + OpenSearch"
-    />
+    <>
+      <TitleSection
+        title="OpenSearch DashBoard"
+        subtitle="Docker 기반의 로그 모니터링 시스템 구축"
+        description="Docker + Packetbeat + Logstash + OpenSearch"
+      />
+      <Alert severity="error" sx={{ mt: 2, fontSize: '0.875rem' }} >
+        EC2 리소스(1vCPU, 1G) 부족으로 인해 현재는 종료하고 있습니다.
+      </Alert>
+    </>
   );
 }
 
@@ -132,59 +140,46 @@ function TechStackSection() {
 function OverviewSection() {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-      <Typography variant="h5" gutterBottom>
-        📌 프로젝트 개요
-      </Typography>
+      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+        <WebIcon color="primary" />
+        <Typography variant="h5" gutterBottom>
+          프로젝트 개요
+        </Typography>
+      </Stack>
+      
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
         OpenSearch와 관련 도구들을 Docker로 구성하여 로그 모니터링 시스템을 구축한 프로젝트입니다.
         Packetbeat를 통해 네트워크 패킷을 수집하고, Logstash로 데이터를 처리한 후, OpenSearch에 저장하여 대시보드를 통해 시각화합니다.
       </Typography>
-      <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
-        오픈서치(OpenSearch)를 사용하여 시스템 로그를 실시간으로 모니터링하고 분석할 수 있는 환경을 구축하였습니다.
-      </Typography>
+      
+      <Paper elevation={1} sx={{ p: 2, mb: 2, bgcolor: 'rgba(25, 118, 210, 0.05)', borderLeft: '4px solid #1976d2' }}>
+        <Typography variant="body1" component="p">
+          자세한 설정 파일과 설치 방법 및 트러블 슈팅은 아래 GitHub 링크를 참고해주세요.
+        </Typography>
+        <Button 
+          variant="outlined" 
+          color="primary" 
+          size="small" 
+          href="https://github.com/hkpark130/opensearch?tab=readme-ov-file" 
+          target="_blank"
+          startIcon={<svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>}
+          sx={{ mt: 1.5 }}
+        >
+          트러블 슈팅 가이드
+        </Button>
+      </Paper>
     </Box>
   );
 }
 
 function ImplementationSection() {
-  const codeString = `opensearch-node1:
-  image: opensearchproject/opensearch:2.11.0
-  container_name: opensearch-node1
-  environment:
-    - discovery.type=single-node
-    # 중요한 옵션들...
-  ports:
-    - 9200:9200
-    - 9600:9600
-  volumes:
-    - opensearch-data:/usr/share/opensearch/data
-
-logstash:
-  image: opensearchproject/logstash-oss-with-opensearch-output-plugin:8.12.0
-  container_name: logstash
-  volumes:
-    - ./logstash/pipelines:/usr/share/logstash/pipeline
-  ports:
-    - 5044:5044
-    - 9600:9600
-
-packetbeat:
-  image: docker.elastic.co/beats/packetbeat:8.12.1
-  container_name: packetbeat
-  user: root
-  volumes:
-    - ./packetbeat/packetbeat.yml:/usr/share/packetbeat/packetbeat.yml
-  network_mode: "host"
-
-opensearch-dashboards:
-  image: opensearchproject/opensearch-dashboards:2.11.0
-  container_name: opensearch-dashboards
-  ports:
-    - 5601:5601
-  environment:
-    - OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]
-  depends_on:
-    - opensearch-node1`;
+  const packetBeatCode = `packetbeat.interfaces.device: any
+packetbeat.protocols:
+  http:
+    ports: [80, 443, 5601, 8080, 8100, 8200, 8300]
+output.elasticsearch:
+  hosts: ["http://opensearch:9200"]
+  index: "packetbeat-%{+yyyy.MM.dd}"`;
 
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
@@ -200,148 +195,73 @@ opensearch-dashboards:
       </Stack>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
         Docker를 사용하여 OpenSearch 시스템의 각 구성 요소(Packetbeat, Logstash, OpenSearch, OpenSearch Dashboard)를
-        컨테이너화하여 쉽게 배포하고 관리할 수 있도록 구성했습니다.
+        컨테이너화하여 로컬에서도 쉽게 배포하고 관리할 수 있도록 구성했습니다.
+      </Typography>
+      <Typography variant="body1" component="p" >
+        Packetbeat로 네트워크 인터페이스에서 HTTP 프로토콜을 사용하는 포트들의 로깅을 설정하였습니다.
+      </Typography>
+      <Typography variant="body2" component="p" >
+        <code>network_mode: "host"</code>
       </Typography>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
-        Packetbeat는 네트워크 패킷을 수집하여 HTTP, MySQL 등의 프로토콜을 분석하고, 
         Logstash는 이 데이터를 가공하여 OpenSearch로 전송합니다.
         OpenSearch DashBoard를 통해 직관적인 시각화 인터페이스를 제공하여 실시간 모니터링 및 분석이 가능합니다.
       </Typography>
+      <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
+        SSL 인증서 적용시 Security Plugins 도 설치되기 때문에 리소스를 더 사용하게 됩니다.
+        이런 이유로 현재는 다 꺼둔 상태입니다. 실제 프로덕션 환경에서는 충분한 리소스 할당이 필요합니다.
+      </Typography>
+
+      <Box sx={{ mt: 3 }}>
+        <CodeAccordion 
+          title="packetbeat/packetbeat.yml"
+          codeString={packetBeatCode}
+          language="javascript"
+        />
+      </Box>      
 
       <Typography variant="h5" gutterBottom sx={{ mt: 3 }}>
-        🚀 서비스 구성도
+        🖥️ 서비스 구성도
       </Typography>
-      <ZoomableImageModal
-        imageSrc="/images/opensearch-architecture.jpg"
-        altText="OpenSearch 서비스 구성도"
-        caption="OpenSearch, Logstash, Packetbeat 서비스 구성도"
-        sx={{ border: '2px solid #ddd', borderRadius: 2 }}
-      />
-
-      <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-        📊 서비스 구성요소
-      </Typography>
-
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3, mt: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <img src="/logo/docker.png" alt="Docker" width="50" height="40" style={{ objectFit: 'contain' }} />
-          <Typography variant="body1">
-            <strong>Docker:</strong> 컨테이너 기반으로 모든 서비스 관리
-          </Typography>
-        </Box>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <img src="/logo/packetbeat.png" alt="Packetbeat" width="50" height="50" style={{ objectFit: 'contain' }} />
-          <Typography variant="body1">
-            <strong>Packetbeat:</strong> 네트워크 패킷 수집 및 분석
-          </Typography>
-        </Box>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <img src="/logo/logstash.png" alt="Logstash" width="50" height="50" style={{ objectFit: 'contain' }} />
-          <Typography variant="body1">
-            <strong>Logstash:</strong> 데이터 처리 및 변환 파이프라인
-          </Typography>
-        </Box>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <img src="/logo/opensearch.png" alt="OpenSearch" width="50" height="50" style={{ objectFit: 'contain' }} />
-          <Typography variant="body1">
-            <strong>OpenSearch:</strong> 분산형 RESTful 검색 및 분석 엔진
-          </Typography>
-        </Box>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <img src="/logo/opensearch-dashboard.png" alt="OpenSearch Dashboard" width="50" height="50" style={{ objectFit: 'contain' }} />
-          <Typography variant="body1">
-            <strong>OpenSearch Dashboard:</strong> 데이터 시각화 및 대시보드 제공
-          </Typography>
-        </Box>
+      <Box sx={{ mb: 2 }}>
+        <img 
+          src="/images/opensearch.png" 
+          alt="OpenSearch 서비스 구성도" 
+          style={{ 
+            maxWidth: '100%', 
+            borderRadius: '8px',
+            border: '1px solid #ddd'
+          }} 
+        />
       </Box>
 
       <Typography variant="h6" gutterBottom>
         💻 OpenSearch 대시보드 스크린샷
       </Typography>
       <ZoomableImageModal
-        imageSrc="/images/opensearch-dashboard.jpg"
+        imageSrc="/images/opensearch-dashboard.png"
         altText="OpenSearch Dashboard 스크린샷"
         caption="OpenSearch Dashboard - 로그 분석 및 시각화 화면"
         sx={{ border: '2px solid #ddd', borderRadius: 2, my: 2 }}
       />
-
-      <motion.div variants={sectionVariant} custom={3.5}>
-        <CodeAccordion 
-          title="Docker Compose 구성 코드"
-          codeString={codeString}
-          language="yaml"
-        />
-      </motion.div>
     </Box>
   );
 }
 
 function ReferenceSection() {
-  const openSearchConsoleCode = `opensearch-interfaces:serverjs> $ sh
-opensearch@opensearch-interfaces:~/serverjs> pwd
-/home/opensearch/serverjs
-opensearch@opensearch-interfaces:~/serverjs> ls
-index.js  node_modules  package.json  package-lock.json
-opensearch@opensearch-interfaces:~/serverjs> cat index.js 
-const { Client } = require('@opensearch-project/opensearch');
-
-// 호스트 설정
-const host = 'http://opensearchproject.example:9200';
-const client = new Client({ node: host });
-
-// 인덱스 검색 예제
-async function run() {
-  try {
-    const response = await client.search({
-      index: 'logstash-*',
-      body: {
-        query: {
-          match_all: {}
-        },
-        size: 10
-      }
-    });
-    console.log(response.body.hits.hits);
-  } catch (err) {
-    console.error('검색 오류:', err);
-  }
-}
-
-run();`;
-
   return (
     <Box>
       <Reference
         spaLinks={[
-          {
-            prefix: '블로그 페이지:',
-            to: '/blog',
-            label: '"OpenSearch 모니터링" 관련 포스트'
-          }
         ]}
         externalLinks={[
           {
             prefix: 'GitHub:',
-            href: 'https://github.com/hkpark130/opensearch-dashboard',
-            label: 'https://github.com/hkpark130/opensearch-dashboard'
+            href: 'https://github.com/hkpark130/opensearch',
+            label: 'https://github.com/hkpark130/opensearch'
           }
         ]}
       />
-      
-      <Box sx={{ mt: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          OpenSearch 연동 코드 예시
-        </Typography>
-        <CodeAccordion 
-          title="Node.js로 OpenSearch 연결하기"
-          codeString={openSearchConsoleCode}
-          language="javascript"
-        />
-      </Box>
     </Box>
   );
 }

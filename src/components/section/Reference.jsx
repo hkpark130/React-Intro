@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Box, Typography, Link as MuiLink } from '@mui/material';
+import { Box, Typography, Link as MuiLink, Button } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
+import LaunchIcon from '@mui/icons-material/Launch';
 
 /**
  * Reference
@@ -9,7 +10,7 @@ import { Link as RouterLink } from 'react-router-dom';
  *
  * Props:
  *  - spaLinks: [{ prefix: string, to: string, label: string }]
- *  - externalLinks: [{ prefix: string, href: string, label: string }]
+ *  - externalLinks: [{ prefix: string, href: string, label: string, highlighted: boolean }]
  */
 export default function Reference({ spaLinks, externalLinks }) {
   return (
@@ -27,13 +28,42 @@ export default function Reference({ spaLinks, externalLinks }) {
         </Typography>
       ))}
 
-      {externalLinks.map(({ prefix, href, label }, idx) => (
-        <Typography key={idx} variant="body1" component="p">
-          {prefix}{' '}
-          <MuiLink href={href} target="_blank" rel="noopener noreferrer" sx={{ ml: 0.5 }}>
-            {label}
-          </MuiLink>
-        </Typography>
+      {externalLinks.map(({ prefix, href, label, highlighted }, idx) => (
+        <Box key={idx} sx={{ mb: 1, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          {highlighted ? (
+            <>
+              <Typography variant="h5" component="span">
+                {prefix}{' '}
+              </Typography>
+              <Button 
+                variant="outlined" 
+                color="primary"
+                href={href}
+                target="_blank" 
+                rel="noopener noreferrer"
+                endIcon={<LaunchIcon />}
+                sx={{ 
+                  ml: 1,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  border: '2px solid',
+                  '&:hover': {
+                    border: '2px solid',
+                  }
+                }}
+              >
+                {label}
+              </Button>
+            </>
+          ) : (
+            <Typography variant="body1" component="p">
+              {prefix}{' '}
+              <MuiLink href={href} target="_blank" rel="noopener noreferrer" sx={{ ml: 0.5 }}>
+                {label}
+              </MuiLink>
+            </Typography>
+          )}
+        </Box>
       ))}
     </Box>
   );
@@ -52,6 +82,7 @@ Reference.propTypes = {
       prefix: PropTypes.string,
       href: PropTypes.string.isRequired,
       label: PropTypes.string.isRequired,
+      highlighted: PropTypes.bool
     })
   ),
 };

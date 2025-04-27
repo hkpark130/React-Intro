@@ -131,19 +131,6 @@ export default function Sidebar() {
         }}
       />
     ) },
-    { to: '/redmine', primary: 'Redmine', secondary: '', icon: (
-      <Box
-        component="img"
-        src="/logo/redmine.png"
-        alt="Redmine"
-        style={{ width: '24px', height: '24px' }}
-        sx={{ 
-          width: 30, 
-          height: 30,
-          objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
-        }}
-      />
-    ) },
     {
       to: '/chrome',
       primary: 'Chrome Extension',
@@ -162,6 +149,20 @@ export default function Sidebar() {
         />
       )
     },
+    // 여기서 프로젝트 더 추가할 것 <------
+    { to: '/redmine', primary: 'Redmine', secondary: '', icon: (
+      <Box
+        component="img"
+        src="/logo/redmine.png"
+        alt="Redmine"
+        style={{ width: '24px', height: '24px' }}
+        sx={{ 
+          width: 30, 
+          height: 30,
+          objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
+        }}
+      />
+    ) },
     { to: '/profile', primary: 'Profile', secondary: '', icon: <BadgeIcon /> }
   ];
 

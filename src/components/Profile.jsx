@@ -102,13 +102,37 @@ function ProfileLinksSection() {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <LinkedInIcon sx={{ mr: 1.5, color: '#0077B5' }} />
           <Link 
-            href="https://www.linkedin.com/in/yourprofile" 
+            href="https://www.linkedin.com/in/hyeonkyeong-park-8ab87025b/" 
             target="_blank"
             rel="noopener noreferrer"
             underline="hover"
             sx={{ fontWeight: 500 }}
           >
             LinkedIn 이동
+          </Link>
+        </Box>
+        
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box 
+            component="span"
+            sx={{ 
+              mr: 1.5, 
+              color: '#D14836', 
+              display: 'flex', 
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 24,
+              height: 24
+            }}
+          >
+            ✉️
+          </Box>
+          <Link 
+            href="mailto:hkpark130@naver.com" 
+            underline="hover"
+            sx={{ fontWeight: 500 }}
+          >
+            hkpark130@naver.com
           </Link>
         </Box>
       </Stack>
@@ -135,18 +159,18 @@ function CertificationsSection() {
         </Typography>
       </Stack>
       
-      <Grid container spacing={3}>
+      <Grid container spacing={1}>
         <Grid item xs={12} md={6}>
           <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <CardMedia
               component="img"
-              image="/images/kubernetes-certificate.jpg"
+              image="/images/cka.png"
               alt="Kubernetes 자격증"
               sx={{ 
-                height: 220,
+                height: 300,
                 objectFit: 'contain',
                 bgcolor: '#1a73e8',
-                p: 2
+                p: 0
               }}
             />
             <CardContent>
@@ -156,18 +180,15 @@ function CertificationsSection() {
               <Typography variant="body2" color="text.secondary">
                 The Cloud Native Computing Foundation 인증
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                발급 날짜: 2023년
-              </Typography>
             </CardContent>
           </Card>
         </Grid>
         
         <Grid item xs={12} md={6}>
-          <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Card elevation={2} sx={{  display: 'flex', flexDirection: 'column' }}>
             <CardMedia
               component="img"
-              image="/images/aws-certificate.jpg"
+              image="/images/aws.png"
               alt="AWS 자격증"
               sx={{ 
                 height: 220,
@@ -182,9 +203,6 @@ function CertificationsSection() {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Amazon Web Services 인증
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                발급 날짜: 2022년
               </Typography>
             </CardContent>
           </Card>
@@ -216,28 +234,20 @@ function EducationSection() {
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <ZoomableAwardCard 
-            imageSrc="/images/award1.jpg"
-            title="우수상"
-            organization="시스템 개발 콘테스트"
-            year="2021"
+            imageSrc="/images/award1.png"
+            title="JAVA 프로그래밍 경진대회"
+            organization="한빛미디어 개최 (은상)"
+            year="2016"
+            linkUrl="http://cafe.naver.com/thisisjava/11141"
           />
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <ZoomableAwardCard 
-            imageSrc="/images/award2.jpg"
-            title="표창장"
-            organization="개발 공모전"
-            year="2020"
-          />
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <ZoomableAwardCard 
-            imageSrc="/images/award3.jpg"
-            title="장려상"
-            organization="프로그래밍 경진대회"
-            year="2019"
+            imageSrc="/images/award2.png"
+            title="신규 사업 아이디어 콘테스트"
+            organization="KWC 개최 (장려상)"
+            year="2018"
           />
         </Grid>
       </Grid>
@@ -245,7 +255,7 @@ function EducationSection() {
   );
 }
 
-function ZoomableAwardCard({ imageSrc, title, organization, year }) {
+function ZoomableAwardCard({ imageSrc, title, organization, year, linkUrl }) {
   const [isModalOpen, setModalOpen] = React.useState(false);
   
   return (
@@ -271,6 +281,32 @@ function ZoomableAwardCard({ imageSrc, title, organization, year }) {
           <Typography variant="h6">{title}</Typography>
           <Typography variant="body2" color="text.secondary">{organization}</Typography>
           <Typography variant="body2" color="text.secondary">{year}</Typography>
+          {linkUrl && (
+            <Link 
+              href={linkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              sx={{ 
+                display: 'inline-flex', 
+                alignItems: 'center',
+                mt: 1,
+                fontSize: '1.25rem'
+              }}
+            >
+              작품 소개 보기
+              <Box 
+                component="span" 
+                sx={{ 
+                  display: 'inline-block', 
+                  ml: 0.5,
+                  fontSize: '1rem'
+                }}
+              >
+                →
+              </Box>
+            </Link>
+          )}
         </CardContent>
       </Card>
       

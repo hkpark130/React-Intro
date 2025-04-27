@@ -4,9 +4,11 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
+      args:
+        ENV: local
     container_name: react-intro
     ports:
-      - "80:80"  # nginx는 80 포트 사용
+      - "80:80"
     restart: unless-stopped
     networks:
       - ext-network
