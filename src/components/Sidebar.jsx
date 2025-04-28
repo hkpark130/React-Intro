@@ -251,7 +251,7 @@ export default function Sidebar() {
               textShadow: '0 1px 3px rgba(0,0,0,0.2)'
             }}
           >
-            {/* 박현경 Portfolio */}
+            박현경 Portfolio
           </Typography>
           <Typography variant="body2" sx={{ opacity: 0.9 }}>
             DevOps Engineer
