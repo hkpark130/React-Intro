@@ -144,22 +144,24 @@ function OverviewSection() {
 }
 
 function ImplementationSection() {
-  const codeString = `@RestController
-@RequestMapping("/api/posts")
-public class PostController {
+  const codeString = `    # 게시글 조회시 캐시에 저장
+    @Cacheable(value = "posts", key = "#id")
+    public PostResponseDto getPost(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
-    @GetMapping
-    public List<Post> getAllPosts() {
-        // DB에서 모든 게시글 조회
+        return convertToDto(post);
     }
-
-    @PostMapping
-    public Post createPost(@RequestBody Post post) {
-        // 게시글 생성 후 저장
-    }
-
-    // 기타 API 구현 생략
-}`;
+    
+    # 삭제 및 수정시 commentCounts:댓글수, posts:게시글 캐시 제거
+    @Transactional
+    @CacheEvict(value = {"posts", "commentCounts"}, key = "#postId")
+    public void deletePost(Long postId, String username) {
+    ...
+    @Transactional
+    @CacheEvict(value = {"posts"}, key = "#postId")
+    public void updatePost(Long postId, PostRequestDto dto, String username) {
+`;
 
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
@@ -223,7 +225,8 @@ function ReferenceSection() {
           {
             prefix: '블로그 페이지:',
             to: '/blog',
-            label: '"Spring Blog" 카테고리'
+            label: '"Spring Blog" 카테고리',
+            highlighted: true
           }
         ]}
         externalLinks={[

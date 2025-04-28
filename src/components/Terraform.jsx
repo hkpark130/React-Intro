@@ -119,12 +119,6 @@ function TechStackSection() {
         { label: 'Makefile', color: 'success' },
       ],
     },
-    {
-      category: '모니터링',
-      labels: [
-        { label: 'CloudWatch', color: 'primary' },
-      ],
-    },
   ];
 
   return (
@@ -147,7 +141,7 @@ function OverviewSection() {
           <ul style={{ margin: 0, paddingLeft: 20 }}>
             <li>
               <strong>이름:</strong> GitHub Actions{' '}
-              <Link href="https://github.com/features/actions" target="_blank" rel="noopener" 
+              <Link href="https://github.com/hkpark130/terraform/tree/main/.github/workflows" target="_blank" rel="noopener" 
                 sx={{ display: 'inline-flex', alignItems: 'center' }}>
                 워크플로 코드
                 <OpenInNewIcon fontSize="small" sx={{ ml: 0.5 }} />
@@ -179,35 +173,98 @@ function GitHubActionsSection() {
         release 브랜치에 push하면 apply 명령어 실행후 봇으로 결과 출력합니다.
       </Typography>
 
-      <ZoomableImageModal
-        imageSrc="/images/terraform-github-actions.jpg"
-        altText="Terraform GitHub Actions 워크플로우"
-        caption="GitHub Actions 봇 출력 결과"
-        sx={{ border: '2px solid #ddd', borderRadius: 2, mb: 3 }}
-      />
+      <Box sx={{ mb: 2 }}>
+        <img 
+          src="/images/gitbot.png" 
+          alt="Terraform GitHub Actions 워크플로우"
+          style={{ 
+            maxWidth: '100%', 
+            borderRadius: '8px',
+            border: '1px solid #ddd'
+          }} 
+        />
+        <Typography variant="body1" color="textSecondary" textAlign="center">
+          GitHub Actions 봇 출력 결과
+        </Typography>
+      </Box>
 
       <CodeAccordion 
-        title="GitHub Actions 워크플로우 파일" 
+        title=".github/workflows/project-dev-plan.yml" 
         language="yaml"
-        codeString={`name: Terraform Plan project Dev
-
-on:
+        codeString={`on:
   pull_request:
     branches:
       - main
       
 jobs:
-  terraform:
+  plan:
+    name: Plan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-      - name: Terraform Init
-        run: terraform init
-      - name: Terraform Plan
-        run: terraform plan`}
+      - uses: actions/checkout@v3
+        ...
+      - name: check diff
+        id: diff
+        uses: technote-space/get-diff-action@v6
+        ...
+      - name: configure AWS credentials for portfolio
+        ...
+      - name: setup terraform
+        id: setup
+        if: steps.diff.outputs.diff
+        ...
+      - name: terraform init
+        id: init
+        if: steps.diff.outputs.diff
+        ...
+      - name: terraform plan
+        if: steps.diff.outputs.diff
+        id: plan
+        ...
+      - name: comment
+        if: steps.diff.outputs.diff
+        uses: actions/github-script@v6.1.0
+        ...`}
       />
+      <Typography variant="body1" color="textSecondary">
+        main 브랜치에 PR 생성하면 Github Actions에서도 Plan 명령어를 실행후 bot으로 결과 출력합니다.
+      </Typography>
+
+      <CodeAccordion 
+        title=".github/workflows/project-dev-apply.yml" 
+        language="yaml"
+        codeString={`on:
+  push:
+    branches:
+      - release
+      
+jobs:
+  apply:
+    name: Apply
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        ...
+      - uses: jwalton/gh-find-current-pr@v1
+        id: findpr
+        ...
+      - name: setup terraform
+        uses: hashicorp/setup-terraform@v2
+        ...
+      - name: configure AWS credentials for portfolio
+        ...
+     - name: terraform apply
+        continue-on-error: true
+        id: apply
+        ...
+      - name: comment
+        if: \${{ steps.apply.outcome == 'success' }}
+        uses: actions/github-script@v6.1.0
+        ...`}
+      />
+      <Typography variant="body1" color="textSecondary">
+        release 브랜치에 push하면 apply 명령어 실행후 bot으로 결과 출력합니다.
+      </Typography>
     </Box>
   );
 }
@@ -226,21 +283,56 @@ function WorkflowSection() {
         </Typography>
       </Stack>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
-        각 프로젝트마다 폴더가 있으며 Makefile로 테라폼 명령어를 설정
+        각 프로젝트마다 폴더가 있으며 Makefile로 테라폼 명령어를 실행합니다.
       </Typography>
       
       <Box sx={{ my: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, border: '1px solid #e0e0e0' }}>
         <Typography variant="body1" component="div">
           <ul style={{ margin: 0, paddingLeft: 20 }}>
-            <li>modules에 있는 파일들을 포함으로 테라폼 초기설정을 위해 `make setup` 명령어를 먼저 실행</li>
-            <li>`terraform plan` 은 var-file 설정이 되도록 `make plan` 명령어로 실행</li>
-            <li>`terraform apply` 은 GitHub Actions로 실행</li>
+            <li>각 프로젝트의 modules 에 있는 tf 파일들을 불러오고 테라폼 초기세팅을 위해 <code>make setup</code> 명령어를 먼저 실행</li>
+            <li><code>terraform plan</code>은 var-file 설정이 되도록 <code>make plan</code> 명령어로 실행</li>
+            <li><code>terraform apply</code>은 GitHub Actions로 실행 (<u>로컬에서 실행 안 함!</u>)</li>
           </ul>
         </Typography>
+        <CodeAccordion 
+        title="base.mk" 
+        language="makefile"
+        codeString={`# 각 프로젝트마다 base.mk 를 include 함
+# include $(shell git rev-parse --show-cdup)make/base.mk
+
+PROJECT_ROOT := $(shell git rev-parse --show-cdup)
+PROJECT 	 := $(shell echo \${PWD} | rev | cut -d '/' -f 3 | rev)
+ENV 		 := $(shell echo \${PWD} | rev | cut -d '/' -f 2 | rev)
+PLAN_OUT   	 := ./.terraform/default.plan
+
+COMMON_VAR_FILE := $(PROJECT_ROOT)terraform/\${PROJECT}/tfvars/common.tfvars
+VAR_FILE 		:= $(PROJECT_ROOT)terraform/\${PROJECT}/tfvars/\${ENV}.tfvars
+VAR_OPTIONS 	:= -var-file "$(COMMON_VAR_FILE)" -var-file "$(VAR_FILE)"
+
+.PHONY: setup install-terraform init-terraform plan
+
+setup: install-terraform init-terraform
+	$(info Setup completed.)
+
+install-terraform:
+	tfenv install
+
+init-terraform:
+	rm -rf .terraform
+	terraform init
+
+fmt: 
+	terraform fmt
+
+plan: fmt
+	terraform plan $(VAR_OPTIONS) \
+	-compact-warnings \
+	-parallelism 10 \
+	-out $(PLAN_OUT)`}/>
       </Box>
 
       <ZoomableImageModal
-        imageSrc="/images/terraform-workflow.jpg"
+        imageSrc="/images/gitbot2.png"
         altText="Terraform 워크플로우"
         caption="GitHub Actions 워크플로우 실행 목록"
         sx={{ border: '2px solid #ddd', borderRadius: 2, mt: 3 }}
@@ -253,11 +345,6 @@ function ReferenceSection() {
   return (
     <Reference
       spaLinks={[
-        {
-          prefix: '블로그 페이지:',
-          to: '/blog',
-          label: '"Terraform" 관련 포스트'
-        }
       ]}
       externalLinks={[
         {

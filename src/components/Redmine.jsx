@@ -6,19 +6,13 @@ import {
   Paper,
   Container,
   Stack,
-  Link,
   Alert
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import TitleSection from '@/components/section/TitleSection';
-import ZoomableImageModal from '@/components/section/ZoomableImageModal'; 
-import CodeAccordion from '@/components/section/CodeAccordion';
+import ZoomableImageModal from '@/components/section/ZoomableImageModal';
 import TechStack from '@/components/section/TechStack';
-import Reference from '@/components/section/Reference';
-import BuildIcon from '@mui/icons-material/Build';
-import StorageIcon from '@mui/icons-material/Storage';
 import BugReportIcon from '@mui/icons-material/BugReport';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import WebIcon from '@mui/icons-material/Web';
 
 /* =======================
@@ -89,7 +83,7 @@ function HeroSection() {
         title="Redmine"
         subtitle="프로젝트 관리 및 이슈 트래킹 시스템"
       />
-      <Alert severity="error" sx={{ mt: 2, fontSize: '0.875rem' }} >
+      <Alert severity="error" sx={{ mt: 2, fontSize: '0.875rem', borderLeft: '4px solid #D74141' }} >
         (EC2 메모리 사양상 현재는 운용하고 있지 않습니다.)
       </Alert>
     </>

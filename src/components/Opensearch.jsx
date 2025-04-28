@@ -16,8 +16,6 @@ import CodeAccordion from '@/components/section/CodeAccordion';
 import TechStack from '@/components/section/TechStack';
 import Reference from '@/components/section/Reference';
 import BuildIcon from '@mui/icons-material/Build';
-import StorageIcon from '@mui/icons-material/Storage';
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import WebIcon from '@mui/icons-material/Web';
 
 /* =======================
@@ -96,7 +94,7 @@ function HeroSection() {
         subtitle="Docker 기반의 로그 모니터링 시스템 구축"
         description="Docker + Packetbeat + Logstash + OpenSearch"
       />
-      <Alert severity="error" sx={{ mt: 2, fontSize: '0.875rem' }} >
+      <Alert severity="error" sx={{ mt: 2, fontSize: '0.875rem', borderLeft: '4px solid #D74141' }} >
         EC2 리소스(1vCPU, 1G) 부족으로 인해 현재는 종료하고 있습니다.
       </Alert>
     </>

@@ -66,7 +66,7 @@ export default function Sidebar() {
     },
     {
       to: '/golang',
-      primary: 'Golang JWT',
+      primary: 'Go JWT',
       secondary: '',
       icon: (
         <Box
@@ -133,17 +133,17 @@ export default function Sidebar() {
     ) },
     {
       to: '/chrome',
-      primary: 'Chrome Extension',
-      secondary: '',
+      primary: 'Chrome',
+      secondary: 'Extension',
       icon: (
         <Box
           component="img"
           src="/logo/chrome.png"
           alt="Chrome Extension"
-          style={{ width: '26px', height: '26px' }}
+          style={{ width: '30px', height: '30px' }}
           sx={{ 
-            width: 28, 
-            height: 24,
+            width: 30, 
+            height: 30,
             objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
           }}
         />
@@ -321,7 +321,8 @@ export default function Sidebar() {
                     },
                     secondary: {
                       sx: { 
-                        fontSize: '0.89.5rem',
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
                         color: selected ? 'white' : 'black'
                       }
                     }

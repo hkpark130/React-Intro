@@ -19,13 +19,41 @@ export default function Reference({ spaLinks, externalLinks }) {
         🔗 Reference
       </Typography>
 
-      {spaLinks.map(({ prefix, to, label }, idx) => (
-        <Typography key={idx} variant="body1" component="p" sx={{ mb: 1 }}>
-          {prefix}{' '}
-          <MuiLink component={RouterLink} to={to} underline="hover" sx={{ ml: 0.5 }}>
-            {label}
-          </MuiLink>
-        </Typography>
+      {spaLinks.map(({ prefix, to, label, highlighted }, idx) => (
+        <Box key={idx} sx={{ mb: 1, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          {highlighted ? (
+            <>
+              <Typography variant="h5" component="span">
+                {prefix}{' '}
+              </Typography>
+              <Button 
+                component={RouterLink}
+                to={to}
+                variant="outlined" 
+                color="primary"
+                endIcon={<LaunchIcon />}
+                sx={{ 
+                  ml: 1,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  border: '2px solid',
+                  '&:hover': {
+                    border: '2px solid',
+                  }
+                }}
+              >
+                {label}
+              </Button>
+            </>
+          ) : (
+            <Typography variant="body1" component="p">
+              {prefix}{' '}
+              <MuiLink component={RouterLink} to={to} underline="hover" sx={{ ml: 0.5 }}>
+                {label}
+              </MuiLink>
+            </Typography>
+          )}
+        </Box>
       ))}
 
       {externalLinks.map(({ prefix, href, label, highlighted }, idx) => (
@@ -75,6 +103,7 @@ Reference.propTypes = {
       prefix: PropTypes.string,
       to: PropTypes.string.isRequired,
       label: PropTypes.string.isRequired,
+      highlighted: PropTypes.bool
     })
   ),
   externalLinks: PropTypes.arrayOf(

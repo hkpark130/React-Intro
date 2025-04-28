@@ -21,7 +21,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Sidebar from './components/Sidebar';
 import { scheduleTokenRefresh } from '@/api/auth';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { yellow } from '@mui/material/colors';
+import { yellow, purple } from '@mui/material/colors';
 import Chrome from '@/components/Chrome';
 
 // 사이드바 상태 컨텍스트 생성
@@ -34,6 +34,9 @@ const theme = createTheme({
   palette: {
     yellow: {
       main: yellow[900],
+    },
+    purple: {
+      main: purple[900],
     },
   },
 });

@@ -74,11 +74,11 @@ export default function ChromeExtension() {
           </motion.div>
           
           <motion.div variants={sectionVariant} custom={3} style={{ marginTop: 32 }}>
-            <FeaturesSection />
+            <ImplementationSection />
           </motion.div>
 
           <motion.div variants={sectionVariant} custom={4} style={{ marginTop: 32 }}>
-            <ImplementationSection />
+            <FeaturesSection />
           </motion.div>
           
           <Divider sx={{ my: { xs: 2, sm: 3 } }} />
@@ -96,7 +96,7 @@ function HeroSection() {
   return (
     <TitleSection
       title="사내 생산성 Chrome Extension"
-      subtitle="업무 효율성 향상을 위한 크롬 확장 앱"
+      subtitle="업무 생산성 향상을 위한 크롬 확장 앱"
       description="React + Spring Cloud + Chrome API"
     />
   );
@@ -108,14 +108,17 @@ function TechStackSection() {
       category: '프론트엔드',
       labels: [
         { label: 'React', color: 'info' },
-        { label: 'JavaScript', color: 'warning' }
+        { label: 'Vite', color: 'purple' },
+        { label: 'TailwindCSS ', color: 'success' },
+        { label: '(Grid Layout, Big Calendar, oidc) 플러그인', color: 'primary' },
       ],
     },
     {
       category: '백엔드',
       labels: [
-        { label: 'Firebase', color: 'error' },
-        { label: 'Spring Gateway', color: 'success' },
+        { label: 'Spring Cloud Gateway', color: 'success' },
+        { label: 'MySQL', color: 'info' },
+        { label: 'JPA', color: 'success' },
       ],
     },
     {
@@ -123,13 +126,17 @@ function TechStackSection() {
       labels: [
         { label: 'JWT', color: 'secondary' },
         { label: 'Keycloak', color: 'primary' },
+        { label: 'Spring Security', color: 'success' },
       ],
     },
     {
-      category: '도구',
+      category: '외부 API',
       labels: [
-        { label: 'Chrome API', color: 'info' },
-        { label: 'ChatGPT API', color: 'success' },
+        { label: 'Chrome Extension API', color: 'error' },
+        { label: '공공데이터 포털', color: 'primary' },
+        { label: 'ChatGPT API', color: 'black' },
+        { label: 'Gitlab API', color: 'warning' },
+        { label: 'Redmine API', color: 'error' },         
       ],
     },
   ];
@@ -147,10 +154,10 @@ function OverviewSection() {
       </Typography>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
         사내 업무 생산성 향상을 위해 개발한 크롬 확장 프로그램입니다. 자주 사용하는 내부 시스템들에 대한 접근성을 높이고, 
-        반복 작업을 자동화하며, ChatGPT를 활용한 코드 보조 기능을 제공합니다.
+        미팅, 일정 관리를 효율화시키며, ChatGPT를 활용한 코드 보조 기능을 제공합니다.
       </Typography>
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
-        JWT 기반 인증으로 보안을 강화하고, 중앙 관리 시스템을 통해 확장 기능의 설정과 업데이트를 효율적으로 관리할 수 있도록 설계했습니다.
+        JWT 기반 인증으로 보안을 강화하고, Keycloak을 통한 SSO 로그인을 구현하여 재로그인 하지 않도록 사용자 경험을 향상시켰습니다.
       </Typography>
     </Box>
   );
@@ -159,37 +166,6 @@ function OverviewSection() {
 function FeaturesSection() {
   return (
     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-      <Stack 
-        direction="row" 
-        spacing={1.5} 
-        alignItems="center"
-      >
-        <ExtensionIcon />
-        <Typography variant="h5" gutterBottom>
-          주요 기능
-        </Typography>
-      </Stack>
-      
-      <Box sx={{ mb: 2 }}>
-        <Box component="ul" sx={{ pl: 2, mb: 2 }}>
-          <Typography component="li" sx={{ mb: 0.5 }}>
-            <strong>Dashboard:</strong> 내부 시스템 통합 접근 대시보드
-          </Typography>
-          <Typography component="li" sx={{ mb: 0.5 }}>
-            <strong>Keycloak 연동:</strong> SSO 인증 시스템 통합
-          </Typography>
-          <Typography component="li" sx={{ mb: 0.5 }}>
-            <strong>자동 로그인:</strong> JWT 토큰 기반 자동 인증
-          </Typography>
-          <Typography component="li" sx={{ mb: 0.5 }}>
-            <strong>ChatGPT 통합:</strong> 코드 자동완성 및 포맷팅 지원
-          </Typography>
-          <Typography component="li" sx={{ mb: 0.5 }}>
-            <strong>업무 자동화:</strong> 반복 작업 스크립트 실행 기능
-          </Typography>
-        </Box>
-      </Box>
-
       <Typography variant="h6" gutterBottom>
         📸 실제 작동 화면
       </Typography>
@@ -285,6 +261,49 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         ChatGPT API 통합으로 코드 자동완성 및 문서 생성 기능을 제공합니다.
       </Typography>
 
+      <Stack 
+        direction="row" 
+        spacing={1.5} 
+        alignItems="center"
+      >
+        <ExtensionIcon />
+        <Typography variant="h6" gutterBottom>
+          주요 기능
+        </Typography>
+      </Stack>
+      
+      <Box sx={{ mb: 2 }}>
+        <Box component="ul" sx={{ pl: 2, mb: 2 }}>
+          <Typography component="li" sx={{ mb: 0.5 }}>
+            Grid 형식의 드래그 앤 드랍으로 커스텀하게 위젯 크기, 위치 설정
+          </Typography>
+          <Typography component="li" sx={{ mb: 0.5 }}>
+            SSO 인증 시스템 통합, 토큰 기반 자동 로그인 (Silent login)
+          </Typography>
+          <Typography component="li" sx={{ mb: 0.5 }}>
+            자주 방문하는 사이트 (Chrome의 topSites API에서 자주 방문한 사이트 가져오기)
+          </Typography>
+          <Typography component="li" sx={{ mb: 0.5 }}>
+            북마크 바로가기 관리 (개인화된 URL 저장 및 빠른 이동, faviconURL 로고 사용)
+          </Typography>
+          <Typography component="li" sx={{ mb: 0.5 }}>
+            투두리스트 기능 (할 일 관리 및 완료 체크, 드래그 앤 드랍으로 우선순위 지정)
+          </Typography>
+          <Typography component="li" sx={{ mb: 0.5 }}>
+            회의실 예약 시스템 (실시간 예약 현황 조회 및 등록, 반복설정도 가능)
+          </Typography>
+          <Typography component="li" sx={{ mb: 0.5 }}>
+            사내 시스템 연동 (GitLab, Redmine, Hi,Works 데이터 불러오기)
+          </Typography>
+          <Typography component="li" sx={{ mb: 0.5 }}>
+            챗봇 (GPT) 연동 (질의응답)
+          </Typography>
+          <Typography component="li" sx={{ mb: 0.5 }}>
+            공공데이터 기반 실시간 날씨 정보 제공
+          </Typography>
+        </Box>
+      </Box>
+
       <Typography variant="h6" gutterBottom>
         🖥️ 시스템 아키텍처
       </Typography>
@@ -294,17 +313,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         caption="JWT 인증 기반 Chrome Extension 아키텍처"
         sx={{ border: '2px solid #ddd', borderRadius: 2, mb: 3 }}
       />
-
-      <Stack 
-        direction="row" 
-        spacing={1.5} 
-        alignItems="center"
-      >
-        <CodeIcon />
-        <Typography variant="h6" gutterBottom>
-          주요 코드
-        </Typography>
-      </Stack>
       
       <CodeAccordion 
         title="manifest.json" 
