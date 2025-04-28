@@ -39,11 +39,11 @@ const sectionVariant = {
 export default function Python() {
   return (
     <Container 
-      maxWidth="md" 
+      maxWidth="lg" 
       sx={{
         mx: "auto",               // 중앙 정렬
         py: { xs: 3, sm: 4, md: 6 }, // 반응형 상하 패딩
-        px: { xs: 2, sm: 3, md: 1 }, // 반응형 좌우 패딩
+        px: { xs: 2, sm: 3, md: 1, lg: 2 }, // 반응형 좌우 패딩
         display: 'flex', 
         flexDirection: 'column'
       }}
@@ -504,10 +504,10 @@ function ServerStructureSection() {
       </Typography>
 
       <ZoomableImageModal
-        imageSrc="/images/python-architecture.jpg"
+        imageSrc="/images/ml.png"
         altText="머신러닝 서버 구성도"
         caption="머신러닝 서버 구성도"
-        sx={{ border: '2px solid #ddd', borderRadius: 2, mb: 3 }}
+        sx={{ border: '2px solid #ddd', borderRadius: 2, mb: 0 }}
       />
     </Box>
   );

@@ -240,7 +240,7 @@ export default function Sidebar() {
               border: '3px solid white'
             }}
             alt="박현경"
-            src="/logo/profile.jpg" // 프로필 이미지 경로 (없으면 이니셜 표시됨)
+            src="/logo/profile.png" // 프로필 이미지 경로 (없으면 이니셜 표시됨)
           >
             P
           </Avatar>
@@ -347,8 +347,8 @@ export default function Sidebar() {
           }}
         >
           <Typography variant="caption" color="text.secondary">
-            {/* 박현경<br />
-            Portfolio */}
+            박현경<br />
+            Portfolio 
           </Typography>
         </Box>
       </Drawer>

@@ -32,11 +32,11 @@ const sectionVariant = {
 export default function SpringBootProject() {
   return (
     <Container 
-      maxWidth="md" 
+      maxWidth="lg" 
       sx={{
         mx: "auto",               // 중앙 정렬
         py: { xs: 3, sm: 4, md: 6 }, // 반응형 상하 패딩
-        px: { xs: 2, sm: 3, md: 1 }, // 반응형 좌우 패딩
+        px: { xs: 2, sm: 3, md: 1, lg: 2 }, // 반응형 좌우 패딩
         display: 'flex', 
         flexDirection: 'column'
       }}

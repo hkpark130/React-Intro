@@ -42,7 +42,7 @@ const processCustomComponents = (markdown) => {
 
 // HTML 태그 보안 처리
 const sanitizeUnknownTags = (markdown) => {
-  const allowedTags = 'custom|p|div|span|h[1-6]|a|ul|ol|li|pre|code|em|strong|br|hr|blockquote|table|thead|tbody|tr|th|td|img|figure|figcaption|details|summary|video|source|u|small|mark';
+  const allowedTags = 'custom|p|div|span|h[1-6]|a|ul|ol|li|pre|code|em|strong|br|hr|blockquote|table|thead|tbody|tr|th|td|img|figure|figcaption|details|summary|video|source|u|small|mark|b';
 
   return markdown.replace(
     new RegExp(`<(?!\\/?(?:${allowedTags})\\b)([a-zA-Z][\\w\\d-]*)([^>]*)>`, 'g'),
@@ -53,7 +53,18 @@ const sanitizeUnknownTags = (markdown) => {
 const preprocessMarkdown = (content) => {
   if (!content || typeof content !== 'string') return '';
   
-  let processed = content;  
+  let processed = content;
+  
+  // 과도한 줄바꿈 정규화
+  processed = processed.replace(/\n\n\n+/g, '\n\n');
+  
+  // 공백 처리 개선 - <b> 태그 내의 공백이 사라지지 않도록 처리
+  processed = processed.replace(/(<b>)([^<]*?)(\s+)([^<]*?)(<\/b>)/g, '$1$2&nbsp;$4$5');
+  
+  // <b> 태그 앞뒤 공백 유지
+  processed = processed.replace(/(\s+)(<b>)/g, '$1$2');
+  processed = processed.replace(/(<\/b>)(\s+)/g, '$1$2');
+  
   return processed;
 };
 
@@ -254,6 +265,16 @@ export default function MarkdownRenderer({ content }) {
       }}>
         {children}
       </li>
+    ),
+
+    // b 태그 처리 추가 (공백 유지를 위한 처리)
+    b: ({ children }) => (
+      <span style={{ 
+        fontWeight: 'bold',
+        whiteSpace: 'pre-wrap' // 공백 유지를 위해 추가
+      }}>
+        {children}
+      </span>
     ),
   };
 

@@ -191,10 +191,10 @@ function CertificationsSection() {
               image="/images/aws.png"
               alt="AWS 자격증"
               sx={{ 
-                height: 220,
+                height: 205,
                 objectFit: 'contain',
                 bgcolor: '#f5f5f5',
-                p: 2
+                p: 0
               }}
             />
             <CardContent>
