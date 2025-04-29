@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8100';
+// const API_BASE = 'http://backend-spring-app:8100';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export const api = axios.create({
     baseURL: `${API_BASE}/api`,

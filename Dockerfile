@@ -13,6 +13,12 @@ FROM nginx:alpine
 ARG ENV=local
 ENV ENV=$ENV
 
+RUN if [ "$ENV" = "local" ]; then \
+      echo "VITE_API_URL='http://backend-spring-app:8100'" > .env; \
+    elif [ "$ENV" = "prd" ]; then \
+      echo "VITE_API_URL=''" > .env; \
+    fi
+
 RUN mkdir -p /etc/ssl/cert
 
 COPY --from=builder /app/dist /usr/share/nginx/html
