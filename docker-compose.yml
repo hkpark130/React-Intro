@@ -1,12 +1,18 @@
 version: "3.8"
 services:
-  node:
-    build: .
-    working_dir: /app
-    volumes:
-      - .:/app #로컬과 컨테이너 동기
-    command: sh -c "npm start"
+  react-app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENV: local
+    container_name: react-intro
     ports:
-      - "80:3000"
-    stdin_open: true
-    tty: true
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - ext-network
+
+networks:
+  ext-network:
+    external: true
