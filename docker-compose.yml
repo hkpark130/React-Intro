@@ -4,12 +4,11 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
+      args:
+        ENV: local
     container_name: react-intro
     ports:
       - "80:80"
-    # 기존 .env 파일 사용
-    env_file:
-      - .env
     restart: unless-stopped
     networks:
       - ext-network
