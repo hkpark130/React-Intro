@@ -3,6 +3,17 @@
     --bg-sidebar: #E0E0E0;
     --bg-page: #E0E0E0;
     --border-light: #DCDCDC;
+    
+    /* 반응형 글꼴 크기 변수 */
+    --font-size-base: 16px;
+    --font-size-small: 14px;
+    --font-size-large: 18px;
+  }
+  
+  /* 모바일 최적화를 위한 기본 설정 */
+  html {
+    font-size: var(--font-size-base);
+    -webkit-text-size-adjust: 100%;
   }
   
   html, body, #root {
@@ -12,10 +23,44 @@
     background-color: var(--bg-page);
   }
   
+  /* 기본 텍스트 최적화 */
+  body {
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
   #root > * {
     background: transparent;
   }
+  
+  /* 모바일에서 사이드바 최적화 */
   .sidebar {
     width: 240px;
     background-color: var(--bg-sidebar);
+  }
+  
+  /* 작은 화면에 대한 미디어 쿼리 */
+  @media (max-width: 600px) {
+    html {
+      font-size: calc(var(--font-size-base) * 1.1); /* 모바일에서 글꼴 약간 키움 */
+    }
+    
+    /* 모바일에서 여백 조정 */
+    .MuiContainer-root {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+    
+    /* 테이블 스크롤 최적화 */
+    .MuiTableContainer-root {
+      overflow-x: auto;
+    }
+  }
+  
+  /* 태블릿에 대한 미디어 쿼리 */
+  @media (min-width: 601px) and (max-width: 960px) {
+    html {
+      font-size: calc(var(--font-size-base) * 1.05);
+    }
   }
