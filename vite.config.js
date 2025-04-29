@@ -12,7 +12,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://backend-spring-app:8100' // 백엔드 서버 지정하기
+      '/api': process.env.VITE_API_URL // 백엔드 서버 지정하기
     }
   }
 })

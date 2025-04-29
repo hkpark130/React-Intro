@@ -17,6 +17,10 @@ import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LoginIcon from '@mui/icons-material/Login';
 import AddIcon from '@mui/icons-material/Add';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import LastPageIcon from '@mui/icons-material/LastPage';
+import FirstPageIcon from '@mui/icons-material/FirstPage';
 
 export default function Blog() {
   const [posts, setPosts] = useState([]);
@@ -547,12 +551,63 @@ export default function Blog() {
 
       {totalPages > 1 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <Pagination 
-            count={totalPages} 
-            page={page} 
-            onChange={handlePageChange} 
-            color="primary" 
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {/* 처음으로 이동 버튼 */}
+            <Tooltip title="첫 페이지로 이동">
+              <IconButton 
+                onClick={() => handlePageChange(null, 1)} 
+                disabled={page === 1}
+                size="small"
+              >
+                <FirstPageIcon />
+              </IconButton>
+            </Tooltip>
+            
+            {/* 5페이지 이전으로 이동 */}
+            <Tooltip title="5페이지 이전">
+              <IconButton 
+                onClick={() => handlePageChange(null, Math.max(1, page - 5))} 
+                disabled={page <= 5}
+                size="small"
+              >
+                <KeyboardDoubleArrowLeftIcon />
+              </IconButton>
+            </Tooltip>
+            
+            {/* 기본 페이지네이션 */}
+            <Pagination 
+              count={totalPages} 
+              page={page} 
+              onChange={handlePageChange} 
+              color="primary"
+              showFirstButton={false}
+              showLastButton={false}
+              siblingCount={2}
+              boundaryCount={0}
+            />
+            
+            {/* 5페이지 다음으로 이동 */}
+            <Tooltip title="5페이지 다음">
+              <IconButton 
+                onClick={() => handlePageChange(null, Math.min(totalPages, page + 5))} 
+                disabled={page > totalPages - 5}
+                size="small"
+              >
+                <KeyboardDoubleArrowRightIcon />
+              </IconButton>
+            </Tooltip>
+            
+            {/* 마지막으로 이동 버튼 */}
+            <Tooltip title="마지막 페이지로 이동">
+              <IconButton 
+                onClick={() => handlePageChange(null, totalPages)} 
+                disabled={page === totalPages}
+                size="small"
+              >
+                <LastPageIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
       )}
 
