@@ -1,15 +1,26 @@
 import React, { useState, useRef } from "react";
 import MarkdownRenderer from "./MarkdownRenderer";
-import { Box, Typography, TextField, Button, Paper, Tab, Tabs, Divider } from '@mui/material';
+import { 
+  Box, Typography, TextField, Button, Paper, Tab, Tabs, Divider,
+  Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, 
+  OutlinedInput, FormHelperText
+} from '@mui/material';
 import CodeIcon from '@mui/icons-material/Code';
 import ImageIcon from '@mui/icons-material/Image';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import TableChartIcon from '@mui/icons-material/TableChart';
-import SpaceBarIcon from '@mui/icons-material/SpaceBar';
+import InsertLinkIcon from '@mui/icons-material/InsertLink';
 
 export default function MarkdownEditor({ value, onChange }) {
   const [tabValue, setTabValue] = useState(0);
   const textareaRef = useRef(null);
+  const [bookmarkDialog, setBookmarkDialog] = useState(false);
+  const [bookmarkForm, setBookmarkForm] = useState({
+    url: '',
+    title: '',
+    description: '',
+    imageUrl: ''
+  });
+  const [bookmarkError, setBookmarkError] = useState('');
 
   const handleTabChange = (_, newValue) => setTabValue(newValue);
 
@@ -46,6 +57,56 @@ export default function MarkdownEditor({ value, onChange }) {
 `);
   };
 
+  // 북마크 다이얼로그 열기
+  const openBookmarkDialog = () => {
+    setBookmarkDialog(true);
+    setBookmarkForm({
+      url: '',
+      title: '',
+      description: '',
+      imageUrl: ''
+    });
+    setBookmarkError('');
+  };
+
+  // 북마크 폼 입력값 변경 처리
+  const handleBookmarkFormChange = (e) => {
+    const { name, value } = e.target;
+    setBookmarkForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // 북마크 삽입하기
+  const insertBookmark = () => {
+    try {
+      // URL 형식 검증
+      new URL(bookmarkForm.url);
+      
+      let bookmarkCode = `<Bookmark url="${bookmarkForm.url}"`;
+      
+      if (bookmarkForm.title) {
+        bookmarkCode += ` title="${bookmarkForm.title}"`;
+      }
+      
+      if (bookmarkForm.description) {
+        bookmarkCode += ` description="${bookmarkForm.description}"`;
+      }
+      
+      if (bookmarkForm.imageUrl) {
+        bookmarkCode += ` imageUrl="${bookmarkForm.imageUrl}"`;
+      }
+      
+      bookmarkCode += ' />';
+      
+      insertAtCursor(bookmarkCode);
+      setBookmarkDialog(false);
+      
+    } catch (error) {
+      setBookmarkError('유효한 URL을 입력해주세요. (예: https://example.com)');
+    }
+  };
 
   return (
     <Box>
@@ -94,6 +155,14 @@ export default function MarkdownEditor({ value, onChange }) {
             >
               테이블 삽입
             </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<InsertLinkIcon />}
+              onClick={openBookmarkDialog}
+            >
+              프리뷰 삽입
+            </Button>
           </Box>
 
           <Divider sx={{ my: 2 }} />
@@ -124,6 +193,80 @@ export default function MarkdownEditor({ value, onChange }) {
           <MarkdownRenderer content={value} />
         </Paper>
       )}
+
+      {/* 북마크 추가 다이얼로그 */}
+      <Dialog
+        open={bookmarkDialog}
+        onClose={() => setBookmarkDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>북마크 추가</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth margin="normal" error={!!bookmarkError}>
+            <InputLabel htmlFor="bookmark-url">URL (필수)</InputLabel>
+            <OutlinedInput
+              id="bookmark-url"
+              name="url"
+              value={bookmarkForm.url}
+              onChange={handleBookmarkFormChange}
+              label="URL (필수)"
+              placeholder="https://example.com"
+              fullWidth
+            />
+            {bookmarkError && (
+              <FormHelperText error>{bookmarkError}</FormHelperText>
+            )}
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <InputLabel htmlFor="bookmark-title">제목 (선택)</InputLabel>
+            <OutlinedInput
+              id="bookmark-title"
+              name="title"
+              value={bookmarkForm.title}
+              onChange={handleBookmarkFormChange}
+              label="제목 (선택)"
+              placeholder="북마크 제목"
+              fullWidth
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <InputLabel htmlFor="bookmark-desc">설명 (선택)</InputLabel>
+            <OutlinedInput
+              id="bookmark-desc"
+              name="description"
+              value={bookmarkForm.description}
+              onChange={handleBookmarkFormChange}
+              label="설명 (선택)"
+              placeholder="북마크에 대한 간략한 설명"
+              multiline
+              rows={2}
+              fullWidth
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <InputLabel htmlFor="bookmark-image">이미지 URL (선택)</InputLabel>
+            <OutlinedInput
+              id="bookmark-image"
+              name="imageUrl"
+              value={bookmarkForm.imageUrl}
+              onChange={handleBookmarkFormChange}
+              label="이미지 URL (선택)"
+              placeholder="https://example.com/image.jpg"
+              fullWidth
+            />
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBookmarkDialog(false)}>취소</Button>
+          <Button onClick={insertBookmark} variant="contained" color="primary">
+            북마크 삽입
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

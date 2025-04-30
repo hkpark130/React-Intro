@@ -4,7 +4,7 @@
 #  docker 로 돌릴 때
 VITE_API_URL=http://backend-spring-app:8100
 
-#  npm 으로 돌릴 때
+#  npm 으로 돌릴 때 (핫리로드 문제 주의)
 # VITE_API_URL=http://localhost:8100
 
 #  https 적용시에는 NGINX 에서 프록시 되도록 여기선 아무 설정 안 함
