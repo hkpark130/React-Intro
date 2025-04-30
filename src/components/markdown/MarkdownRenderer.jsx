@@ -5,15 +5,17 @@ import rehypeRaw from 'rehype-raw';
 import { marked } from 'marked';
 import ZoomableImageModal from '../section/ZoomableImageModal';
 import CodeAccordion from '../section/CodeAccordion';
+import Bookmark from './Bookmark';
 import { Box, Alert, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
 // react-notion-x 컴포넌트 스타일
 import './markdown-styles.css';
 
-const ALLOWED_COMPONENTS = ["ZoomableImageModal", "CodeAccordion"];
+const ALLOWED_COMPONENTS = ["ZoomableImageModal", "CodeAccordion", "Bookmark"];
 const COMPONENT_MAP = {
   ZoomableImageModal,
-  CodeAccordion
+  CodeAccordion,
+  Bookmark
 };
 
 // 커스텀 컴포넌트 처리 로직
@@ -143,19 +145,47 @@ export default function MarkdownRenderer({ content }) {
       const Component = COMPONENT_MAP[name];
       if (!Component) return <code>&lt;{name} /&gt;</code>;
 
+      // props 파싱 개선
       const parsedProps = {};
-      Object.entries(props).forEach(([k, v]) => {
-        const key = k.startsWith("data-") ? k.replace("data-", "") : k;
-        parsedProps[key] = v;
+      
+      // 모든 data-* 속성 처리
+      Object.entries(props).forEach(([key, value]) => {
+        if (key.startsWith("data-") && key !== "data-component") {
+          // data- 접두사 제거
+          const propKey = key.replace("data-", "");
+          parsedProps[propKey] = value;
+        } else if (!key.startsWith("data-")) {
+          // 일반 속성은 그대로 전달
+          parsedProps[key] = value;
+        }
       });
-
+      
+      if (name === "Bookmark") {
+        return (
+          <Component 
+            url={props.url || ""} 
+            title={props.title || ""} 
+            description={props.description || ""}
+            imageUrl={props.imageurl || ""}
+            {...parsedProps}
+          >
+            {children}
+          </Component>
+        );
+      }
+      
       if (name === "CodeAccordion") {
         const code = Array.isArray(children) ? children.join("") : (children || "");
         return <Component codeString={code} {...parsedProps} />;
       }
       
-      if (name === "ZoomableImageModal" && props.src) {
-        return <Component imageSrc={props.src} altText={props.alt || ""} caption={props.caption || ""} {...parsedProps} />;
+      if (name === "ZoomableImageModal") {
+        return <Component 
+          imageSrc={props.src || ""} 
+          altText={props.alt || ""} 
+          caption={props.caption || ""} 
+          {...parsedProps} 
+        />;
       }
 
       return <Component {...parsedProps}>{children}</Component>;
