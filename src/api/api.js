@@ -8,6 +8,12 @@ export const api = axios.create({
     withCredentials: true
 });
 
+// Notion SSR API uses separate prefix (/notion) proxied by Nginx/Vite directly to SSR service
+export const notionApi = axios.create({
+  baseURL: '',
+  withCredentials: true
+});
+
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('accessToken');
     if (token) {
@@ -75,4 +81,5 @@ export const createCategory = categoryData => api.post('/categories', categoryDa
 export const deleteCategory = id => api.delete(`/categories/${id}`);
 export const updateCategory = (id, categoryData) => api.put(`/categories/${id}`, categoryData);
 
-export const notionConvert = (data) => api.post('/notion/convert', data);
+export const notionConvert = (data) => notionApi.post('/notion/convert', data);
+export const getNotionPageMeta = (pageId) => notionApi.get(`/notion/page/${pageId}`);

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import remarkToc from 'remark-toc';
+import rehypeHighlight from 'rehype-highlight';
+import remarkRehype from 'remark-rehype';
+import rehypeSlug from 'rehype-slug';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 // import remarkGfm from 'remark-gfm';
 import { marked } from 'marked';
 import ZoomableImageModal from '../section/ZoomableImageModal';
@@ -11,6 +16,7 @@ import { Box, Alert, CircularProgress, Table, TableBody, TableCell, TableContain
 // react-notion-x 컴포넌트 스타일
 import './markdown-styles.css';
 
+// 커스텀 태그로 치환해서 처리할 컴포넌트 목록
 const ALLOWED_COMPONENTS = ["ZoomableImageModal", "CodeAccordion", "Bookmark"];
 const COMPONENT_MAP = {
   ZoomableImageModal,
@@ -56,7 +62,7 @@ const preprocessMarkdown = (content) => {
   if (!content || typeof content !== 'string') return '';
   
   let processed = content;
-  
+
   // 과도한 줄바꿈 정규화
   processed = processed.replace(/\n\n\n+/g, '\n\n');
   
@@ -190,7 +196,7 @@ export default function MarkdownRenderer({ content }) {
 
       return <Component {...parsedProps}>{children}</Component>;
     },
-    
+
     // 테이블 관련 컴포넌트 확장
     table: TableComponent,
     thead: TableHeadComponent,
@@ -322,8 +328,15 @@ export default function MarkdownRenderer({ content }) {
         fontFamily: 'inherit'
       }
     }} className="markdown-body">
-      <ReactMarkdown 
-        rehypePlugins={[rehypeRaw]}
+    <ReactMarkdown 
+        remarkPlugins={[remarkToc, remarkRehype]}
+        rehypePlugins={[
+          rehypeRaw,
+          rehypeHighlight,
+          rehypeSlug,
+          rehypeAutolinkHeadings,
+        ]}
+        // rehypePlugins={[rehypeRaw]}
         // remarkPlugins={[remarkGfm]} // 이거 rehypeRaw와 충돌함
         components={components}
         skipHtml={false}

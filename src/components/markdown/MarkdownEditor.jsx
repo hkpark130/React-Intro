@@ -1,9 +1,10 @@
 import React, { useState, useRef } from "react";
 import MarkdownRenderer from "./MarkdownRenderer";
+import { notionApi, notionConvert } from "@/api/api";
 import { 
   Box, Typography, TextField, Button, Paper, Tab, Tabs, Divider,
   Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, 
-  OutlinedInput, FormHelperText
+  OutlinedInput, FormHelperText, CircularProgress, LinearProgress, Alert
 } from '@mui/material';
 import CodeIcon from '@mui/icons-material/Code';
 import ImageIcon from '@mui/icons-material/Image';
@@ -21,6 +22,16 @@ export default function MarkdownEditor({ value, onChange }) {
     imageUrl: ''
   });
   const [bookmarkError, setBookmarkError] = useState('');
+
+  // Notion dialog state
+  const [notionDialog, setNotionDialog] = useState(false);
+  const [notionMode, setNotionMode] = useState('page'); // 'page' | 'db'
+  const [pageId, setPageId] = useState('');
+  const [dbId, setDbId] = useState('');
+  const [dbResults, setDbResults] = useState([]);
+  const [notionLoading, setNotionLoading] = useState(false);
+  const [notionError, setNotionError] = useState('');
+  // Html 경로 제거: 마크다운만 지원
 
   const handleTabChange = (_, newValue) => setTabValue(newValue);
 
@@ -68,6 +79,67 @@ export default function MarkdownEditor({ value, onChange }) {
     });
     setBookmarkError('');
   };
+
+  // Open Notion Dialog
+  const openNotionDialog = () => {
+    setNotionDialog(true);
+    setNotionMode('page');
+    setPageId('');
+    setDbId('');
+    setDbResults([]);
+    setNotionError('');
+  };
+
+  const handleNotionFetchPage = async () => {
+    if (!pageId.trim()) {
+      setNotionError('페이지 ID를 입력하세요.');
+      return;
+    }
+    setNotionLoading(true);
+    setNotionError('');
+    try {
+  const { data } = await notionConvert({ pageId: pageId.trim() });
+  insertAtCursor(`\n${data.markdown}\n`);
+      setNotionDialog(false);
+    } catch (e) {
+      setNotionError('페이지 변환에 실패했습니다.');
+    } finally {
+      setNotionLoading(false);
+    }
+  };
+
+  const handleNotionFetchDb = async () => {
+    if (!dbId.trim()) {
+      setNotionError('데이터베이스 ID를 입력하세요.');
+      return;
+    }
+    setNotionLoading(true);
+    setNotionError('');
+    try {
+      const { data } = await notionApi.get(`/notion/render-db/${dbId.trim()}?pageSize=10`);
+      setDbResults(data.results || []);
+    } catch (e) {
+      setNotionError('데이터베이스 로드에 실패했습니다.');
+    } finally {
+      setNotionLoading(false);
+    }
+  };
+
+  const handleInsertDbPage = async (pId) => {
+    setNotionLoading(true);
+    setNotionError('');
+    try {
+  const { data } = await notionConvert({ pageId: pId });
+  insertAtCursor(`\n${data.markdown}\n`);
+      setNotionDialog(false);
+    } catch (e) {
+      setNotionError('페이지 변환에 실패했습니다.');
+    } finally {
+      setNotionLoading(false);
+    }
+  };
+
+  // 마크다운 붙여넣기 기능 제거
 
   // 북마크 폼 입력값 변경 처리
   const handleBookmarkFormChange = (e) => {
@@ -163,6 +235,13 @@ export default function MarkdownEditor({ value, onChange }) {
             >
               프리뷰 삽입
             </Button>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={openNotionDialog}
+              >
+                노션 가져오기
+              </Button>
           </Box>
 
           <Divider sx={{ my: 2 }} />
@@ -265,6 +344,116 @@ export default function MarkdownEditor({ value, onChange }) {
           <Button onClick={insertBookmark} variant="contained" color="primary">
             북마크 삽입
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notion 가져오기 다이얼로그 */}
+      <Dialog
+        open={notionDialog}
+        onClose={() => setNotionDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>노션 가져오기</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" color="warning" sx={{ mb: 2, lineHeight: 1.6 }}>
+            노션에서 가져온 이미지 링크(예: <code>https://prod-files-secure.s3...</code>)는 유효기간이 있어 일정 시간이 지나면 깨질 수 있습니다.
+            반드시 이미지를 개인/영구 저장소(S3/CloudFront, GitHub 등)에 업로드한 뒤
+            마크다운의 이미지 URL(<code>![](url)</code>)을 해당 저장소 주소로 교체하세요.
+          </Alert>
+          {/* HTML 삽입 형식 제거: 항상 마크다운만 */}
+
+          <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+            <Button
+              size="small"
+              variant={notionMode === 'page' ? 'contained' : 'outlined'}
+              onClick={() => { setNotionMode('page'); setNotionError(''); }}
+            >페이지 ID</Button>
+            <Button
+              size="small"
+              variant={notionMode === 'db' ? 'contained' : 'outlined'}
+              onClick={() => { setNotionMode('db'); setNotionError(''); }}
+            >데이터베이스 ID</Button>
+          </Box>
+
+          {/* 로딩 바 */}
+          {notionLoading && <LinearProgress sx={{ mb: 2 }} />}
+
+          {notionMode === 'page' && (
+            <Box>
+              <TextField
+                label="페이지 ID"
+                fullWidth
+                size="small"
+                value={pageId}
+                onChange={(e) => setPageId(e.target.value)}
+                disabled={notionLoading}
+              />
+              <Box sx={{ mt: 1 }}>
+                <Button onClick={handleNotionFetchPage} variant="contained" disabled={notionLoading}>
+                  {notionLoading ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CircularProgress size={16} />
+                      <span>변환중...</span>
+                    </Box>
+                  ) : (
+                    '변환하여 삽입'
+                  )}
+                </Button>
+              </Box>
+            </Box>
+          )}
+
+          {notionMode === 'db' && (
+            <Box>
+              <TextField
+                label="데이터베이스 ID"
+                fullWidth
+                size="small"
+                value={dbId}
+                onChange={(e) => setDbId(e.target.value)}
+                disabled={notionLoading}
+              />
+              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                <Button onClick={handleNotionFetchDb} variant="contained" disabled={notionLoading}>
+                  {notionLoading ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CircularProgress size={16} />
+                      <span>불러오는 중...</span>
+                    </Box>
+                  ) : (
+                    '목록 불러오기'
+                  )}
+                </Button>
+              </Box>
+              <Box sx={{ mt: 2, maxHeight: 300, overflowY: 'auto' }}>
+                {dbResults.map((item) => (
+                  <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, borderBottom: '1px solid #eee' }}>
+                    <Typography variant="body2" sx={{ mr: 2 }}>{item.title || '(제목 없음)'}</Typography>
+                    <Button size="small" variant="outlined" onClick={() => handleInsertDbPage(item.id)} disabled={notionLoading}>
+                      {notionLoading ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CircularProgress size={14} />
+                          <span>삽입중...</span>
+                        </Box>
+                      ) : (
+                        '삽입'
+                      )}
+                    </Button>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+
+          {/* 마크다운 붙여넣기 모드 제거 */}
+
+          {notionError && (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>{notionError}</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNotionDialog(false)}>닫기</Button>
         </DialogActions>
       </Dialog>
     </Box>
