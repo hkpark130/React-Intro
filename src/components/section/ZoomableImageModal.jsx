@@ -6,6 +6,14 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import NorthIcon from '@mui/icons-material/North';
+import SouthIcon from '@mui/icons-material/South';
+import EastIcon from '@mui/icons-material/East';
+import WestIcon from '@mui/icons-material/West';
+import NorthEastIcon from '@mui/icons-material/NorthEast';
+import NorthWestIcon from '@mui/icons-material/NorthWest';
+import SouthEastIcon from '@mui/icons-material/SouthEast';
+import SouthWestIcon from '@mui/icons-material/SouthWest';
 
 /**
  * ZoomableImageModal
@@ -22,8 +30,10 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
  */
 export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
   const [open, setOpen] = useState(false);
-  const [modalSize, setModalSize] = useState({ width: 'auto', height: 'auto' });
+  // width/height를 숫자(px)로 보관하여 연산을 쉽게 처리
+  const [modalSize, setModalSize] = useState({ width: 640, height: 420 });
   const imageBoxRef = useRef(null); // 이미지 컨테이너 참조 추가
+  const resizingRef = useRef(null); // { dir, startX, startY, startW, startH }
   
   const handleOpen = (e) => {
     // 이벤트 객체가 있는 경우 (클릭에 의한 호출)
@@ -44,12 +54,59 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
       const img = imageBoxRef.current;
       const naturalWidth = img.naturalWidth;
       const naturalHeight = img.naturalHeight;
-      // 이미지 크기에 기반하여 모달 크기 설정 (50px 더 크게)
+      const maxW = Math.floor(window.innerWidth * 0.85);
+      const maxH = Math.floor(window.innerHeight * 0.85);
       setModalSize({
-        width: `${Math.min(naturalWidth + 100, window.innerWidth * 0.85)}px`, // 창 너비의 85%를 넘지 않도록
-        height: `${Math.min(naturalHeight + 100, window.innerHeight * 0.85)}px` // 창 높이의 85%를 넘지 않도록
+        width: Math.min(naturalWidth + 100, maxW),
+        height: Math.min(naturalHeight + 100, maxH)
       });
     }
+  };
+
+  // 리사이즈 시작/진행/종료 처리
+  const beginResize = (dir) => (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const pointer = e.touches?.[0] || e;
+    resizingRef.current = {
+      dir,
+      startX: pointer.clientX,
+      startY: pointer.clientY,
+      startW: modalSize.width,
+      startH: modalSize.height,
+    };
+    // 전역 리스너 등록
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', endResize, { once: true });
+  };
+
+  const endResize = () => {
+    window.removeEventListener('pointermove', onPointerMove);
+    resizingRef.current = null;
+  };
+
+  const onPointerMove = (e) => {
+    const state = resizingRef.current;
+    if (!state) return;
+    const { dir, startX, startY, startW, startH } = state;
+    const pointer = e.touches?.[0] || e;
+    const dx = pointer.clientX - startX;
+    const dy = pointer.clientY - startY;
+
+    let nextW = startW;
+    let nextH = startH;
+    if (dir.includes('e')) nextW = startW + dx;
+    if (dir.includes('w')) nextW = startW - dx;
+    if (dir.includes('s')) nextH = startH + dy;
+    if (dir.includes('n')) nextH = startH - dy;
+
+    const maxW = Math.floor(window.innerWidth * 0.85);
+    const maxH = Math.floor(window.innerHeight * 0.85);
+    const minW = 300;
+    const minH = 200;
+    nextW = Math.max(minW, Math.min(maxW, Math.floor(nextW)));
+    nextH = Math.max(minH, Math.min(maxH, Math.floor(nextH)));
+    setModalSize({ width: nextW, height: nextH });
   };
 
   // 클릭 이벤트 직접 바인딩을 위한 useEffect
@@ -115,7 +172,7 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
         </Typography>
       )}
 
-      <Dialog
+  <Dialog
         open={open}
         onClose={handleClose}
         maxWidth={false} // 자체 maxWidth 사용
@@ -123,8 +180,8 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
         slotProps={{
           paper: {
             sx: {
-              width: modalSize.width,   // 동적으로 계산된 너비
-              height: modalSize.height,  // 동적으로 계산된 높이
+      width: `${modalSize.width}px`,   // 동적으로 계산된 너비
+      height: `${modalSize.height}px`,  // 동적으로 계산된 높이
               maxWidth: '85vw', // 브라우저 창 너비의 85%로 제한
               maxHeight: '85vh', // 브라우저 창 높이의 85%로 조정
               minWidth: '300px',  // 최소 크기 설정
@@ -165,6 +222,85 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
             bgcolor: 'background.paper'
           }}
         >
+          {/* 리사이즈 핸들 오버레이 */}
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 9998,
+              pointerEvents: 'none',
+            }}
+          >
+            {/* Corner icon handles */}
+            {[
+              { dir: 'nw', pos: { top: -6, left: -6 },  icon: <NorthWestIcon fontSize="inherit" />, cursor: 'nwse-resize' },
+              { dir: 'ne', pos: { top: -6, right: -6 }, icon: <NorthEastIcon fontSize="inherit" />, cursor: 'nesw-resize' },
+              { dir: 'sw', pos: { bottom: -6, left: -6 }, icon: <SouthWestIcon fontSize="inherit" />, cursor: 'nesw-resize' },
+              { dir: 'se', pos: { bottom: -6, right: -6 }, icon: <SouthEastIcon fontSize="inherit" />, cursor: 'nwse-resize' },
+            ].map(({ dir, pos, icon, cursor }) => (
+              <IconButton
+                key={`corner-${dir}`}
+                onPointerDown={beginResize(dir)}
+                role="separator"
+                aria-label={`resize-${dir}`}
+                size="small"
+                sx={{
+                  position: 'absolute',
+                  width: 20,
+                  height: 20,
+                  minWidth: 20,
+                  minHeight: 20,
+                  p: 0,
+                  ...pos,
+                  pointerEvents: 'auto',
+                  bgcolor: 'rgba(0,0,0,0.35)',
+                  color: 'white',
+                  border: '1px solid rgba(255,255,255,0.8)',
+                  borderRadius: 0.75,
+                  cursor,
+                  '&:hover': { bgcolor: 'rgba(0,0,0,0.55)' },
+                  fontSize: 16,
+                }}
+              >
+                {icon}
+              </IconButton>
+            ))}
+
+            {/* Edge arrow handles (centers) */}
+            {[
+              { dir: 'n',  pos: { top: -6, left: '50%', transform: 'translateX(-50%)' }, icon: <NorthIcon fontSize="inherit" />, cursor: 'ns-resize' },
+              { dir: 's',  pos: { bottom: -6, left: '50%', transform: 'translateX(-50%)' }, icon: <SouthIcon fontSize="inherit" />, cursor: 'ns-resize' },
+              { dir: 'w',  pos: { left: -6, top: '50%', transform: 'translateY(-50%)' }, icon: <WestIcon fontSize="inherit" />, cursor: 'ew-resize' },
+              { dir: 'e',  pos: { right: -6, top: '50%', transform: 'translateY(-50%)' }, icon: <EastIcon fontSize="inherit" />, cursor: 'ew-resize' },
+            ].map(({ dir, pos, icon, cursor }) => (
+              <IconButton
+                key={`edge-${dir}`}
+                onPointerDown={beginResize(dir)}
+                role="separator"
+                aria-label={`resize-${dir}`}
+                size="small"
+                sx={{
+                  position: 'absolute',
+                  width: 20,
+                  height: 20,
+                  minWidth: 20,
+                  minHeight: 20,
+                  p: 0,
+                  ...pos,
+                  pointerEvents: 'auto',
+                  bgcolor: 'rgba(0,0,0,0.35)',
+                  color: 'white',
+                  border: '1px solid rgba(255,255,255,0.8)',
+                  borderRadius: 0.75,
+                  cursor,
+                  '&:hover': { bgcolor: 'rgba(0,0,0,0.55)' },
+                  fontSize: 16,
+                }}
+              >
+                {icon}
+              </IconButton>
+            ))}
+          </Box>
           <TransformWrapper
             initialScale={1}
             minScale={0.5}

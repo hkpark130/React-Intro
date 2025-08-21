@@ -1,0 +1,27 @@
+# Dependencies and builds
+node_modules/
+build/
+dist/
+.cache/
+
+# VCS
+.git/
+.gitignore
+
+# Editor/OS
+.vscode/
+.DS_Store
+
+# Env & logs
+.env
+.env.*
+*.env
+npm-debug.log*
+yarn-error.log
+
+# Certificates/keys
+*.pem
+*.key
+
+# Prevent copying server dependencies into frontend build context
+server/**/node_modules/
