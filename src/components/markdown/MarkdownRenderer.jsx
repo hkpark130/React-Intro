@@ -146,6 +146,28 @@ export default function MarkdownRenderer({ content }) {
   };
 
   const components = {
+    // children -> plain text로 변환 (줄바꿈 유지)
+    // React 요소 구조를 순회하며 텍스트/개행을 복원
+    _toPlainText: (nodes) => {
+      const walk = (n) => {
+        if (n == null || n === false) return '';
+        if (typeof n === 'string' || typeof n === 'number') return String(n);
+        if (Array.isArray(n)) return n.map(walk).join('');
+        // React element
+        const type = n.type;
+        const children = n.props?.children;
+        const inner = walk(children);
+        // 블록 요소는 개행을 넣어 가독성 유지
+        const blockTags = new Set(['p','div','pre','code','ul','ol','li','table','thead','tbody','tr','th','td','h1','h2','h3','h4','h5','h6']);
+        if (type === 'br') return '\n';
+        if (typeof type === 'string' && blockTags.has(type)) {
+          return (type === 'li') ? `- ${inner}\n` : `${inner}\n`;
+        }
+        return inner;
+      };
+      // 후처리: 연속 개행 정리
+      return walk(nodes).replace(/\r/g, '').replace(/\n{3,}/g, '\n\n');
+    },
     // 커스텀 컴포넌트 처리
     custom: ({ "data-component": name, children, ...props }) => {
       const Component = COMPONENT_MAP[name];
@@ -181,8 +203,14 @@ export default function MarkdownRenderer({ content }) {
       }
       
       if (name === "CodeAccordion") {
-        const code = Array.isArray(children) ? children.join("") : (children || "");
-        return <Component codeString={code} {...parsedProps} />;
+        const code = components._toPlainText(children).replace(/^\n+|\n+$/g, '');
+        // HTML 속성은 소문자로 들어올 수 있으므로 보정
+        const { defaultexpanded, ...restProps } = parsedProps;
+        const compProps = {
+          ...restProps,
+          defaultExpanded: restProps.defaultExpanded ?? defaultexpanded
+        };
+        return <Component codeString={code} {...compProps} />;
       }
       
       if (name === "ZoomableImageModal") {

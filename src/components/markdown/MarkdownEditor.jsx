@@ -10,6 +10,13 @@ import CodeIcon from '@mui/icons-material/Code';
 import ImageIcon from '@mui/icons-material/Image';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import InsertLinkIcon from '@mui/icons-material/InsertLink';
+import {
+  FormControlLabel,
+  RadioGroup,
+  Radio,
+  MenuItem,
+  Select
+} from '@mui/material';
 
 export default function MarkdownEditor({ value, onChange }) {
   const [tabValue, setTabValue] = useState(0);
@@ -22,6 +29,16 @@ export default function MarkdownEditor({ value, onChange }) {
     imageUrl: ''
   });
   const [bookmarkError, setBookmarkError] = useState('');
+
+  // CodeAccordion dialog state
+  const [codeDialog, setCodeDialog] = useState(false);
+  const [codeError, setCodeError] = useState('');
+  const [codeForm, setCodeForm] = useState({
+    title: '',
+    language: 'java',
+    codeString: '',
+    openState: 'hidden' // 'open' | 'hidden'
+  });
 
   // Notion dialog state
   const [notionDialog, setNotionDialog] = useState(false);
@@ -150,6 +167,43 @@ export default function MarkdownEditor({ value, onChange }) {
     }));
   };
 
+  // 코드 아코디언 다이얼로그 열기
+  const openCodeDialog = () => {
+    setCodeDialog(true);
+    setCodeError('');
+    setCodeForm({ title: '', language: 'java', codeString: '', openState: 'hidden' });
+  };
+
+  const handleCodeFormChange = (e) => {
+    const { name, value } = e.target;
+    setCodeForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const insertCodeAccordion = () => {
+    if (!codeForm.codeString.trim()) {
+      setCodeError('코드 내용을 입력하세요.');
+      return;
+    }
+    // 속성 문자열 구성
+    const attrs = [];
+    if (codeForm.title.trim()) {
+      const safeTitle = codeForm.title.replace(/"/g, '\\"');
+      attrs.push(` title="${safeTitle}"`);
+    }
+    if (codeForm.language.trim()) {
+      attrs.push(` language="${codeForm.language.trim()}"`);
+    }
+    if (codeForm.openState === 'open') {
+      attrs.push(` defaultExpanded="true"`);
+    }
+
+    const openTag = `<CodeAccordion${attrs.join('')}>`;
+    const closeTag = `</CodeAccordion>`;
+    const block = `\n${openTag}\n${codeForm.codeString}\n${closeTag}\n`;
+    insertAtCursor(block);
+    setCodeDialog(false);
+  };
+
   // 북마크 삽입하기
   const insertBookmark = () => {
     try {
@@ -207,7 +261,7 @@ export default function MarkdownEditor({ value, onChange }) {
               size="small"
               variant="outlined"
               startIcon={<CodeIcon />}
-              onClick={() => insertAtCursor(`<CodeAccordion>\n// 코드를 여기에 작성하세요\n</CodeAccordion>`)}
+              onClick={openCodeDialog}
             >
               코드 블록 삽입
             </Button>
@@ -454,6 +508,81 @@ export default function MarkdownEditor({ value, onChange }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setNotionDialog(false)}>닫기</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 코드 블록 삽입 다이얼로그 */}
+      <Dialog
+        open={codeDialog}
+        onClose={() => setCodeDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>코드 블록 삽입</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
+            <FormControl fullWidth margin="dense">
+              <InputLabel htmlFor="code-title">제목 (선택)</InputLabel>
+              <OutlinedInput
+                id="code-title"
+                name="title"
+                value={codeForm.title}
+                onChange={handleCodeFormChange}
+                label="제목 (선택)"
+                placeholder="코드 살펴보기"
+              />
+            </FormControl>
+
+            <FormControl fullWidth margin="dense">
+              <InputLabel id="code-language-label">언어</InputLabel>
+              <Select
+                labelId="code-language-label"
+                id="code-language"
+                name="language"
+                value={codeForm.language}
+                label="언어"
+                onChange={handleCodeFormChange}
+              >
+                {['bash','json','yaml','yml','java','kotlin','go','python','javascript','typescript','tsx','tsx','sql','xml','html','css','dockerfile','ini','toml'].map(lang => (
+                  <MenuItem key={lang} value={lang}>{lang}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl component="fieldset" margin="dense">
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>초기 상태</Typography>
+              <RadioGroup
+                row
+                name="openState"
+                value={codeForm.openState}
+                onChange={handleCodeFormChange}
+              >
+                <FormControlLabel value="hidden" control={<Radio />} label="숨김" />
+                <FormControlLabel value="open" control={<Radio />} label="오픈" />
+              </RadioGroup>
+            </FormControl>
+
+            <FormControl fullWidth margin="dense" error={!!codeError}>
+              <TextField
+                id="code-string"
+                name="codeString"
+                value={codeForm.codeString}
+                onChange={handleCodeFormChange}
+                label="코드 내용 (필수)"
+                placeholder={`// 코드를 여기에 작성하세요`}
+                multiline
+                minRows={8}
+                maxRows={24}
+              />
+              {codeError && (
+                <FormHelperText error>{codeError}</FormHelperText>
+              )}
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCodeDialog(false)}>취소</Button>
+          <Button onClick={insertCodeAccordion} variant="contained">삽입</Button>
         </DialogActions>
       </Dialog>
     </Box>
