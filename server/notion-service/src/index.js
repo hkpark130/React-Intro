@@ -78,7 +78,7 @@ function normalizeBlocks(blocks = []) {
           return { ...b, code: { ...b.code, language: norm } };
         }
       }
-    } catch (_) {}
+    } catch (_) { }
     return b;
   });
 }
@@ -88,9 +88,9 @@ async function fetchAllBlocks(notion, blockId) {
   const results = [];
   let start_cursor = undefined;
   while (true) {
-  const params = { block_id: blockId, page_size: 1000 };
-  if (start_cursor) params.start_cursor = start_cursor;
-  const resp = await notion.blocks.children.list(params);
+    const params = { block_id: blockId, page_size: 1000 };
+    if (start_cursor) params.start_cursor = start_cursor;
+    const resp = await notion.blocks.children.list(params);
     if (Array.isArray(resp.results)) results.push(...resp.results);
     if (resp.has_more && resp.next_cursor) {
       start_cursor = resp.next_cursor;
@@ -220,26 +220,57 @@ app.get('/robots.txt', (req, res) => {
   const host = req.get('host');
   const scheme = (req.headers['x-forwarded-proto'] || req.protocol);
   res.type('text/plain').send(
-`User-agent: *
+    `User-agent: *
 Allow: /
 Sitemap: ${scheme}://${host}/sitemap.xml
 `);
 });
 
-// sitemap.xml (basic, lists latest post URLs)
+// sitemap.xml (paginate all posts; small in-memory cache)
+let sitemapCache = { xml: null, ts: 0 };
+const SITEMAP_TTL_MS = parseInt(process.env.SITEMAP_TTL_MS || '600000', 10); // default 10m
+
 app.get('/sitemap.xml', async (req, res) => {
   try {
-    // fetch a large page of posts from Spring; adjust limits as needed
-    const { data } = await axios.get(`${SPRING_BASE}/api/posts?offset=0&limit=200`, { timeout: 8000 });
-    const posts = (data && data.posts) || [];
+    // serve from cache if fresh
+    if (sitemapCache.xml && Date.now() - sitemapCache.ts < SITEMAP_TTL_MS) {
+      return res.type('application/xml').send(sitemapCache.xml);
+    }
+
     const scheme = (req.headers['x-forwarded-proto'] || req.protocol);
     const host = req.get('host');
     const base = `${scheme}://${host}`;
 
+    // Try new Spring endpoint that returns all posts for sitemap (lightweight)
+    let posts = [];
+    try {
+      const { data } = await axios.get(`${SPRING_BASE}/api/posts/sitemap/all`, { timeout: 15000 });
+      if (Array.isArray(data)) {
+        posts = data;
+      }
+    } catch (_) {
+      // Fallback to pagination if endpoint not available
+      const limit = 200; // page size per request
+      let offset = 0;
+      const aggregated = [];
+      const maxPages = 1000; // safety cap (up to 200k posts)
+      for (let i = 0; i < maxPages; i++) {
+        const { data } = await axios.get(`${SPRING_BASE}/api/posts?offset=${offset}&limit=${limit}`, { timeout: 8000 });
+        const chunk = (data && (data.posts || data)) || [];
+        if (!Array.isArray(chunk) || chunk.length === 0) break;
+        aggregated.push(...chunk);
+        if (chunk.length < limit) break; // last page
+        offset += limit;
+      }
+      posts = aggregated;
+    }
+
     const urls = posts.map(p => {
       const loc = `${base}/blog/${p.id}`;
-      const lastmod = p.updatedAt || p.createdAt || new Date().toISOString();
-      return `<url><loc>${loc}</loc><lastmod>${new Date(lastmod).toISOString()}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`;
+      const lastmodRaw = p.updatedAt || p.createdAt;
+      let lastmodIso;
+      try { lastmodIso = new Date(lastmodRaw || Date.now()).toISOString(); } catch (_) { lastmodIso = new Date().toISOString(); }
+      return `<url><loc>${loc}</loc><lastmod>${lastmodIso}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`;
     }).join('');
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -248,6 +279,8 @@ app.get('/sitemap.xml', async (req, res) => {
   ${urls}
 </urlset>`;
 
+    // cache and send
+    sitemapCache = { xml, ts: Date.now() };
     res.type('application/xml').send(xml);
   } catch (err) {
     console.error('[notion-ssr] sitemap error', err?.response?.data || err.message);
@@ -263,12 +296,12 @@ app.post('/notion/convert', async (req, res) => {
       return res.status(400).json({ message: 'pageId is required' });
     }
 
-  const apiKey = getApiKeyFromReq(req);
-  const { notion, n2m } = buildNotionTools(apiKey);
-  setupCustomTransformers(n2m);
+    const apiKey = getApiKeyFromReq(req);
+    const { notion, n2m } = buildNotionTools(apiKey);
+    setupCustomTransformers(n2m);
 
-  const mdBlocks = await n2m.pageToMarkdown(pageId);
-  const mdString = n2m.toMarkdownString(mdBlocks);
+    const mdBlocks = await n2m.pageToMarkdown(pageId);
+    const mdString = n2m.toMarkdownString(mdBlocks);
 
     const markdown = mdString.parent || '';
     const html = marked.parse(markdown);
@@ -320,7 +353,7 @@ function extractMeta(html = '', baseUrl = '') {
       const u = new URL(image, baseUrl);
       image = u.toString();
     }
-  } catch (_) {}
+  } catch (_) { }
 
   return { title, description, image, siteName };
 }
@@ -361,9 +394,9 @@ app.get('/seo/preview', async (req, res) => {
 app.get('/notion/page/:pageId', async (req, res) => {
   try {
     const { pageId } = req.params;
-  const apiKey = getApiKeyFromReq(req);
-  const { notion } = buildNotionTools(apiKey);
-  const page = await notion.pages.retrieve({ page_id: pageId });
+    const apiKey = getApiKeyFromReq(req);
+    const { notion } = buildNotionTools(apiKey);
+    const page = await notion.pages.retrieve({ page_id: pageId });
 
     // cover
     let coverImage = null;
@@ -400,8 +433,8 @@ app.post('/notion/fetchPages', async (req, res) => {
     if (!databaseId) {
       return res.status(400).json({ message: 'databaseId is required' });
     }
-  const apiKey = getApiKeyFromReq(req);
-  const { notion } = buildNotionTools(apiKey);
+    const apiKey = getApiKeyFromReq(req);
+    const { notion } = buildNotionTools(apiKey);
     const response = await notion.databases.query({ database_id: databaseId });
     res.json(response);
   } catch (err) {
@@ -417,8 +450,8 @@ app.post('/notion/fetchPageBlocks', async (req, res) => {
     if (!pageId) {
       return res.status(400).json({ message: 'pageId is required' });
     }
-  const apiKey = getApiKeyFromReq(req);
-  const { notion } = buildNotionTools(apiKey);
+    const apiKey = getApiKeyFromReq(req);
+    const { notion } = buildNotionTools(apiKey);
     const response = await notion.blocks.children.list({ block_id: pageId });
     res.json(response);
   } catch (err) {
@@ -436,7 +469,7 @@ app.post('/notion/blocksToHtml', async (req, res) => {
     }
     const apiKey = getApiKeyFromReq(req);
     const { notion } = buildNotionTools(apiKey);
-  const html = await safeRenderHtml(notion, blocks);
+    const html = await safeRenderHtml(notion, blocks);
     return res.json({ html });
   } catch (err) {
     console.error('[notion-ssr] blocksToHtml error', err?.response?.data || err.message);
@@ -450,13 +483,13 @@ app.get('/notion/render/:pageId', async (req, res) => {
     const { pageId } = req.params;
     const apiKey = getApiKeyFromReq(req);
     const { notion } = buildNotionTools(apiKey);
-  // fetch all children blocks for the page and render
-  const allBlocks = await fetchAllBlocks(notion, pageId);
-  const html = await safeRenderHtml(notion, allBlocks);
+    // fetch all children blocks for the page and render
+    const allBlocks = await fetchAllBlocks(notion, pageId);
+    const html = await safeRenderHtml(notion, allBlocks);
     res.json({ html });
   } catch (err) {
-  console.error('[notion-ssr] render page error', err?.response?.data || err?.body || err.message, { code: err?.code, status: err?.status });
-  res.status(500).json({ message: 'render page failed', detail: err?.message || 'unknown error' });
+    console.error('[notion-ssr] render page error', err?.response?.data || err?.body || err.message, { code: err?.code, status: err?.status });
+    res.status(500).json({ message: 'render page failed', detail: err?.message || 'unknown error' });
   }
 });
 
@@ -472,12 +505,12 @@ app.get('/notion/render-db/:databaseId', async (req, res) => {
 
     const query = { database_id: databaseId, page_size: pageSize };
     if (startCursor) query.start_cursor = startCursor;
-  const apiKey = getApiKeyFromReq(req);
-  const { notion } = buildNotionTools(apiKey);
-  const dbResp = await notion.databases.query(query);
+    const apiKey = getApiKeyFromReq(req);
+    const { notion } = buildNotionTools(apiKey);
+    const dbResp = await notion.databases.query(query);
     const pages = dbResp.results || [];
 
-  const renderer = null; // not used directly; use safeRenderHtml instead
+    const renderer = null; // not used directly; use safeRenderHtml instead
 
     const items = await Promise.all(pages.map(async (page) => {
       // title
@@ -495,9 +528,9 @@ app.get('/notion/render-db/:databaseId', async (req, res) => {
         if (page.cover.type === 'file') coverImage = page.cover.file?.url || null;
       }
 
-    // render blocks
-  const allBlocks = await fetchAllBlocks(notion, page.id);
-  const html = await safeRenderHtml(notion, allBlocks);
+      // render blocks
+      const allBlocks = await fetchAllBlocks(notion, page.id);
+      const html = await safeRenderHtml(notion, allBlocks);
 
       return {
         id: page.id,
