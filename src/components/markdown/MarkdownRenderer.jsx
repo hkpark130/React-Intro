@@ -3,25 +3,26 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkToc from 'remark-toc';
 import rehypeHighlight from 'rehype-highlight';
-import remarkRehype from 'remark-rehype';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-// import remarkGfm from 'remark-gfm';
-import { marked } from 'marked';
+import remarkGfm from 'remark-gfm';
 import ZoomableImageModal from '../section/ZoomableImageModal';
 import CodeAccordion from '../section/CodeAccordion';
 import Bookmark from './Bookmark';
+import AlertBlock from './AlertBlock';
 import { Box, Alert, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
 // react-notion-x 컴포넌트 스타일
 import './markdown-styles.css';
 
 // 커스텀 태그로 치환해서 처리할 컴포넌트 목록
-const ALLOWED_COMPONENTS = ["ZoomableImageModal", "CodeAccordion", "Bookmark"];
+const ALLOWED_COMPONENTS = ["ZoomableImageModal", "CodeAccordion", "Bookmark", "Alert", "AlertBlock"];
 const COMPONENT_MAP = {
   ZoomableImageModal,
   CodeAccordion,
-  Bookmark
+  Bookmark,
+  Alert: AlertBlock,
+  AlertBlock
 };
 
 // 커스텀 컴포넌트 처리 로직
@@ -63,8 +64,23 @@ const preprocessMarkdown = (content) => {
   
   let processed = content;
 
+  // 줄바꿈 정규화 (CRLF/CR -> LF)
+  processed = processed.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
   // 과도한 줄바꿈 정규화
   processed = processed.replace(/\n\n\n+/g, '\n\n');
+
+  // 헤딩 뒤 과도한 빈 줄 -> 하나로 축소 (헤딩 다음 표/리스트 앞 공백 폭 제거)
+  processed = processed.replace(/^(#{1,6} .+?)\n{2,}/gm, '$1\n');
+
+  // 블록 요소(표/리스트/코드) 앞의 3줄 이상 공백을 1~2줄로 축소
+  processed = processed
+    // 표 앞
+    .replace(/\n{3,}(\|[^\n]*\|)/g, '\n\n$1')
+    // 리스트 앞
+    .replace(/\n{3,}(- |\d+\. )/g, '\n\n$1')
+    // 코드펜스 앞
+    .replace(/\n{3,}(```|~~~)/g, '\n\n$1');
   
   // 공백 처리 개선 - <b> 태그 내의 공백이 사라지지 않도록 처리
   processed = processed.replace(/(<b>)([^<]*?)(\s+)([^<]*?)(<\/b>)/g, '$1$2&nbsp;$4$5');
@@ -76,18 +92,33 @@ const preprocessMarkdown = (content) => {
   return processed;
 };
 
+// 매우 단순한 sx 문자열 파서: "{ key: 'val', num: 1 }" 형태를 JS 객체로 변환
+// 따옴표/숫자/px 등 기본값만 처리 (중첩 객체/배열은 미지원)
+const parseSx = (sxStr) => {
+  if (!sxStr || typeof sxStr !== 'string') return undefined;
+  let s = sxStr.trim();
+  // 앞뒤 중괄호(한두 겹) 제거
+  s = s.replace(/^\{+\s*/, '').replace(/\s*\}+$/, '');
+  const out = {};
+  const regex = /([a-zA-Z0-9_-]+)\s*:\s*([^,]+)\s*(?:,|$)/g;
+  let m;
+  while ((m = regex.exec(s)) !== null) {
+    const key = m[1].trim();
+    let val = m[2].trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith('\'') && val.endsWith('\''))) {
+      val = val.slice(1, -1);
+    } else if (/^-?\d+(?:\.\d+)?$/.test(val)) {
+      val = Number(val);
+    }
+    if (key) out[key] = val;
+  }
+  return Object.keys(out).length ? out : undefined;
+};
+
 export default function MarkdownRenderer({ content }) {
   const [processedContent, setProcessedContent] = useState("");
   const [error, setError] = useState(null);
   useEffect(() => {
-    // marked 옵션 설정
-    marked.setOptions({
-      gfm: true,
-      breaks: true,
-      smartLists: false,
-      xhtml: false
-    });
-    
     processMarkdownContent();
   }, [content]);
 
@@ -222,6 +253,15 @@ export default function MarkdownRenderer({ content }) {
         />;
       }
 
+  if (name === "AlertBlock") {
+        const severity = (props.severity || parsedProps.severity || 'info');
+        return (
+          <AlertBlock severity={severity} {...parsedProps}>
+            {children}
+          </AlertBlock>
+        );
+      }
+
       return <Component {...parsedProps}>{children}</Component>;
     },
 
@@ -239,25 +279,28 @@ export default function MarkdownRenderer({ content }) {
     ),
     
     // 줄바꿈 처리 개선
-    p: ({ children }) => (
-      <p style={{ marginTop: '0', marginBottom: '0' }}>{children}</p>
+    // 코드 블록: 기존의 <pre><code>를 다시 감싸지 않음 (중복 감싸기 제거)
+    pre: ({ children, ...props }) => (
+      <pre
+        style={{
+          marginTop: '0',
+          marginBottom: '0',
+          backgroundColor: 'rgb(224, 224, 224)',
+          padding: '10px',
+          borderRadius: '4px',
+          overflowX: 'auto'
+        }}
+        {...props}
+      >
+        {children}
+      </pre>
     ),
-    
-    // 헤더 스타일링 개선
-    h1: ({ children }) => <h1 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h1>,
-    h2: ({ children }) => <h2 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h2>,
     h3: ({ children }) => <h3 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h3>,
     h4: ({ children }) => <h4 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h4>,
     h5: ({ children }) => <h5 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h5>,
     h6: ({ children }) => <h6 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h6>,
 
-    pre: ({ children }) => (
-      <pre style={{ marginTop: '0', marginBottom: '0', backgroundColor: 'rgb(224, 224, 224)', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-        <code style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
-          {children}
-        </code>
-      </pre>
-    ),
+  // 중복 pre 제거됨
 
     mark: ({ children }) => (
       <span style={{ 
@@ -350,14 +393,14 @@ export default function MarkdownRenderer({ content }) {
   // 일반 마크다운 렌더링
   return (
     <Box sx={{ 
-      wordBreak: 'break-word', 
-      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+      // 전역 pre-wrap 제거: 필요 시 개별 요소에서만 적용
       '& .markdown-body': {
         fontFamily: 'inherit'
       }
     }} className="markdown-body">
-    <ReactMarkdown 
-        remarkPlugins={[remarkToc, remarkRehype]}
+  <ReactMarkdown 
+    remarkPlugins={[remarkToc, remarkGfm]}
         rehypePlugins={[
           rehypeRaw,
           rehypeHighlight,
@@ -365,11 +408,10 @@ export default function MarkdownRenderer({ content }) {
           rehypeAutolinkHeadings,
         ]}
         // rehypePlugins={[rehypeRaw]}
-        // remarkPlugins={[remarkGfm]} // 이거 rehypeRaw와 충돌함
         components={components}
         skipHtml={false}
       >
-        {marked(processedContent)}
+    {processedContent}
       </ReactMarkdown>
     </Box>
   );

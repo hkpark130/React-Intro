@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import MarkdownRenderer from "./MarkdownRenderer";
 import { notionApi, notionConvert } from "@/api/api";
 import { 
@@ -6,10 +6,12 @@ import {
   Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, 
   OutlinedInput, FormHelperText, CircularProgress, LinearProgress, Alert
 } from '@mui/material';
+import { Unstable_NumberInput as NumberInput } from '@mui/base/Unstable_NumberInput';
 import CodeIcon from '@mui/icons-material/Code';
 import ImageIcon from '@mui/icons-material/Image';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import InsertLinkIcon from '@mui/icons-material/InsertLink';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import {
   FormControlLabel,
   RadioGroup,
@@ -40,6 +42,31 @@ export default function MarkdownEditor({ value, onChange }) {
     openState: 'hidden' // 'open' | 'hidden'
   });
 
+  // Alert dialog state
+  const [alertDialog, setAlertDialog] = useState(false);
+  const [alertForm, setAlertForm] = useState({
+    severity: 'info', // 'info' | 'warning' | 'error'
+    message: ''
+  });
+
+  // Zoomable dialog state
+  const [zoomDialog, setZoomDialog] = useState(false);
+  const [zoomForm, setZoomForm] = useState({
+    src: '',
+    alt: '',
+    caption: ''
+  });
+  const [zoomError, setZoomError] = useState('');
+
+  // Table dialog state
+  const [tableDialog, setTableDialog] = useState(false);
+  const [tableForm, setTableForm] = useState({
+    rows: 3,
+    cols: 3
+  });
+  const [tableError, setTableError] = useState('');
+
+
   // Notion dialog state
   const [notionDialog, setNotionDialog] = useState(false);
   const [notionMode, setNotionMode] = useState('page'); // 'page' | 'db'
@@ -51,6 +78,13 @@ export default function MarkdownEditor({ value, onChange }) {
   // Html 경로 제거: 마크다운만 지원
 
   const handleTabChange = (_, newValue) => setTabValue(newValue);
+
+  // 작성 탭 복귀 시 포커스 복원 (Undo 단축키가 바로 동작하도록)
+  useEffect(() => {
+    if (tabValue === 0 && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [tabValue]);
 
   const insertAtCursor = (insertText) => {
     const textarea = textareaRef.current;
@@ -75,14 +109,68 @@ export default function MarkdownEditor({ value, onChange }) {
     onChange(newValue);
   };
   
-  // 마크다운 테이블 템플릿 삽입
-  const insertTable = () => {
-    insertAtCursor(`
-| 항목 1 | 항목 2 | 항목 3 |
-| ------ | ------ | ------ |
-| 내용 1 | 내용 2 | 내용 3 |
-| 내용 4 | 내용 5 | 내용 6 |
-`);
+  // Zoomable 다이얼로그 열기
+  const openZoomDialog = () => {
+    setZoomDialog(true);
+    setZoomForm({ src: '', alt: '', caption: '' });
+    setZoomError('');
+  };
+
+  const handleZoomFormChange = (e) => {
+    const { name, value } = e.target;
+    setZoomForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const insertZoomable = () => {
+    if (!zoomForm.src.trim()) {
+      setZoomError('이미지 경로(src)를 입력하세요.');
+      return;
+    }
+    let tag = `<ZoomableImageModal src="${zoomForm.src.trim()}"`;
+    if (zoomForm.alt.trim()) tag += ` alt="${zoomForm.alt.trim()}"`;
+    if (zoomForm.caption.trim()) tag += ` caption="${zoomForm.caption.trim()}"`;
+    tag += ' />';
+    insertAtCursor(`\n${tag}\n`);
+    setZoomDialog(false);
+  };
+
+  // 테이블 다이얼로그 열기
+  const openTableDialog = () => {
+    setTableDialog(true);
+  setTableForm({ rows: 3, cols: 3 });
+    setTableError('');
+  };
+
+  const handleTableFormChange = (e) => {
+    const { name, value } = e.target;
+    setTableForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const insertTableFromDialog = () => {
+    let rows = parseInt(tableForm.rows, 10);
+    let cols = parseInt(tableForm.cols, 10);
+    if (!(rows > 0 && cols > 0)) {
+      setTableError('행과 열은 1 이상이어야 합니다.');
+      return;
+    }
+    rows = Math.min(rows, 20);
+    cols = Math.min(cols, 20);
+
+    const lines = [];
+    const makeRow = (arr) => `| ${arr.join(' | ')} |`;
+
+    // 항상 헤더 행 포함
+    const header = Array.from({ length: cols }, (_, i) => `헤더 ${i + 1}`);
+    const divider = Array.from({ length: cols }, () => '------');
+    lines.push(makeRow(header));
+    lines.push(makeRow(divider));
+    for (let r = 0; r < Math.max(rows - 1, 0); r++) {
+      const cells = Array.from({ length: cols }, (_, c) => `내용 ${r + 1}-${c + 1}`);
+      lines.push(makeRow(cells));
+    }
+
+    insertAtCursor(`\n${lines.join('\n')}\n`);
+    setTableDialog(false);
   };
 
   // 북마크 다이얼로그 열기
@@ -118,7 +206,7 @@ export default function MarkdownEditor({ value, onChange }) {
   const { data } = await notionConvert({ pageId: pageId.trim() });
   insertAtCursor(`\n${data.markdown}\n`);
       setNotionDialog(false);
-    } catch (e) {
+  } catch {
       setNotionError('페이지 변환에 실패했습니다.');
     } finally {
       setNotionLoading(false);
@@ -135,7 +223,7 @@ export default function MarkdownEditor({ value, onChange }) {
     try {
       const { data } = await notionApi.get(`/notion/render-db/${dbId.trim()}?pageSize=10`);
       setDbResults(data.results || []);
-    } catch (e) {
+  } catch {
       setNotionError('데이터베이스 로드에 실패했습니다.');
     } finally {
       setNotionLoading(false);
@@ -149,7 +237,7 @@ export default function MarkdownEditor({ value, onChange }) {
   const { data } = await notionConvert({ pageId: pId });
   insertAtCursor(`\n${data.markdown}\n`);
       setNotionDialog(false);
-    } catch (e) {
+  } catch {
       setNotionError('페이지 변환에 실패했습니다.');
     } finally {
       setNotionLoading(false);
@@ -172,6 +260,12 @@ export default function MarkdownEditor({ value, onChange }) {
     setCodeDialog(true);
     setCodeError('');
     setCodeForm({ title: '', language: 'java', codeString: '', openState: 'hidden' });
+  };
+
+  // Alert 다이얼로그 열기
+  const openAlertDialog = () => {
+    setAlertDialog(true);
+    setAlertForm({ severity: 'info', message: '' });
   };
 
   const handleCodeFormChange = (e) => {
@@ -204,6 +298,22 @@ export default function MarkdownEditor({ value, onChange }) {
     setCodeDialog(false);
   };
 
+  const handleAlertFormChange = (e) => {
+    const { name, value } = e.target;
+    setAlertForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const insertAlert = () => {
+    // severity만 출력, 스타일은 렌더러의 AlertBlock이 결정
+    const sev = (alertForm.severity || 'info').toLowerCase();
+  const defaultMessage = sev === 'error' ? '경고문' : sev === 'warning' ? '주의문' : '인포 문구';
+  const msg = (alertForm.message || '').trim() || defaultMessage;
+  // 태그 내부 개행 없이 삽입 (미리보기 pre-wrap 영향 방지)
+  const block = `\n<AlertBlock severity=\"${sev}\">${msg}</AlertBlock>\n`;
+    insertAtCursor(block);
+    setAlertDialog(false);
+  };
+
   // 북마크 삽입하기
   const insertBookmark = () => {
     try {
@@ -229,7 +339,7 @@ export default function MarkdownEditor({ value, onChange }) {
       insertAtCursor(bookmarkCode);
       setBookmarkDialog(false);
       
-    } catch (error) {
+  } catch {
       setBookmarkError('유효한 URL을 입력해주세요. (예: https://example.com)');
     }
   };
@@ -243,89 +353,92 @@ export default function MarkdownEditor({ value, onChange }) {
         </Tabs>
       </Box>
 
-      {tabValue === 0 && (
-        <Box>
-          <TextField
-            inputRef={textareaRef}
-            value={value}
-            onChange={handleContentChange}
-            multiline
-            fullWidth
-            rows={15}
-            variant="outlined"
-            placeholder="마크다운을 입력하세요..."
-          />
-
-          <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<CodeIcon />}
-              onClick={openCodeDialog}
-            >
-              코드 블록 삽입
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<ImageIcon />}
-              onClick={() => insertAtCursor(`<ZoomableImageModal src="/images/example.jpg" alt="이미지 설명" />`)}
-            >
-              Zoomable 이미지 삽입
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<TableChartIcon />}
-              onClick={insertTable}
-            >
-              테이블 삽입
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<InsertLinkIcon />}
-              onClick={openBookmarkDialog}
-            >
-              프리뷰 삽입
-            </Button>
-              <Button
-                size="small"
-                variant="contained"
-                onClick={openNotionDialog}
-              >
-                노션 가져오기
-              </Button>
-          </Box>
-
-          <Divider sx={{ my: 2 }} />
-
-          <Typography variant="subtitle2" color="text.secondary">
-            마크다운 문법 가이드:
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            # 제목, **굵게**, *기울임*, `코드`, [링크](url), - 목록, | 테이블 |
-          </Typography>
-        </Box>
-      )}
-
-      {tabValue === 1 && (
-        <Paper
+      <Box sx={{ display: tabValue === 0 ? 'block' : 'none' }}>
+        <TextField
+          inputRef={textareaRef}
+          value={value}
+          onChange={handleContentChange}
+          multiline
+          fullWidth
+          rows={15}
           variant="outlined"
-          sx={{
-            p: 3,
-            minHeight: '400px',
-            wordBreak: 'break-word',
-            whiteSpace: 'pre-wrap',
-            '& code': { display: 'block', whiteSpace: 'pre-wrap' }
-          }}
-        >
-          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-            미리보기
-          </Typography>
-          <MarkdownRenderer content={value} />
-        </Paper>
-      )}
+          placeholder="마크다운을 입력하세요..."
+        />
+
+        <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<CodeIcon />}
+            onClick={openCodeDialog}
+          >
+            코드 블록 삽입
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<ImageIcon />}
+            onClick={openZoomDialog}
+          >
+            Zoomable 이미지 삽입
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<TableChartIcon />}
+            onClick={openTableDialog}
+          >
+            테이블 삽입
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<InsertLinkIcon />}
+            onClick={openBookmarkDialog}
+          >
+            프리뷰 삽입
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<WarningAmberIcon />}
+            onClick={openAlertDialog}
+          >
+            Alert 삽입
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={openNotionDialog}
+          >
+            노션 가져오기
+          </Button>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Typography variant="subtitle2" color="text.secondary">
+          마크다운 문법 가이드:
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          # 제목, **굵게**, *기울임*, `코드`, [링크](url), - 목록, | 테이블 |
+        </Typography>
+      </Box>
+
+    <Paper
+        variant="outlined"
+        sx={{
+      display: tabValue === 1 ? 'block' : 'none',
+      p: 3,
+      minHeight: '400px',
+      wordBreak: 'break-word'
+        }}
+      >
+        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
+          미리보기
+        </Typography>
+        <MarkdownRenderer content={value} />
+      </Paper>
 
       {/* 북마크 추가 다이얼로그 */}
       <Dialog
@@ -398,6 +511,111 @@ export default function MarkdownEditor({ value, onChange }) {
           <Button onClick={insertBookmark} variant="contained" color="primary">
             북마크 삽입
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Zoomable 이미지 다이얼로그 */}
+      <Dialog
+        open={zoomDialog}
+        onClose={() => setZoomDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Zoomable 이미지 삽입</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth margin="normal" error={!!zoomError}>
+            <InputLabel htmlFor="zoom-src">이미지 src (필수)</InputLabel>
+            <OutlinedInput
+              id="zoom-src"
+              name="src"
+              value={zoomForm.src}
+              onChange={handleZoomFormChange}
+              label="이미지 src (필수)"
+              placeholder="https://..."
+              fullWidth
+            />
+            {zoomError && <FormHelperText error>{zoomError}</FormHelperText>}
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <InputLabel htmlFor="zoom-alt">대체 텍스트 (선택)</InputLabel>
+            <OutlinedInput
+              id="zoom-alt"
+              name="alt"
+              value={zoomForm.alt}
+              onChange={handleZoomFormChange}
+              label="대체 텍스트 (선택)"
+              placeholder="이미지 설명"
+              fullWidth
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <InputLabel htmlFor="zoom-caption">캡션 (선택)</InputLabel>
+            <OutlinedInput
+              id="zoom-caption"
+              name="caption"
+              value={zoomForm.caption}
+              onChange={handleZoomFormChange}
+              label="캡션 (선택)"
+              placeholder="이미지 아래 설명"
+              fullWidth
+            />
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setZoomDialog(false)}>취소</Button>
+          <Button onClick={insertZoomable} variant="contained">삽입</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 테이블 삽입 다이얼로그 */}
+      <Dialog
+        open={tableDialog}
+        onClose={() => setTableDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>테이블 삽입</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', pl: 0.5 }}>
+                행 수
+              </Typography>
+              <NumberInput
+                min={1}
+                max={20}
+                value={tableForm.rows}
+                onChange={(_, val) => setTableForm(prev => ({ ...prev, rows: val }))}
+                slotProps={{
+                  incrementButton: { style: { display: 'none' } },
+                  decrementButton: { style: { display: 'none' } },
+                }}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', pl: 0.5 }}>
+                열 수
+              </Typography>
+              <NumberInput
+                min={1}
+                max={20}
+                value={tableForm.cols}
+                onChange={(_, val) => setTableForm(prev => ({ ...prev, cols: val }))}
+                slotProps={{
+                  incrementButton: { style: { display: 'none' } },
+                  decrementButton: { style: { display: 'none' } },
+                }}
+              />
+            </Box>
+          </Box>
+          {/* 헤더 행은 기본 포함 */}
+          {tableError && <FormHelperText error sx={{ mt: 1 }}>{tableError}</FormHelperText>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTableDialog(false)}>취소</Button>
+          <Button onClick={insertTableFromDialog} variant="contained">삽입</Button>
         </DialogActions>
       </Dialog>
 
@@ -583,6 +801,50 @@ export default function MarkdownEditor({ value, onChange }) {
         <DialogActions>
           <Button onClick={() => setCodeDialog(false)}>취소</Button>
           <Button onClick={insertCodeAccordion} variant="contained">삽입</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Alert 삽입 다이얼로그 */}
+      <Dialog
+        open={alertDialog}
+        onClose={() => setAlertDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Alert 삽입</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <FormControl component="fieldset">
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>타입</Typography>
+              <RadioGroup
+                row
+                name="severity"
+                value={alertForm.severity}
+                onChange={handleAlertFormChange}
+              >
+                <FormControlLabel value="info" control={<Radio />} label="info" />
+                <FormControlLabel value="warning" control={<Radio />} label="warning" />
+                <FormControlLabel value="error" control={<Radio />} label="error" />
+              </RadioGroup>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <TextField
+                id="alert-message"
+                name="message"
+                value={alertForm.message}
+                onChange={handleAlertFormChange}
+                label="메시지"
+                placeholder="알림 내용을 입력하세요 (미입력 시 기본 문구가 들어갑니다)"
+                multiline
+                minRows={3}
+              />
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAlertDialog(false)}>취소</Button>
+          <Button onClick={insertAlert} variant="contained">삽입</Button>
         </DialogActions>
       </Dialog>
     </Box>
