@@ -27,9 +27,10 @@ export default function CodeAccordion({
   language = "java",
   showLineNumbers = true,
   wrapLines = true,
+  defaultExpanded = false,
 }) {
   return (
-    <Accordion sx={{ mt: 3 }}>
+    <Accordion sx={{ mt: 3 }} defaultExpanded={String(defaultExpanded) === 'true' || defaultExpanded === true}>
       <AccordionSummary sx={{backgroundColor: "rgba(153,153,153,0.3)"}} expandIcon={<ExpandMoreIcon />}>
         <Typography variant="subtitle1">{title}</Typography>
       </AccordionSummary>
@@ -59,5 +60,6 @@ CodeAccordion.propTypes = {
   title: PropTypes.string,
   language: PropTypes.string,
   showLineNumbers: PropTypes.bool,
-  wrapLines: PropTypes.bool
+  wrapLines: PropTypes.bool,
+  defaultExpanded: PropTypes.oneOfType([PropTypes.bool, PropTypes.string])
 };

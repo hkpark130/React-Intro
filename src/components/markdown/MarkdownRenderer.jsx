@@ -1,21 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-// import remarkGfm from 'remark-gfm';
-import { marked } from 'marked';
+import remarkToc from 'remark-toc';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeSlug from 'rehype-slug';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import remarkGfm from 'remark-gfm';
 import ZoomableImageModal from '../section/ZoomableImageModal';
 import CodeAccordion from '../section/CodeAccordion';
 import Bookmark from './Bookmark';
+import AlertBlock from './AlertBlock';
 import { Box, Alert, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 // react-notion-x 컴포넌트 스타일
 import './markdown-styles.css';
 
-const ALLOWED_COMPONENTS = ["ZoomableImageModal", "CodeAccordion", "Bookmark"];
+// 커스텀 태그로 치환해서 처리할 컴포넌트 목록
+const ALLOWED_COMPONENTS = ["ZoomableImageModal", "CodeAccordion", "Bookmark", "Alert", "AlertBlock"];
 const COMPONENT_MAP = {
   ZoomableImageModal,
   CodeAccordion,
-  Bookmark
+  Bookmark,
+  Alert: AlertBlock,
+  AlertBlock
 };
 
 // 커스텀 컴포넌트 처리 로직
@@ -56,9 +64,24 @@ const preprocessMarkdown = (content) => {
   if (!content || typeof content !== 'string') return '';
   
   let processed = content;
-  
+
+  // 줄바꿈 정규화 (CRLF/CR -> LF)
+  processed = processed.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
   // 과도한 줄바꿈 정규화
   processed = processed.replace(/\n\n\n+/g, '\n\n');
+
+  // 헤딩 뒤 과도한 빈 줄 -> 하나로 축소 (헤딩 다음 표/리스트 앞 공백 폭 제거)
+  processed = processed.replace(/^(#{1,6} .+?)\n{2,}/gm, '$1\n');
+
+  // 블록 요소(표/리스트/코드) 앞의 3줄 이상 공백을 1~2줄로 축소
+  processed = processed
+    // 표 앞
+    .replace(/\n{3,}(\|[^\n]*\|)/g, '\n\n$1')
+    // 리스트 앞
+    .replace(/\n{3,}(- |\d+\. )/g, '\n\n$1')
+    // 코드펜스 앞
+    .replace(/\n{3,}(```|~~~)/g, '\n\n$1');
   
   // 공백 처리 개선 - <b> 태그 내의 공백이 사라지지 않도록 처리
   processed = processed.replace(/(<b>)([^<]*?)(\s+)([^<]*?)(<\/b>)/g, '$1$2&nbsp;$4$5');
@@ -70,18 +93,33 @@ const preprocessMarkdown = (content) => {
   return processed;
 };
 
+// 매우 단순한 sx 문자열 파서: "{ key: 'val', num: 1 }" 형태를 JS 객체로 변환
+// 따옴표/숫자/px 등 기본값만 처리 (중첩 객체/배열은 미지원)
+const parseSx = (sxStr) => {
+  if (!sxStr || typeof sxStr !== 'string') return undefined;
+  let s = sxStr.trim();
+  // 앞뒤 중괄호(한두 겹) 제거
+  s = s.replace(/^\{+\s*/, '').replace(/\s*\}+$/, '');
+  const out = {};
+  const regex = /([a-zA-Z0-9_-]+)\s*:\s*([^,]+)\s*(?:,|$)/g;
+  let m;
+  while ((m = regex.exec(s)) !== null) {
+    const key = m[1].trim();
+    let val = m[2].trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith('\'') && val.endsWith('\''))) {
+      val = val.slice(1, -1);
+    } else if (/^-?\d+(?:\.\d+)?$/.test(val)) {
+      val = Number(val);
+    }
+    if (key) out[key] = val;
+  }
+  return Object.keys(out).length ? out : undefined;
+};
+
 export default function MarkdownRenderer({ content }) {
   const [processedContent, setProcessedContent] = useState("");
   const [error, setError] = useState(null);
   useEffect(() => {
-    // marked 옵션 설정
-    marked.setOptions({
-      gfm: true,
-      breaks: true,
-      smartLists: false,
-      xhtml: false
-    });
-    
     processMarkdownContent();
   }, [content]);
 
@@ -140,6 +178,50 @@ export default function MarkdownRenderer({ content }) {
   };
 
   const components = {
+    // Inject MUI disclosure icon into summary
+    summary: ({ children, ...props }) => (
+      <summary {...props}>
+        <PlayArrowIcon className="mui-disclosure-icon" fontSize="medium" />
+        {children}
+      </summary>
+    ),
+    // a 링크 커스텀: [bookmark](url) 패턴을 Bookmark 카드로 변환
+    a: ({ href, children, ...props }) => {
+      try {
+        const text = (components._toPlainText(children) || '').trim().toLowerCase();
+        if (text === 'bookmark' && href) {
+          return <Bookmark url={href} />;
+        }
+      } catch (_) {}
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+          {children}
+        </a>
+      );
+    },
+
+    // children -> plain text로 변환 (줄바꿈 유지)
+    // React 요소 구조를 순회하며 텍스트/개행을 복원
+    _toPlainText: (nodes) => {
+      const walk = (n) => {
+        if (n == null || n === false) return '';
+        if (typeof n === 'string' || typeof n === 'number') return String(n);
+        if (Array.isArray(n)) return n.map(walk).join('');
+        // React element
+        const type = n.type;
+        const children = n.props?.children;
+        const inner = walk(children);
+        // 블록 요소는 개행을 넣어 가독성 유지
+        const blockTags = new Set(['p','div','pre','code','ul','ol','li','table','thead','tbody','tr','th','td','h1','h2','h3','h4','h5','h6']);
+        if (type === 'br') return '\n';
+        if (typeof type === 'string' && blockTags.has(type)) {
+          return (type === 'li') ? `- ${inner}\n` : `${inner}\n`;
+        }
+        return inner;
+      };
+      // 후처리: 연속 개행 정리
+      return walk(nodes).replace(/\r/g, '').replace(/\n{3,}/g, '\n\n');
+    },
     // 커스텀 컴포넌트 처리
     custom: ({ "data-component": name, children, ...props }) => {
       const Component = COMPONENT_MAP[name];
@@ -175,8 +257,14 @@ export default function MarkdownRenderer({ content }) {
       }
       
       if (name === "CodeAccordion") {
-        const code = Array.isArray(children) ? children.join("") : (children || "");
-        return <Component codeString={code} {...parsedProps} />;
+        const code = components._toPlainText(children).replace(/^\n+|\n+$/g, '');
+        // HTML 속성은 소문자로 들어올 수 있으므로 보정
+        const { defaultexpanded, ...restProps } = parsedProps;
+        const compProps = {
+          ...restProps,
+          defaultExpanded: restProps.defaultExpanded ?? defaultexpanded
+        };
+        return <Component codeString={code} {...compProps} />;
       }
       
       if (name === "ZoomableImageModal") {
@@ -188,9 +276,18 @@ export default function MarkdownRenderer({ content }) {
         />;
       }
 
+  if (name === "AlertBlock") {
+        const severity = (props.severity || parsedProps.severity || 'info');
+        return (
+          <AlertBlock severity={severity} {...parsedProps}>
+            {children}
+          </AlertBlock>
+        );
+      }
+
       return <Component {...parsedProps}>{children}</Component>;
     },
-    
+
     // 테이블 관련 컴포넌트 확장
     table: TableComponent,
     thead: TableHeadComponent,
@@ -205,25 +302,28 @@ export default function MarkdownRenderer({ content }) {
     ),
     
     // 줄바꿈 처리 개선
-    p: ({ children }) => (
-      <p style={{ marginTop: '0', marginBottom: '0' }}>{children}</p>
+    // 코드 블록: 기존의 <pre><code>를 다시 감싸지 않음 (중복 감싸기 제거)
+    pre: ({ children, ...props }) => (
+      <pre
+        style={{
+          marginTop: '0',
+          marginBottom: '0',
+          backgroundColor: 'rgb(224, 224, 224)',
+          padding: '10px',
+          borderRadius: '4px',
+          overflowX: 'auto'
+        }}
+        {...props}
+      >
+        {children}
+      </pre>
     ),
-    
-    // 헤더 스타일링 개선
-    h1: ({ children }) => <h1 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h1>,
-    h2: ({ children }) => <h2 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h2>,
     h3: ({ children }) => <h3 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h3>,
     h4: ({ children }) => <h4 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h4>,
     h5: ({ children }) => <h5 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h5>,
     h6: ({ children }) => <h6 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h6>,
 
-    pre: ({ children }) => (
-      <pre style={{ marginTop: '0', marginBottom: '0', backgroundColor: 'rgb(224, 224, 224)', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-        <code style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
-          {children}
-        </code>
-      </pre>
-    ),
+  // 중복 pre 제거됨
 
     mark: ({ children }) => (
       <span style={{ 
@@ -316,19 +416,25 @@ export default function MarkdownRenderer({ content }) {
   // 일반 마크다운 렌더링
   return (
     <Box sx={{ 
-      wordBreak: 'break-word', 
-      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+      // 전역 pre-wrap 제거: 필요 시 개별 요소에서만 적용
       '& .markdown-body': {
         fontFamily: 'inherit'
       }
     }} className="markdown-body">
-      <ReactMarkdown 
-        rehypePlugins={[rehypeRaw]}
-        // remarkPlugins={[remarkGfm]} // 이거 rehypeRaw와 충돌함
+  <ReactMarkdown 
+    remarkPlugins={[remarkToc, remarkGfm]}
+        rehypePlugins={[
+          rehypeRaw,
+          rehypeHighlight,
+          rehypeSlug,
+          rehypeAutolinkHeadings,
+        ]}
+        // rehypePlugins={[rehypeRaw]}
         components={components}
         skipHtml={false}
       >
-        {marked(processedContent)}
+    {processedContent}
       </ReactMarkdown>
     </Box>
   );

@@ -8,6 +8,35 @@ export const api = axios.create({
     withCredentials: true
 });
 
+// Notion SSR API uses separate prefix (/notion) proxied by Nginx/Vite directly to SSR service
+export const notionApi = axios.create({
+  baseURL: '',
+  withCredentials: true
+});
+
+// Allow overriding Notion API key per user via localStorage
+const NOTION_KEY_STORAGE = 'notion.apiKey';
+export function setNotionApiKey(key) {
+  if (key && typeof key === 'string') {
+    localStorage.setItem(NOTION_KEY_STORAGE, key);
+  } else {
+    localStorage.removeItem(NOTION_KEY_STORAGE);
+  }
+}
+export function getNotionApiKey() {
+  return localStorage.getItem(NOTION_KEY_STORAGE) || '';
+}
+
+notionApi.interceptors.request.use(config => {
+  const key = getNotionApiKey();
+  if (key) {
+    config.headers['x-notion-api-key'] = key;
+  } else {
+    delete config.headers['x-notion-api-key'];
+  }
+  return config;
+});
+
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('accessToken');
     if (token) {
@@ -75,4 +104,5 @@ export const createCategory = categoryData => api.post('/categories', categoryDa
 export const deleteCategory = id => api.delete(`/categories/${id}`);
 export const updateCategory = (id, categoryData) => api.put(`/categories/${id}`, categoryData);
 
-export const notionConvert = (data) => api.post('/notion/convert', data);
+export const notionConvert = (data) => notionApi.post('/notion/convert', data);
+export const getNotionPageMeta = (pageId) => notionApi.get(`/notion/page/${pageId}`);

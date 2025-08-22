@@ -1,0 +1,20 @@
+{
+  "name": "notion-ssr-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@notion-render/bookmark-plugin": "^0.0.2",
+    "@notion-render/client": "^0.0.2",
+    "@notion-render/hljs-plugin": "^0.0.2",
+    "@notionhq/client": "^4.0.2",
+    "axios": "^1.8.4",
+    "express": "^4.19.2",
+    "marked": "^15.0.9",
+    "notion-to-md": "^3.1.9"
+  }
+}

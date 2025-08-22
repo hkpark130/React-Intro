@@ -13,6 +13,20 @@ services:
     networks:
       - ext-network
 
+  ssr-notion:
+    build:
+      context: ./server/notion-service
+    container_name: ssr-notion
+    environment:
+      - PORT=3000
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - SPRING_BASE=http://backend-spring-app:8100
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - ext-network
+
 networks:
   ext-network:
     external: true

@@ -12,7 +12,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': process.env.VITE_API_URL // 백엔드 서버 지정하기
+      '/api': process.env.VITE_API_URL, // Spring API (기존)
+  '/notion': 'http://localhost:3000', // SSR Notion 서비스 (로컬 개발 시)
+  '/seo': 'http://localhost:3000' // OGP Preview API 프록시
     }
   }
 })
