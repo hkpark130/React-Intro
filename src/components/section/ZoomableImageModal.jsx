@@ -6,14 +6,7 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import NorthIcon from '@mui/icons-material/North';
-import SouthIcon from '@mui/icons-material/South';
-import EastIcon from '@mui/icons-material/East';
-import WestIcon from '@mui/icons-material/West';
-import NorthEastIcon from '@mui/icons-material/NorthEast';
-import NorthWestIcon from '@mui/icons-material/NorthWest';
-import SouthEastIcon from '@mui/icons-material/SouthEast';
-import SouthWestIcon from '@mui/icons-material/SouthWest';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 
 /**
  * ZoomableImageModal
@@ -231,13 +224,13 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
               pointerEvents: 'none',
             }}
           >
-            {/* Corner icon handles */}
+            {/* Corner icon handles (use rotated ArrowBackIosIcon) */}
             {[
-              { dir: 'nw', pos: { top: -6, left: -6 },  icon: <NorthWestIcon fontSize="inherit" />, cursor: 'nwse-resize' },
-              { dir: 'ne', pos: { top: -6, right: -6 }, icon: <NorthEastIcon fontSize="inherit" />, cursor: 'nesw-resize' },
-              { dir: 'sw', pos: { bottom: -6, left: -6 }, icon: <SouthWestIcon fontSize="inherit" />, cursor: 'nesw-resize' },
-              { dir: 'se', pos: { bottom: -6, right: -6 }, icon: <SouthEastIcon fontSize="inherit" />, cursor: 'nwse-resize' },
-            ].map(({ dir, pos, icon, cursor }) => (
+              { dir: 'nw', pos: { top: -2, left: -2 },  rotate: '45deg',  cursor: 'nwse-resize' },
+              { dir: 'ne', pos: { top: -2, right: -2 }, rotate: '135deg', cursor: 'nesw-resize' },
+              { dir: 'sw', pos: { bottom: -2, left: -2 }, rotate: '-45deg', cursor: 'nesw-resize' },
+              { dir: 'se', pos: { bottom: -2, right: -2 }, rotate: '-135deg', cursor: 'nwse-resize' },
+            ].map(({ dir, pos, rotate, cursor }) => (
               <IconButton
                 key={`corner-${dir}`}
                 onPointerDown={beginResize(dir)}
@@ -253,26 +246,24 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
                   p: 0,
                   ...pos,
                   pointerEvents: 'auto',
-                  bgcolor: 'rgba(0,0,0,0.35)',
-                  color: 'white',
-                  border: '1px solid rgba(255,255,255,0.8)',
+                  color: 'rgba(0,0,0,0.55)',
+                  // border: '1px solid rgba(255,255,255,0.8)',
                   borderRadius: 0.75,
                   cursor,
-                  '&:hover': { bgcolor: 'rgba(0,0,0,0.55)' },
                   fontSize: 16,
                 }}
               >
-                {icon}
+                <ArrowBackIosIcon fontSize="small" sx={{ transform: `rotate(${rotate})` }} />
               </IconButton>
             ))}
 
-            {/* Edge arrow handles (centers) */}
+            {/* Edge arrow handles (centers) - use rotated ArrowBackIosIcon */}
             {[
-              { dir: 'n',  pos: { top: -6, left: '50%', transform: 'translateX(-50%)' }, icon: <NorthIcon fontSize="inherit" />, cursor: 'ns-resize' },
-              { dir: 's',  pos: { bottom: -6, left: '50%', transform: 'translateX(-50%)' }, icon: <SouthIcon fontSize="inherit" />, cursor: 'ns-resize' },
-              { dir: 'w',  pos: { left: -6, top: '50%', transform: 'translateY(-50%)' }, icon: <WestIcon fontSize="inherit" />, cursor: 'ew-resize' },
-              { dir: 'e',  pos: { right: -6, top: '50%', transform: 'translateY(-50%)' }, icon: <EastIcon fontSize="inherit" />, cursor: 'ew-resize' },
-            ].map(({ dir, pos, icon, cursor }) => (
+              { dir: 'n',  pos: { top: -1, left: '50%', transform: 'translateX(-50%)' }, rotate: '90deg',  cursor: 'ns-resize' },
+              { dir: 's',  pos: { bottom: -1, left: '50%', transform: 'translateX(-50%)' }, rotate: '-90deg', cursor: 'ns-resize' },
+              { dir: 'w',  pos: { left: -1, top: '50%', transform: 'translateY(-50%)' }, rotate: '0deg',   cursor: 'ew-resize' },
+              { dir: 'e',  pos: { right: -1, top: '50%', transform: 'translateY(-50%)' }, rotate: '180deg', cursor: 'ew-resize' },
+            ].map(({ dir, pos, rotate, cursor }) => (
               <IconButton
                 key={`edge-${dir}`}
                 onPointerDown={beginResize(dir)}
@@ -288,16 +279,14 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
                   p: 0,
                   ...pos,
                   pointerEvents: 'auto',
-                  bgcolor: 'rgba(0,0,0,0.35)',
-                  color: 'white',
-                  border: '1px solid rgba(255,255,255,0.8)',
+                  color: 'rgba(0,0,0,0.55)',
+                  // border: '1px solid rgba(255,255,255,0.8)',
                   borderRadius: 0.75,
                   cursor,
-                  '&:hover': { bgcolor: 'rgba(0,0,0,0.55)' },
                   fontSize: 16,
                 }}
               >
-                {icon}
+                <ArrowBackIosIcon fontSize="small" sx={{ transform: `rotate(${rotate})` }} />
               </IconButton>
             ))}
           </Box>
