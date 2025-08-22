@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
   Paper, 
   Typography, 
@@ -27,46 +28,38 @@ const Bookmark = ({ url, title, description, imageUrl }) => {
 
   // URL 정보 추출 및 파비콘 설정
   useEffect(() => {
-    try {
-      // URL이 유효한지 확인
-      const urlObj = new URL(url);
-      
-      // 타이틀과 설명이 제공되지 않았을 때만 가져오기
-      if (!title || !description) {
-        setBookmarkData(prev => ({
-          ...prev,
-          isLoading: true
-        }));
-        
-        // 실제 애플리케이션에서는 여기에 메타데이터 fetch 로직 추가
-        // 예: fetch('/api/metadata?url=' + encodeURIComponent(url))
-        
-        // 로딩 상태 종료
-        setTimeout(() => {
+    const run = async () => {
+      try {
+        const urlObj = new URL(url);
+        if (!title || !description || !imageUrl) {
+          setBookmarkData(prev => ({ ...prev, isLoading: true }));
+          // SSR 서비스가 같은 도메인 프록시 뒤에 배치된 것을 가정하여 절대 경로 사용하지 않음
+          const { data } = await axios.get(`/seo/preview`, {
+            params: { url },
+            timeout: 6000
+          });
           setBookmarkData(prev => ({
             ...prev,
-            title: title || urlObj.hostname,
-            description: description || '북마크 설명이 제공되지 않았습니다.',
+            title: title || data?.title || urlObj.hostname,
+            description: description || data?.description || '북마크 설명이 제공되지 않았습니다.',
+            imageUrl: imageUrl || data?.image || '',
             isLoading: false
           }));
-        }, 500);
-      } else {
+        } else {
+          setBookmarkData(prev => ({ ...prev, isLoading: false }));
+        }
+      } catch (error) {
+        console.error('Bookmark preview error:', error?.message || error);
         setBookmarkData(prev => ({
           ...prev,
+          title: title || '유효하지 않은 URL',
+          description: description || '올바른 URL을 입력해주세요.',
           isLoading: false
         }));
       }
-      
-    } catch (error) {
-      console.error('Invalid URL:', error);
-      setBookmarkData(prev => ({
-        ...prev,
-        title: title || '유효하지 않은 URL',
-        description: description || '올바른 URL을 입력해주세요.',
-        isLoading: false
-      }));
-    }
-  }, [url, title, description]);
+    };
+    run();
+  }, [url, title, description, imageUrl]);
 
   // 파비콘 URL 생성
   const getFaviconUrl = () => {

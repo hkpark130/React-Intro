@@ -26,3 +26,54 @@ code:not(pre code) {
     border-radius: 0;
     font-size: large;
 } */
+
+/* details/summary UX improvements */
+.markdown-body details {
+    margin: 8px 0;
+}
+.markdown-body summary {
+    cursor: pointer;
+    list-style: none; /* avoid default triangle interfering with default marker */
+    display: inline-flex;
+    align-items: center; /* vertical center */
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background-color: rgba(25, 118, 210, 0.04); /* subtle default bg */
+    transition: background-color 0.2s ease;
+}
+.markdown-body summary::-webkit-details-marker {
+    display: none;
+}
+.markdown-body summary:hover {
+    text-decoration: underline;
+    background-color: rgba(25, 118, 210, 0.10);
+}
+
+.markdown-body summary:focus {
+    outline: 2px solid rgba(0,0,0,0.2);
+    border-radius: 2px;
+}
+
+/* Nested details indentation */
+.markdown-body details details summary {
+    padding-left: 0;
+}
+
+/* MUI disclosure icon (inserted by React) */
+.markdown-body .mui-disclosure-icon {
+    transition: transform 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+    vertical-align: middle;
+    margin-right: 4px;
+    color: #666;
+    padding: 2px;
+    border-radius: 4px;
+    display: inline-block; /* enable background visibility */
+}
+.markdown-body details[open] > summary .mui-disclosure-icon {
+    transform: rotate(90deg);
+    color: #1976d2;
+}
+.markdown-body summary:hover .mui-disclosure-icon {
+    background-color: rgba(25, 118, 210, 0.12); /* MUI primary 12% */
+}

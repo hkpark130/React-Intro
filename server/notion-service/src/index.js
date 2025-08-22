@@ -20,8 +20,45 @@ if (!NOTION_API_KEY) {
   console.warn('[notion-ssr] NOTION_API_KEY is not set. /notion endpoints will fail until provided.');
 }
 
-const notion = new Client({ auth: NOTION_API_KEY });
-const n2m = new NotionToMarkdown({ notionClient: notion });
+// Resolve API key per-request: header > body > query > env
+function getApiKeyFromReq(req) {
+  const headerKey = req.get('x-notion-api-key');
+  const bodyKey = req.body && (req.body.apiKey || req.body.notionKey);
+  const queryKey = req.query && (req.query.apiKey || req.query.notionKey);
+  return (headerKey || bodyKey || queryKey || NOTION_API_KEY);
+}
+
+// Build Notion tools (client + markdown converter) for a given key
+function buildNotionTools(apiKey) {
+  const notion = new Client({ auth: apiKey });
+  const n2m = new NotionToMarkdown({ notionClient: notion });
+  return { notion, n2m };
+}
+
+// Escape attribute values for safe inline HTML
+function escapeAttr(val) {
+  return String(val ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Apply custom transformer to a NotionToMarkdown instance
+function setupCustomTransformers(n2m) {
+  try {
+    n2m.setCustomTransformer('bookmark', async (block) => {
+      const url = block?.bookmark?.url || '';
+      const caption = Array.isArray(block?.bookmark?.caption)
+        ? block.bookmark.caption.map(t => t?.plain_text || '').join('')
+        : '';
+      // Keep attributes minimal; client Bookmark will enrich via /seo/preview
+      return `<Bookmark url="${escapeAttr(url)}" description="${escapeAttr(caption)}" />`;
+    });
+  } catch (e) {
+    console.warn('[notion-ssr] failed to set custom transformer for bookmark', e?.message || e);
+  }
+}
 
 // Normalize Notion code block languages for highlight.js compatibility
 function normalizeCodeLanguage(lang) {
@@ -47,7 +84,7 @@ function normalizeBlocks(blocks = []) {
 }
 
 // Fetch all blocks with pagination for a given block/page id
-async function fetchAllBlocks(blockId) {
+async function fetchAllBlocks(notion, blockId) {
   const results = [];
   let start_cursor = undefined;
   while (true) {
@@ -65,7 +102,7 @@ async function fetchAllBlocks(blockId) {
 }
 
 // Build renderer with optional bookmark plugin
-function buildRenderer({ withBookmark = true } = {}) {
+function buildRenderer(notion, { withBookmark = true } = {}) {
   const renderer = new NotionRenderer({ client: notion });
   renderer.use(hljsPlugin({}));
   if (withBookmark) {
@@ -80,16 +117,16 @@ function buildRenderer({ withBookmark = true } = {}) {
 }
 
 // Safely render blocks: try with bookmark plugin, fallback without on fetch errors
-async function safeRenderHtml(blocks) {
+async function safeRenderHtml(notion, blocks) {
   const normalized = normalizeBlocks(blocks);
   try {
-    const renderer = buildRenderer({ withBookmark: process.env.SSR_NOTION_DISABLE_BOOKMARK !== '1' });
+    const renderer = buildRenderer(notion, { withBookmark: process.env.SSR_NOTION_DISABLE_BOOKMARK !== '1' });
     return await renderer.render(...normalized);
   } catch (err) {
     const msg = (err && err.message) || '';
     if (/fetch failed|ENOTFOUND|ECONNRESET|ETIMEDOUT/i.test(msg)) {
       console.warn('[notion-ssr] bookmark render failed, retrying without bookmark plugin');
-      const renderer = buildRenderer({ withBookmark: false });
+      const renderer = buildRenderer(notion, { withBookmark: false });
       return await renderer.render(...normalized);
     }
     throw err;
@@ -226,8 +263,12 @@ app.post('/notion/convert', async (req, res) => {
       return res.status(400).json({ message: 'pageId is required' });
     }
 
-    const mdBlocks = await n2m.pageToMarkdown(pageId);
-    const mdString = n2m.toMarkdownString(mdBlocks);
+  const apiKey = getApiKeyFromReq(req);
+  const { notion, n2m } = buildNotionTools(apiKey);
+  setupCustomTransformers(n2m);
+
+  const mdBlocks = await n2m.pageToMarkdown(pageId);
+  const mdString = n2m.toMarkdownString(mdBlocks);
 
     const markdown = mdString.parent || '';
     const html = marked.parse(markdown);
@@ -239,11 +280,90 @@ app.post('/notion/convert', async (req, res) => {
   }
 });
 
+// Very small HTML meta extractor for OGP/Twitter tags
+function extractMeta(html = '', baseUrl = '') {
+  const decodeEntities = (s) => {
+    if (!s) return '';
+    // numeric entities: decimal and hex
+    let out = String(s).replace(/&#(x?)([0-9a-fA-F]+);/g, (m, isHex, code) => {
+      try {
+        const cp = parseInt(code, isHex ? 16 : 10);
+        if (!isFinite(cp)) return m;
+        return String.fromCodePoint(cp);
+      } catch (_) { return m; }
+    });
+    // minimal named entities support
+    const map = {
+      amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00A0',
+      mdash: '\u2014', ndash: '\u2013', hellip: '\u2026', copy: '\u00A9', reg: '\u00AE'
+    };
+    out = out.replace(/&([a-zA-Z]+);/g, (m, name) => map[name] || m);
+    return out;
+  };
+  const pick = (regex) => {
+    const m = html.match(regex);
+    return m ? m[1].trim() : '';
+  };
+  const title = decodeEntities(pick(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["'][^>]*>/i)
+    || pick(/<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']+)["'][^>]*>/i)
+    || pick(/<title[^>]*>([^<]*)<\/title>/i));
+  const description = decodeEntities(pick(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["'][^>]*>/i)
+    || pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["'][^>]*>/i)
+    || pick(/<meta[^>]+name=["']twitter:description["'][^>]+content=["']([^"']+)["'][^>]*>/i));
+  let image = pick(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["'][^>]*>/i)
+    || pick(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["'][^>]*>/i);
+  const siteName = decodeEntities(pick(/<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["'][^>]*>/i));
+
+  // Resolve relative image URLs
+  try {
+    if (image) {
+      const u = new URL(image, baseUrl);
+      image = u.toString();
+    }
+  } catch (_) {}
+
+  return { title, description, image, siteName };
+}
+
+// GET /seo/preview?url=https://...
+app.get('/seo/preview', async (req, res) => {
+  try {
+    const url = req.query?.url;
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ message: 'url is required' });
+    }
+    if (!/^https?:\/\//i.test(url)) {
+      return res.status(400).json({ message: 'only http(s) supported' });
+    }
+
+    const resp = await axios.get(url, {
+      timeout: 6000,
+      // Simple UA to improve chances of OGP
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NotionSSRBot/1.0)' }
+    });
+
+    const { title, description, image, siteName } = extractMeta(String(resp.data || ''), url);
+    return res.json({
+      ok: true,
+      url,
+      title,
+      description,
+      image,
+      siteName
+    });
+  } catch (err) {
+    console.warn('[notion-ssr] seo/preview error:', err?.message || err);
+    return res.status(500).json({ ok: false, message: 'preview failed' });
+  }
+});
+
 // GET /notion/page/:pageId -> metadata (title, created/updated, cover)
 app.get('/notion/page/:pageId', async (req, res) => {
   try {
     const { pageId } = req.params;
-    const page = await notion.pages.retrieve({ page_id: pageId });
+  const apiKey = getApiKeyFromReq(req);
+  const { notion } = buildNotionTools(apiKey);
+  const page = await notion.pages.retrieve({ page_id: pageId });
 
     // cover
     let coverImage = null;
@@ -280,7 +400,8 @@ app.post('/notion/fetchPages', async (req, res) => {
     if (!databaseId) {
       return res.status(400).json({ message: 'databaseId is required' });
     }
-
+  const apiKey = getApiKeyFromReq(req);
+  const { notion } = buildNotionTools(apiKey);
     const response = await notion.databases.query({ database_id: databaseId });
     res.json(response);
   } catch (err) {
@@ -296,7 +417,8 @@ app.post('/notion/fetchPageBlocks', async (req, res) => {
     if (!pageId) {
       return res.status(400).json({ message: 'pageId is required' });
     }
-
+  const apiKey = getApiKeyFromReq(req);
+  const { notion } = buildNotionTools(apiKey);
     const response = await notion.blocks.children.list({ block_id: pageId });
     res.json(response);
   } catch (err) {
@@ -312,8 +434,9 @@ app.post('/notion/blocksToHtml', async (req, res) => {
     if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
       return res.status(400).json({ message: 'blocks (non-empty array) is required' });
     }
-
-  const html = await safeRenderHtml(blocks);
+    const apiKey = getApiKeyFromReq(req);
+    const { notion } = buildNotionTools(apiKey);
+  const html = await safeRenderHtml(notion, blocks);
     return res.json({ html });
   } catch (err) {
     console.error('[notion-ssr] blocksToHtml error', err?.response?.data || err.message);
@@ -325,10 +448,11 @@ app.post('/notion/blocksToHtml', async (req, res) => {
 app.get('/notion/render/:pageId', async (req, res) => {
   try {
     const { pageId } = req.params;
-
+    const apiKey = getApiKeyFromReq(req);
+    const { notion } = buildNotionTools(apiKey);
   // fetch all children blocks for the page and render
-  const allBlocks = await fetchAllBlocks(pageId);
-  const html = await safeRenderHtml(allBlocks);
+  const allBlocks = await fetchAllBlocks(notion, pageId);
+  const html = await safeRenderHtml(notion, allBlocks);
     res.json({ html });
   } catch (err) {
   console.error('[notion-ssr] render page error', err?.response?.data || err?.body || err.message, { code: err?.code, status: err?.status });
@@ -348,8 +472,9 @@ app.get('/notion/render-db/:databaseId', async (req, res) => {
 
     const query = { database_id: databaseId, page_size: pageSize };
     if (startCursor) query.start_cursor = startCursor;
-
-    const dbResp = await notion.databases.query(query);
+  const apiKey = getApiKeyFromReq(req);
+  const { notion } = buildNotionTools(apiKey);
+  const dbResp = await notion.databases.query(query);
     const pages = dbResp.results || [];
 
   const renderer = null; // not used directly; use safeRenderHtml instead
@@ -370,9 +495,9 @@ app.get('/notion/render-db/:databaseId', async (req, res) => {
         if (page.cover.type === 'file') coverImage = page.cover.file?.url || null;
       }
 
-      // render blocks
-  const allBlocks = await fetchAllBlocks(page.id);
-  const html = await safeRenderHtml(allBlocks);
+    // render blocks
+  const allBlocks = await fetchAllBlocks(notion, page.id);
+  const html = await safeRenderHtml(notion, allBlocks);
 
       return {
         id: page.id,

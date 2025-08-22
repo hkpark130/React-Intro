@@ -11,6 +11,7 @@ import CodeAccordion from '../section/CodeAccordion';
 import Bookmark from './Bookmark';
 import AlertBlock from './AlertBlock';
 import { Box, Alert, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 // react-notion-x 컴포넌트 스타일
 import './markdown-styles.css';
@@ -177,6 +178,28 @@ export default function MarkdownRenderer({ content }) {
   };
 
   const components = {
+    // Inject MUI disclosure icon into summary
+    summary: ({ children, ...props }) => (
+      <summary {...props}>
+        <PlayArrowIcon className="mui-disclosure-icon" fontSize="medium" />
+        {children}
+      </summary>
+    ),
+    // a 링크 커스텀: [bookmark](url) 패턴을 Bookmark 카드로 변환
+    a: ({ href, children, ...props }) => {
+      try {
+        const text = (components._toPlainText(children) || '').trim().toLowerCase();
+        if (text === 'bookmark' && href) {
+          return <Bookmark url={href} />;
+        }
+      } catch (_) {}
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+          {children}
+        </a>
+      );
+    },
+
     // children -> plain text로 변환 (줄바꿈 유지)
     // React 요소 구조를 순회하며 텍스트/개행을 복원
     _toPlainText: (nodes) => {

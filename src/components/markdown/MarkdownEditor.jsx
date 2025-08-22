@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import MarkdownRenderer from "./MarkdownRenderer";
-import { notionApi, notionConvert } from "@/api/api";
+import { notionApi, notionConvert, getNotionApiKey, setNotionApiKey } from "@/api/api";
 import { 
   Box, Typography, TextField, Button, Paper, Tab, Tabs, Divider,
   Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, 
@@ -17,7 +17,8 @@ import {
   RadioGroup,
   Radio,
   MenuItem,
-  Select
+  Select,
+  Switch
 } from '@mui/material';
 
 export default function MarkdownEditor({ value, onChange }) {
@@ -75,6 +76,8 @@ export default function MarkdownEditor({ value, onChange }) {
   const [dbResults, setDbResults] = useState([]);
   const [notionLoading, setNotionLoading] = useState(false);
   const [notionError, setNotionError] = useState('');
+  const [notionKey, setNotionKey] = useState('');
+  const [useCustomKey, setUseCustomKey] = useState(false);
   // Html 경로 제거: 마크다운만 지원
 
   const handleTabChange = (_, newValue) => setTabValue(newValue);
@@ -193,6 +196,10 @@ export default function MarkdownEditor({ value, onChange }) {
     setDbId('');
     setDbResults([]);
     setNotionError('');
+  // load saved key
+  const saved = getNotionApiKey();
+  setNotionKey(saved || '');
+  setUseCustomKey(!!saved);
   };
 
   const handleNotionFetchPage = async () => {
@@ -200,6 +207,8 @@ export default function MarkdownEditor({ value, onChange }) {
       setNotionError('페이지 ID를 입력하세요.');
       return;
     }
+  // persist key if toggled on
+  if (useCustomKey) setNotionApiKey(notionKey.trim()); else setNotionApiKey('');
     setNotionLoading(true);
     setNotionError('');
     try {
@@ -218,6 +227,7 @@ export default function MarkdownEditor({ value, onChange }) {
       setNotionError('데이터베이스 ID를 입력하세요.');
       return;
     }
+  if (useCustomKey) setNotionApiKey(notionKey.trim()); else setNotionApiKey('');
     setNotionLoading(true);
     setNotionError('');
     try {
@@ -231,6 +241,7 @@ export default function MarkdownEditor({ value, onChange }) {
   };
 
   const handleInsertDbPage = async (pId) => {
+  if (useCustomKey) setNotionApiKey(notionKey.trim()); else setNotionApiKey('');
     setNotionLoading(true);
     setNotionError('');
     try {
@@ -646,6 +657,31 @@ export default function MarkdownEditor({ value, onChange }) {
               variant={notionMode === 'db' ? 'contained' : 'outlined'}
               onClick={() => { setNotionMode('db'); setNotionError(''); }}
             >데이터베이스 ID</Button>
+          </Box>
+
+          {/* 사용자 Notion 키 설정 */}
+          <Box sx={{ mb: 2 }}>
+            <FormControlLabel
+              control={<Switch checked={useCustomKey} onChange={() => setUseCustomKey(v => !v)} />}
+              label="사용자 Notion API 키 사용"
+            />
+            {useCustomKey && (
+              <TextField
+                label="Notion API 키 (x-notion-api-key)"
+                fullWidth
+                size="small"
+                type="password"
+                value={notionKey}
+                onChange={(e) => setNotionKey(e.target.value)}
+                placeholder="secret_..."
+                sx={{ mt: 1 }}
+              />
+            )}
+            {!useCustomKey && (
+              <Typography variant="caption" color="text.secondary">
+                기본값(.env)의 서버 키를 사용합니다.
+              </Typography>
+            )}
           </Box>
 
           {/* 로딩 바 */}

@@ -14,6 +14,29 @@ export const notionApi = axios.create({
   withCredentials: true
 });
 
+// Allow overriding Notion API key per user via localStorage
+const NOTION_KEY_STORAGE = 'notion.apiKey';
+export function setNotionApiKey(key) {
+  if (key && typeof key === 'string') {
+    localStorage.setItem(NOTION_KEY_STORAGE, key);
+  } else {
+    localStorage.removeItem(NOTION_KEY_STORAGE);
+  }
+}
+export function getNotionApiKey() {
+  return localStorage.getItem(NOTION_KEY_STORAGE) || '';
+}
+
+notionApi.interceptors.request.use(config => {
+  const key = getNotionApiKey();
+  if (key) {
+    config.headers['x-notion-api-key'] = key;
+  } else {
+    delete config.headers['x-notion-api-key'];
+  }
+  return config;
+});
+
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('accessToken');
     if (token) {
