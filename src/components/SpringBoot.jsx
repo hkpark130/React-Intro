@@ -188,7 +188,7 @@ function ImplementationSection() {
         🖥️ 프로젝트 아키텍쳐
       </Typography>
       <ZoomableImageModal
-        imageSrc="/images/spring-blog.jpg"
+        imageSrc="/images/spring-blog.png"
         altText="Spring Diagram"
         caption="🔼 클릭 후 스크롤하면 확대/축소, 드래그하면 이미지 이동 가능합니다."
         sx={{ border: '2px solid #ddd', borderRadius: 2 }}
@@ -208,7 +208,7 @@ function ImplementationSection() {
         imageSrc="/images/blog-jwt.jpg"
         altText="Spring Diagram"
         caption="🔼 클릭 후 스크롤하면 확대/축소, 드래그하면 이미지 이동 가능합니다."
-        sx={{ border: '2px solid #ddd', borderRadius: 2 }}
+        sx={{ width: 600, height: 'auto', border: '2px solid #ddd', borderRadius: 2 }}
       />
 
       <motion.div variants={sectionVariant} custom={3.5}>

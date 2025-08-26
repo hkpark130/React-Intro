@@ -11,6 +11,12 @@ const app = express();
 app.set('trust proxy', true);
 app.use(express.json({ limit: '1mb' }));
 
+// Configure marked: treat single newlines as <br> (hard breaks)
+marked.setOptions({
+  gfm: true,
+  breaks: true
+});
+
 // Env
 const PORT = process.env.PORT || 3000;
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
@@ -54,6 +60,22 @@ function setupCustomTransformers(n2m) {
         : '';
       // Keep attributes minimal; client Bookmark will enrich via /seo/preview
       return `<Bookmark url="${escapeAttr(url)}" description="${escapeAttr(caption)}" />`;
+    });
+
+    // Preserve explicit blank spacing: if a Notion paragraph has no text,
+    // emit a hard break so spacing is visible after MD->HTML conversion.
+    n2m.setCustomTransformer('paragraph', async (block) => {
+      try {
+        const rt = block?.paragraph?.rich_text || [];
+        const combined = rt.map(t => (t?.plain_text ?? '')).join('');
+        if (!combined || combined.trim().length === 0) {
+          return '<br />';
+        }
+        // non-empty: fall back to default handling
+        return undefined;
+      } catch (_) {
+        return undefined;
+      }
     });
   } catch (e) {
     console.warn('[notion-ssr] failed to set custom transformer for bookmark', e?.message || e);

@@ -39,7 +39,8 @@ code:not(pre code) {
     gap: 4px;
     padding: 2px 6px;
     border-radius: 6px;
-    background-color: rgba(25, 118, 210, 0.04); /* subtle default bg */
+    background-color: rgba(25, 118, 210, 0.08); /* more visible default bg */
+    border: 1px solid rgba(25, 118, 210, 0.18); /* subtle border to signal interactivity */
     transition: background-color 0.2s ease;
 }
 .markdown-body summary::-webkit-details-marker {
@@ -47,7 +48,8 @@ code:not(pre code) {
 }
 .markdown-body summary:hover {
     text-decoration: underline;
-    background-color: rgba(25, 118, 210, 0.10);
+    background-color: rgba(25, 118, 210, 0.16);
+    border-color: rgba(25, 118, 210, 0.39);
 }
 
 .markdown-body summary:focus {

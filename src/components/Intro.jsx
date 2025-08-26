@@ -94,8 +94,8 @@ function HeroSection() {
   return (
     <TitleSection
       title="포트폴리오 웹사이트"
-      subtitle="React와 Spring Boot를 활용한 포트폴리오 페이지"
-      description="기술 스택 소개 및 프로젝트 전시"
+      subtitle="React · Spring Boot · Node.js SSR 기반 포트폴리오"
+      description="SEO 최적화와 Notion 연동을 위한 별도 SSR(Node.js) 서비스 도입"
     />
   );
 }
@@ -106,7 +106,8 @@ function TechStackSection() {
       category: '인프라',
       labels: [
         { label: 'Docker', color: 'info' },
-        { label: 'AWS EC2', color: 'warning' }
+        { label: 'AWS EC2', color: 'warning' },
+        { label: 'Nginx(Reverse Proxy)', color: 'secondary' }
       ],
     },
     {
@@ -116,6 +117,13 @@ function TechStackSection() {
         { label: 'Material-UI', color: 'info' },
         { label: 'Framer Motion', color: 'success' },
         { label: 'Vite', color: 'warning' }
+      ],
+    },
+    {
+      category: 'SSR/SEO',
+      labels: [
+        { label: 'Node.js', color: 'success' },
+        { label: 'Notion API', color: 'info' }
       ],
     },
     {
@@ -152,9 +160,11 @@ function PortfolioOverviewSection() {
       </Typography>
 
       <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
-        블로그 기능에서는 마크다운 기반 컨텐츠 작성과 댓글 시스템을 통해 방문자와 소통할 수 있으며,
-        JWT 인증을 통해 관리자 권한을 제어하고 있습니다. 현재 SEO 최적화 및 성능 향상을 위해
-        Next.js로의 마이그레이션을 준비 중입니다.
+        블로그 기능은 마크다운 기반 컨텐츠 작성과 댓글 시스템을 포함하며 JWT 인증으로 관리자 권한을 제어합니다.
+        SEO 및 Notion 연동을 위해 별도 Node.js 기반 SSR 서비스(<b>ssr-notion</b>)를 컨테이너로 분리하여 운영합니다.
+        Nginx가 봇 트래픽을 감지하면 <code>/blog/:id</code> 요청을 SSR로 프록시하고, 일반 사용자는 SPA UI를 제공합니다.
+        또한 <code>/notion/*</code>, <code>/seo/*</code>, <code>/sitemap.xml</code>, <code>/robots.txt</code>를 통해
+        서버 측 렌더링, 메타 미리보기, 사이트맵/로봇 제어를 제공합니다.
       </Typography>
     </Box>
   );
@@ -369,7 +379,7 @@ function ImplementationDetailsSection() {
       </Stack>
 
       <Typography variant="body1" component="p" sx={{ mb: 2 }}>
-        본 프로젝트는 프론트엔드와 백엔드를 분리한 모던 웹 아키텍처로 구성되어 있습니다.
+        본 프로젝트는 프론트엔드와 백엔드를 분리한 웹 아키텍처로 구성되어 있습니다.
         CI/CD 파이프라인을 통해 자동 배포되며, Docker 컨테이너로 서비스됩니다.
       </Typography>
 
@@ -392,22 +402,17 @@ function ImplementationDetailsSection() {
       <Typography variant="h6" gutterBottom>
         🖥️ 시스템 아키텍처
       </Typography>
-      <Box sx={{ mb: 2 }}>
-        <img 
-          src="/images/spring-blog.jpg" 
-          alt="포트폴리오 시스템 아키텍처" 
-          style={{ 
-            maxWidth: '100%', 
-            borderRadius: '8px',
-            border: '1px solid #ddd'
-          }} 
-        />
-      </Box>
+      <ZoomableImageModal
+        imageSrc="/images/spring-blog.png"
+        altText="Spring Diagram"
+        caption="🔼 클릭 후 스크롤하면 확대/축소, 드래그하면 이미지 이동 가능합니다."
+        sx={{ width: 600, height: 'auto', border: '2px solid #ddd', borderRadius: 2 }}
+      />
 
       <Typography variant="body1" sx={{ mt: 2 }}>
-        <strong>향후 계획:</strong> 현재 SEO 최적화, 서버 사이드 렌더링 및 정적 페이지 생성을 위해 
-        Next.js로의 마이그레이션을 진행 중입니다. 이를 통해 검색 엔진 노출도 향상 및
-        CRA 에서 발생하는 CORS 문제를 해결하고 Notion API 까지 도입할 예정입니다.
+        <strong>운영 현황:</strong> SEO 최적화와 서버 사이드 렌더링은 <b>별도 Node.js SSR 서비스(ssr-notion)</b>로 구현했습니다.
+        Nginx가 봇을 감지하면 <code>/blog/:id</code>를 SSR로 프록시하고, <code>/notion/*</code> · <code>/seo/*</code> · <code>/sitemap.xml</code> · <code>/robots.txt</code>
+        엔드포인트를 통해 Notion API 연동과 메타 태그 생성까지 서버에서 처리합니다.
       </Typography>
     </Box>
   );

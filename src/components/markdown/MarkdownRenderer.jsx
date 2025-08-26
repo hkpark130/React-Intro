@@ -6,6 +6,7 @@ import rehypeHighlight from 'rehype-highlight';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import ZoomableImageModal from '../section/ZoomableImageModal';
 import CodeAccordion from '../section/CodeAccordion';
 import Bookmark from './Bookmark';
@@ -64,24 +65,6 @@ const preprocessMarkdown = (content) => {
   if (!content || typeof content !== 'string') return '';
   
   let processed = content;
-
-  // 줄바꿈 정규화 (CRLF/CR -> LF)
-  processed = processed.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-  // 과도한 줄바꿈 정규화
-  processed = processed.replace(/\n\n\n+/g, '\n\n');
-
-  // 헤딩 뒤 과도한 빈 줄 -> 하나로 축소 (헤딩 다음 표/리스트 앞 공백 폭 제거)
-  processed = processed.replace(/^(#{1,6} .+?)\n{2,}/gm, '$1\n');
-
-  // 블록 요소(표/리스트/코드) 앞의 3줄 이상 공백을 1~2줄로 축소
-  processed = processed
-    // 표 앞
-    .replace(/\n{3,}(\|[^\n]*\|)/g, '\n\n$1')
-    // 리스트 앞
-    .replace(/\n{3,}(- |\d+\. )/g, '\n\n$1')
-    // 코드펜스 앞
-    .replace(/\n{3,}(```|~~~)/g, '\n\n$1');
   
   // 공백 처리 개선 - <b> 태그 내의 공백이 사라지지 않도록 처리
   processed = processed.replace(/(<b>)([^<]*?)(\s+)([^<]*?)(<\/b>)/g, '$1$2&nbsp;$4$5');
@@ -93,28 +76,6 @@ const preprocessMarkdown = (content) => {
   return processed;
 };
 
-// 매우 단순한 sx 문자열 파서: "{ key: 'val', num: 1 }" 형태를 JS 객체로 변환
-// 따옴표/숫자/px 등 기본값만 처리 (중첩 객체/배열은 미지원)
-const parseSx = (sxStr) => {
-  if (!sxStr || typeof sxStr !== 'string') return undefined;
-  let s = sxStr.trim();
-  // 앞뒤 중괄호(한두 겹) 제거
-  s = s.replace(/^\{+\s*/, '').replace(/\s*\}+$/, '');
-  const out = {};
-  const regex = /([a-zA-Z0-9_-]+)\s*:\s*([^,]+)\s*(?:,|$)/g;
-  let m;
-  while ((m = regex.exec(s)) !== null) {
-    const key = m[1].trim();
-    let val = m[2].trim();
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith('\'') && val.endsWith('\''))) {
-      val = val.slice(1, -1);
-    } else if (/^-?\d+(?:\.\d+)?$/.test(val)) {
-      val = Number(val);
-    }
-    if (key) out[key] = val;
-  }
-  return Object.keys(out).length ? out : undefined;
-};
 
 export default function MarkdownRenderer({ content }) {
   const [processedContent, setProcessedContent] = useState("");
@@ -318,10 +279,6 @@ export default function MarkdownRenderer({ content }) {
         {children}
       </pre>
     ),
-    h3: ({ children }) => <h3 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h3>,
-    h4: ({ children }) => <h4 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h4>,
-    h5: ({ children }) => <h5 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h5>,
-    h6: ({ children }) => <h6 style={{ marginTop: '0', marginBottom: '0' }}>{children}</h6>,
 
   // 중복 pre 제거됨
 
@@ -356,10 +313,8 @@ export default function MarkdownRenderer({ content }) {
     ),
 
     // ul 목록 스타일링 추가
-    ul: ({ children }) => (
+  ul: ({ children }) => (
       <ul style={{ 
-        marginTop: '0', 
-        marginBottom: '0',
         paddingLeft: '20px', 
         paddingTop: '0',
         paddingBottom: '0',
@@ -370,10 +325,8 @@ export default function MarkdownRenderer({ content }) {
       </ul>
     ),
 
-    ol: ({ children }) => (
+  ol: ({ children }) => (
       <ol style={{ 
-        marginTop: '0', 
-        marginBottom: '0',
         paddingLeft: '20px', 
         paddingTop: '0',
         paddingBottom: '0',
@@ -423,7 +376,7 @@ export default function MarkdownRenderer({ content }) {
       }
     }} className="markdown-body">
   <ReactMarkdown 
-    remarkPlugins={[remarkToc, remarkGfm]}
+  remarkPlugins={[remarkBreaks, remarkToc, remarkGfm]}
         rehypePlugins={[
           rehypeRaw,
           rehypeHighlight,
