@@ -68,18 +68,17 @@ function App() {
             sx={{
               flexGrow: 1, 
               p: 3,
+              display: 'flex',
+              justifyContent: 'center',
               transition: theme.transitions.create('margin', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.leavingScreen,
               }),
-              ...(sidebarOpen && !isMobile ? {
-                marginLeft: `${drawerWidth}px`,
-              } : {
-                marginLeft: 0,
-              }),
+              ml: sidebarOpen && !isMobile ? `10px` : 0,
               pt: { xs: 6, sm: 5, md: 3 }, // 모바일에서는 상단 여백을 좀 더 주어 토글 버튼 공간 확보
             }}
           >
+            <Box sx={{ width: '100%', maxWidth: 1200 }}>
             <Routes>
               <Route path="/" element={<Intro />} />
               <Route path="/springboot" element={<SpringBoot />} />
@@ -110,6 +109,7 @@ function App() {
               <Route path="/chrome" element={<Chrome />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Box>
           </Box>
         </Box>
       </SidebarContext.Provider>
