@@ -196,6 +196,7 @@ export default function Sidebar() {
         variant={isMobile ? 'temporary' : 'persistent'}
         open={open}
         onClose={isMobile ? handleDrawerToggle : undefined}
+        PaperProps={{ className: 'sidebar' }}
         sx={{
           width: open ? drawerWidth : 0,
           flexShrink: 0,
@@ -210,7 +211,12 @@ export default function Sidebar() {
             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
             border: 'none',
             ...(isMobile ? {} : { 
-              position: 'relative',
+              position: 'fixed', // Make sidebar fixed so it stays in place while main content scrolls
+              top: 0,
+              left: 0,
+              height: '100vh',
+              overflowY: 'auto',
+              zIndex: theme.zIndex.drawer,
               transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,

@@ -126,7 +126,7 @@ export default function Login({ open, onClose, redirectTo = null }) {
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {successMessage && <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>}
         
-        <Box component="form" onSubmit={isRegisterMode ? handleRegister : handleLogin} sx={{ mt: 1 }}>
+        <Box component="form" id="login-form" onSubmit={isRegisterMode ? handleRegister : handleLogin} sx={{ mt: 1 }}>
           <TextField
             margin="normal"
             required
@@ -187,7 +187,8 @@ export default function Login({ open, onClose, redirectTo = null }) {
             취소
           </Button>
           <Button 
-            onClick={isRegisterMode ? handleRegister : handleLogin} 
+            type="submit"
+            form="login-form"
             variant="contained" 
             disabled={loading}
             startIcon={loading && <CircularProgress size={16} />}

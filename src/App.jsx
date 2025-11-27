@@ -44,6 +44,7 @@ const theme = createTheme({
 function App() {
   const appTheme = useTheme();
   const isMobile = useMediaQuery(appTheme.breakpoints.down('md'));
+  const drawerWidth = 240; // Keep in sync with Sidebar
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
 
   useEffect(() => {
@@ -72,7 +73,7 @@ function App() {
                 duration: theme.transitions.duration.leavingScreen,
               }),
               ...(sidebarOpen && !isMobile ? {
-                marginLeft: 0,
+                marginLeft: `${drawerWidth}px`,
               } : {
                 marginLeft: 0,
               }),

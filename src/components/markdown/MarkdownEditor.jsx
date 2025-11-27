@@ -6,7 +6,6 @@ import {
   Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, 
   OutlinedInput, FormHelperText, CircularProgress, LinearProgress, Alert
 } from '@mui/material';
-import { Unstable_NumberInput as NumberInput } from '@mui/base/Unstable_NumberInput';
 import CodeIcon from '@mui/icons-material/Code';
 import ImageIcon from '@mui/icons-material/Image';
 import TableChartIcon from '@mui/icons-material/TableChart';
@@ -146,7 +145,12 @@ export default function MarkdownEditor({ value, onChange }) {
 
   const handleTableFormChange = (e) => {
     const { name, value } = e.target;
-    setTableForm(prev => ({ ...prev, [name]: value }));
+    if (value === '') {
+      setTableForm(prev => ({ ...prev, [name]: '' }));
+      return;
+    }
+    const numeric = Math.max(1, Math.min(20, parseInt(value, 10) || 1));
+    setTableForm(prev => ({ ...prev, [name]: numeric }));
   };
 
   const insertTableFromDialog = () => {
@@ -317,10 +321,10 @@ export default function MarkdownEditor({ value, onChange }) {
   const insertAlert = () => {
     // severity만 출력, 스타일은 렌더러의 AlertBlock이 결정
     const sev = (alertForm.severity || 'info').toLowerCase();
-  const defaultMessage = sev === 'error' ? '경고문' : sev === 'warning' ? '주의문' : '인포 문구';
-  const msg = (alertForm.message || '').trim() || defaultMessage;
-  // 태그 내부 개행 없이 삽입 (미리보기 pre-wrap 영향 방지)
-  const block = `\n<AlertBlock severity=\"${sev}\">${msg}</AlertBlock>\n`;
+    const defaultMessage = sev === 'error' ? '경고문' : sev === 'warning' ? '주의문' : '인포 문구';
+    const msg = (alertForm.message || '').trim() || defaultMessage;
+    // 태그 내부 개행 없이 삽입 (미리보기 pre-wrap 영향 방지)
+    const block = `\n<AlertBlock severity="${sev}">${msg}</AlertBlock>\n`;
     insertAtCursor(block);
     setAlertDialog(false);
   };
@@ -594,30 +598,26 @@ export default function MarkdownEditor({ value, onChange }) {
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', pl: 0.5 }}>
                 행 수
               </Typography>
-              <NumberInput
-                min={1}
-                max={20}
+              <TextField
+                name="rows"
+                type="number"
+                size="small"
                 value={tableForm.rows}
-                onChange={(_, val) => setTableForm(prev => ({ ...prev, rows: val }))}
-                slotProps={{
-                  incrementButton: { style: { display: 'none' } },
-                  decrementButton: { style: { display: 'none' } },
-                }}
+                onChange={handleTableFormChange}
+                inputProps={{ min: 1, max: 20 }}
               />
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', pl: 0.5 }}>
                 열 수
               </Typography>
-              <NumberInput
-                min={1}
-                max={20}
+              <TextField
+                name="cols"
+                type="number"
+                size="small"
                 value={tableForm.cols}
-                onChange={(_, val) => setTableForm(prev => ({ ...prev, cols: val }))}
-                slotProps={{
-                  incrementButton: { style: { display: 'none' } },
-                  decrementButton: { style: { display: 'none' } },
-                }}
+                onChange={handleTableFormChange}
+                inputProps={{ min: 1, max: 20 }}
               />
             </Box>
           </Box>

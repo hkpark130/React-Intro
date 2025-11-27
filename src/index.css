@@ -39,6 +39,17 @@
     width: 240px;
     background-color: var(--bg-sidebar);
   }
+
+/* Sidebar scrolling and hidden scrollbar styles */
+.sidebar {
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* Internet Explorer 10+ */
+}
+.sidebar::-webkit-scrollbar {
+  display: none;              /* Chrome, Safari, Edge */
+}
   
   /* 작은 화면에 대한 미디어 쿼리 */
   @media (max-width: 600px) {
