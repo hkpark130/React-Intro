@@ -6,7 +6,9 @@ import {
   AccordionDetails,
   Typography
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -29,9 +31,26 @@ export default function CodeAccordion({
   wrapLines = true,
   defaultExpanded = false,
 }) {
+  const initial = String(defaultExpanded) === 'true' || defaultExpanded === true;
+  const [expanded, setExpanded] = useState(initial);
+
   return (
-    <Accordion sx={{ mt: 3 }} defaultExpanded={String(defaultExpanded) === 'true' || defaultExpanded === true}>
-      <AccordionSummary sx={{backgroundColor: "rgba(153,153,153,0.3)"}} expandIcon={<ExpandMoreIcon />}>
+    <Accordion sx={{ mt: 3 }} expanded={expanded} onChange={() => setExpanded(prev => !prev)}>
+      <AccordionSummary 
+        sx={{
+          backgroundColor: "rgba(153,153,153,0.3)",
+          flexDirection: 'row-reverse',
+          '& .MuiAccordionSummary-expandIconWrapper': {
+            marginRight: 1,
+            transform: 'none',
+            transition: 'none',
+          },
+          '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
+            transform: 'none',
+          },
+        }} 
+        expandIcon={expanded ? <ArrowDropDownIcon sx={{ fontSize: 30 }} /> : <ArrowRightIcon sx={{ fontSize: 30 }} />}
+      >
         <Typography variant="subtitle1">{title}</Typography>
       </AccordionSummary>
       <AccordionDetails>
