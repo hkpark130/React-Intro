@@ -23,6 +23,7 @@ import { scheduleTokenRefresh } from '@/api/auth';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { yellow, purple } from '@mui/material/colors';
 import Chrome from '@/components/Chrome';
+import ChatWidget from '@/components/ChatWidget';
 
 // 사이드바 상태 컨텍스트 생성
 export const SidebarContext = createContext({
@@ -112,6 +113,9 @@ function App() {
             </Box>
           </Box>
         </Box>
+        
+        {/* 채팅 위젯 - 화면 고정 */}
+        <ChatWidget />
       </SidebarContext.Provider>
     </ThemeProvider>
   )

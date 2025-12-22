@@ -1,6 +1,7 @@
 import React from 'react'
 import Box from '@mui/material/Box'
 import Sidebar from './components/Sidebar'
+import ChatWidget from './components/ChatWidget'
 
 export default function Layout({ children }) {
   return (
@@ -15,6 +16,9 @@ export default function Layout({ children }) {
       >
         {children}
       </Box>
+
+      {/* 채팅 위젯 */}
+      <ChatWidget />
     </Box>
   )
 }

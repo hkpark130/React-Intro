@@ -106,3 +106,6 @@ export const updateCategory = (id, categoryData) => api.put(`/categories/${id}`,
 
 export const notionConvert = (data) => notionApi.post('/notion/convert', data);
 export const getNotionPageMeta = (pageId) => notionApi.get(`/notion/page/${pageId}`);
+
+// Chat API - AI 어시스턴트
+export const sendChatMessage = (question) => api.post('/chat', { question });
