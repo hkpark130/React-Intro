@@ -23,6 +23,7 @@ import { scheduleTokenRefresh } from '@/api/auth';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { yellow, purple } from '@mui/material/colors';
 import Chrome from '@/components/Chrome';
+import ChatBot from '@/components/ChatBot';
 import ChatWidget from '@/components/ChatWidget';
 
 // 사이드바 상태 컨텍스트 생성
@@ -108,6 +109,7 @@ function App() {
               <Route path="/redmine" element={<Redmine />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/chrome" element={<Chrome />} />
+              <Route path="/chatbot" element={<ChatBot />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Box>

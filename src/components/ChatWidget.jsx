@@ -289,10 +289,21 @@ export default function ChatWidget() {
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={isLoading}
+              inputProps={{ maxLength: 50 }}
+              helperText={input.length > 0 ? `${input.length}/50` : ''}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 3,
                   bgcolor: '#f5f5f5',
+                },
+                '& .MuiFormHelperText-root': {
+                  textAlign: 'right',
+                  mr: 0,
+                  mt: 0.5,
+                  fontSize: '0.7rem',
+                  minHeight: '18px',
+                  lineHeight: 1,
+                  color: input.length >= 40 ? '#f44336' : '#999',
                 },
               }}
             />
@@ -301,6 +312,13 @@ export default function ChatWidget() {
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
               sx={{
+                width: 44,
+                height: 44,
+                minWidth: 'auto',
+                p: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 '&:hover': {
@@ -311,8 +329,9 @@ export default function ChatWidget() {
                   color: '#999',
                 },
               }}
+              aria-label="send"
             >
-              <SendIcon />
+              <SendIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Box>
         </Paper>

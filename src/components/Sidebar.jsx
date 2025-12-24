@@ -19,6 +19,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import BadgeIcon from '@mui/icons-material/Badge';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { SidebarContext } from '../App';
 
 export default function Sidebar() {
@@ -148,6 +149,11 @@ export default function Sidebar() {
           }}
         />
       )
+    },
+    {
+      to: '/chatbot',
+      primary: 'AI 챗봇',
+      icon: <SmartToyIcon />
     },
     // 여기서 프로젝트 더 추가할 것 <------
     { to: '/redmine', primary: 'Redmine', secondary: '', icon: (
