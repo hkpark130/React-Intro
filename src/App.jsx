@@ -25,6 +25,7 @@ import { yellow, purple } from '@mui/material/colors';
 import Chrome from '@/components/Chrome';
 import ChatBot from '@/components/ChatBot';
 import ChatWidget from '@/components/ChatWidget';
+import KredisOperator from '@/components/KredisOperator'
 
 // 사이드바 상태 컨텍스트 생성
 export const SidebarContext = createContext({
@@ -110,6 +111,7 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/chrome" element={<Chrome />} />
               <Route path="/chatbot" element={<ChatBot />} />
+              <Route path="/kredis" element={<KredisOperator />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Box>

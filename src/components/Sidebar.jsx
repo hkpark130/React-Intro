@@ -84,6 +84,24 @@ export default function Sidebar() {
       )
     },
     {
+      to: '/kredis',
+      primary: 'Kubernetes',
+      secondary: 'Operator (Kredis)',
+      icon: (
+        <Box
+          component="img"
+          src="/logo/kubernetes.png"
+          alt="Kubernetes"
+          style={{ width: '35px', height: '35px' }}
+          sx={{ 
+            width: 45, 
+            height: 45,
+            objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
+          }}
+        />
+      )
+    },
+    {
       to: '/opensearch',
       primary: 'OpenSearch',
       secondary: '',
