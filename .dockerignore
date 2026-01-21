@@ -1,7 +1,7 @@
 # Dependencies and builds
 node_modules/
 build/
-dist/
+# dist/ - 주석 처리: GitHub Actions에서 빌드한 dist를 Docker에서 사용해야 함
 .cache/
 
 # VCS
