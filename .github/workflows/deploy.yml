@@ -61,7 +61,7 @@ jobs:
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" \
             ./dist/ \
-            ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/build/dist/
+            ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/react-dist/
 
       - name: Close SSH Port
         if: always()
