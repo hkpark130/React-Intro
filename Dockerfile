@@ -1,17 +1,4 @@
-# 1) Build stage
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci \
-  && npm rebuild esbuild
-COPY . .
-
-# Node.js 힙 메모리 증가 (OOM 방지)
-ENV NODE_OPTIONS="--max-old-space-size=1024"
-RUN npm run build
-
-# 2) Production stage
+# Production stage (빌드는 GitHub Actions에서 수행)
 FROM nginx:alpine
 
 ARG ENV=local
@@ -25,7 +12,8 @@ RUN if [ "$ENV" = "local" ]; then \
 
 RUN mkdir -p /etc/ssl/cert
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+# GitHub Actions에서 rsync로 전송된 dist 폴더 복사
+COPY dist /usr/share/nginx/html
 
 RUN rm /etc/nginx/conf.d/default.conf
 
