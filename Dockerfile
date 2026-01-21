@@ -6,6 +6,9 @@ COPY package.json package-lock.json ./
 RUN npm ci \
   && npm rebuild esbuild
 COPY . .
+
+# Node.js 힙 메모리 증가 (OOM 방지)
+ENV NODE_OPTIONS="--max-old-space-size=1024"
 RUN npm run build
 
 # 2) Production stage
