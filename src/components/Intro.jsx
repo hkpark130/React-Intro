@@ -214,6 +214,31 @@ function ProjectsSection() {
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
           <Box
             component="img"
+            src="/logo/kubernetes.png"
+            alt="Kubernetes"
+            sx={{ 
+              width: 36, 
+              height: 36,
+              objectFit: 'contain'
+            }}
+          />
+          <Typography variant="h6">
+            K8S 오퍼레이터 for Managing Redis Clusters
+          </Typography>
+        </Stack>
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          Go 언어로 구현한 Redis 클러스터의 관리 자동화를 위한 Kubernetes Operator입니다. <br/>
+          Kredis라는 CRD(Custom Resource Definition)를 활용하여 Redis 클러스터 생성, 스케일링, 복구 기능을 제공합니다.
+        </Typography>
+        <Button component={Link} to="/kredis" variant="outlined" size="small" sx={{ mr: 1 }}>
+          자세히 보기
+        </Button>
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
+        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+          <Box
+            component="img"
             src="/logo/go.png"
             alt="Go"
             sx={{ 
