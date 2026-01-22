@@ -22,5 +22,5 @@ cp -r /home/ec2-user/react-dist /home/ec2-user/build/dist
 
 echo "dist folder ready, proceeding with deployment..."
 
-docker-compose build --no-cache
-docker-compose -f /home/ec2-user/build/production.yml up --build -d
+docker-compose -f /home/ec2-user/build/production.yml build --no-cache
+docker-compose -f /home/ec2-user/build/production.yml up -d
