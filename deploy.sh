@@ -18,6 +18,7 @@ if [ ! -d "/home/ec2-user/react-dist" ]; then
 fi
 
 echo "Copying dist folder from /home/ec2-user/react-dist..."
+rm -rf /home/ec2-user/build/dist
 cp -r /home/ec2-user/react-dist /home/ec2-user/build/dist
 
 echo "dist folder ready, proceeding with deployment..."
