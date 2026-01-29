@@ -248,6 +248,7 @@ export function ArchitectureDiagramsSection() {
             <BuildIcon color="action" />
             <Typography variant="subtitle1" fontWeight="bold">클러스터 작업 상세 흐름도</Typography>
             <Chip label={`${operationDiagrams.length}개`} size="small" variant="outlined" sx={{ ml: 1 }} />
+            <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary', fontSize: '14px' }}>(클릭하여 펼치기)</Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails sx={{ p: { xs: 2, md: 3 } }}>
