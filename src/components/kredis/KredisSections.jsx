@@ -289,10 +289,13 @@ export function AutoscalingDemoSection() {
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Typography variant="h5" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <SpeedIcon color="warning" /> 오토스케일링 데모
+      <Typography variant="h5" sx={{ display: 'flex', alignItems: 'center', gap: 1}}>
+        <SpeedIcon color="warning" /> (Memory, CPU) 오토스케일링 데모
       </Typography>
-      <Typography variant="body1" sx={{ mb: 2 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+        (토글 버튼을 클릭하여 Memory 또는 CPU 기반 스케일링 데모를 전환할 수 있습니다.)
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 2, mt: 2 }}>
         Metrics API를 통해 실시간으로 리소스 사용률을 모니터링하고, 임계값을 초과하면 자동으로 스케일링합니다.
       </Typography>
 
