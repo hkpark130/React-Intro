@@ -71,14 +71,18 @@ export default function Sidebar() {
       secondary: '',
       icon: (
         <Box
-          component="img"
-          src="/logo/go.png"
-          alt="Golang"
-          style={{ width: '30px', height: '24px' }}
-          sx={{ 
-            width: 28, 
-            height: 24,
-            objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
+          style={{
+            width: '30px',
+            height: '24px',
+            backgroundColor: 'currentColor',
+            maskImage: 'url(/logo/go.png)',
+            maskSize: 'contain',
+            maskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            WebkitMaskImage: 'url(/logo/go.png)',
+            WebkitMaskSize: 'contain',
+            WebkitMaskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
           }}
         />
       )
@@ -89,14 +93,18 @@ export default function Sidebar() {
       secondary: 'Operator (Kredis)',
       icon: (
         <Box
-          component="img"
-          src="/logo/kubernetes.png"
-          alt="Kubernetes"
-          style={{ width: '35px', height: '35px' }}
-          sx={{ 
-            width: 45, 
-            height: 45,
-            objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
+          style={{
+            width: '35px',
+            height: '35px',
+            backgroundColor: 'currentColor',
+            maskImage: 'url(/logo/kubernetes.svg)',
+            maskSize: 'contain',
+            maskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            WebkitMaskImage: 'url(/logo/kubernetes.svg)',
+            WebkitMaskSize: 'contain',
+            WebkitMaskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
           }}
         />
       )
@@ -107,14 +115,18 @@ export default function Sidebar() {
       secondary: '',
       icon: (
         <Box
-          component="img"
-          src="/logo/opensearch.png"
-          alt="OpenSearch"
-          style={{ width: '30px', height: '24px' }}
-          sx={{ 
-            width: 28, 
-            height: 24,
-            objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
+          style={{
+            width: '30px',
+            height: '24px',
+            backgroundColor: 'currentColor',
+            maskImage: 'url(/logo/opensearch.png)',
+            maskSize: 'contain',
+            maskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            WebkitMaskImage: 'url(/logo/opensearch.png)',
+            WebkitMaskSize: 'contain',
+            WebkitMaskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
           }}
         />
       )
@@ -139,14 +151,18 @@ export default function Sidebar() {
     },
     { to: '/terraform', primary: 'Terraform', secondary: '', icon: (
       <Box
-        component="img"
-        src="/logo/terraform.png"
-        alt="Spring Boot"
-        style={{ width: '30px', height: '30px' }}
-        sx={{ 
-          width: 30, 
-          height: 30,
-          objectFit: 'contain' // 이미지 비율 유지하면서 크기 조정
+        style={{
+          width: '30px',
+          height: '30px',
+          backgroundColor: 'currentColor',
+          maskImage: 'url(/logo/terraform.png)',
+          maskSize: 'contain',
+          maskRepeat: 'no-repeat',
+          maskPosition: 'center',
+          WebkitMaskImage: 'url(/logo/terraform.png)',
+          WebkitMaskSize: 'contain',
+          WebkitMaskRepeat: 'no-repeat',
+          WebkitMaskPosition: 'center',
         }}
       />
     ) },

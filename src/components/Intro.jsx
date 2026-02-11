@@ -214,7 +214,7 @@ function ProjectsSection() {
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
           <Box
             component="img"
-            src="/logo/kubernetes.png"
+            src="/logo/kubernetes.svg"
             alt="Kubernetes"
             sx={{ 
               width: 36, 
