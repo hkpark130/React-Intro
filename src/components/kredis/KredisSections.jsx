@@ -300,12 +300,65 @@ export function AutoscalingDemoSection() {
       </Typography>
 
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-        <ToggleButtonGroup value={scaleType} exclusive onChange={handleScaleTypeChange} size="medium">
-          <ToggleButton value="memory" sx={{ px: 3, py: 1, '&.Mui-selected': { bgcolor: '#fff3e0', color: '#ff9800' } }}>
-            <MemoryIcon sx={{ mr: 1 }} /> Memory → Master 스케일링
+        <ToggleButtonGroup
+          value={scaleType}
+          exclusive
+          onChange={handleScaleTypeChange}
+          size="medium"
+          sx={{
+            bgcolor: '#f0f0f0',
+            borderRadius: '50px',
+            p: '4px',
+            gap: '4px',
+            border: 'none',
+            '& .MuiToggleButtonGroup-grouped': {
+              border: 'none',
+              borderRadius: '50px !important',
+              mx: 0,
+            },
+          }}
+        >
+          <ToggleButton
+            value="memory"
+            sx={{
+              px: 3, py: 1,
+              borderRadius: '50px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              color: '#888',
+              transition: 'all 0.25s ease',
+              '&.Mui-selected': {
+                bgcolor: '#fff',
+                color: '#ff9800',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                '&:hover': { bgcolor: '#fff' },
+              },
+              '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' },
+            }}
+          >
+            <MemoryIcon sx={{ mr: 1, fontSize: 20 }} /> Memory → Master 스케일링
           </ToggleButton>
-          <ToggleButton value="cpu" sx={{ px: 3, py: 1, '&.Mui-selected': { bgcolor: '#e3f2fd', color: '#2196f3' } }}>
-            <SpeedIcon sx={{ mr: 1 }} /> CPU → Replica 스케일링
+          <ToggleButton
+            value="cpu"
+            sx={{
+              px: 3, py: 1,
+              borderRadius: '50px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              color: '#888',
+              transition: 'all 0.25s ease',
+              '&.Mui-selected': {
+                bgcolor: '#fff',
+                color: '#2196f3',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                '&:hover': { bgcolor: '#fff' },
+              },
+              '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' },
+            }}
+          >
+            <SpeedIcon sx={{ mr: 1, fontSize: 20 }} /> CPU → Replica 스케일링
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
