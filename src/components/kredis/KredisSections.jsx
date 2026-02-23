@@ -193,11 +193,19 @@ export function ReconcileFlowSection() {
    ======================= */
 export function ArchitectureDiagramsSection() {
   const [expandedOp, setExpandedOp] = useState(false);
+  const [selectedOperationId, setSelectedOperationId] = useState(operationDiagramsData[0]?.id ?? '');
 
   const operationDiagrams = operationDiagramsData.map((op) => ({
     ...op,
     icon: getOperationIcon(op.iconType, op.color),
   }));
+
+  const selectedOperationIndex = Math.max(0, operationDiagrams.findIndex((op) => op.id === selectedOperationId));
+  const selectedOperation = operationDiagrams[selectedOperationIndex] ?? operationDiagrams[0];
+
+  const handleOperationChange = (event, newOperationId) => {
+    if (newOperationId !== null) setSelectedOperationId(newOperationId);
+  };
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -253,24 +261,89 @@ export function ArchitectureDiagramsSection() {
         </AccordionSummary>
         <AccordionDetails sx={{ p: { xs: 2, md: 3 } }}>
           <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>Create, Scale Up/Down, Rebalance, Heal 등 각 클러스터 작업의 상세 처리 흐름입니다.</Typography>
-          <Grid container spacing={2}>
-            {operationDiagrams.map((op) => (
-              <Grid item xs={12} sm={6} lg={4} key={op.id}>
-                <Card elevation={1} sx={{ height: '100%', borderTop: `3px solid ${op.color}`, transition: 'box-shadow 0.2s', '&:hover': { boxShadow: 3 }, bgcolor: op.color + '20' }}>
-                  <CardContent sx={{ p: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      {op.icon}
-                      <Typography variant="subtitle2" fontWeight="bold">{op.title}</Typography>
-                    </Box>
-                    <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', minHeight: 36 }}>{op.description}</Typography>
-                    <Box sx={{ height: 1, textAlign: 'center' }}>
-                      <ZoomableImageModal imageSrc={op.image} altText={op.title} caption={op.title} sx={{ border: '1px solid #eee', borderRadius: 1, bgcolor: 'white', maxHeight: 200, minWidth: 300 }} />
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+          {selectedOperation && (
+            <>
+              <Box sx={{ mb: 2.5, overflowX: 'auto', pb: 0.5 }}>
+                <ToggleButtonGroup
+                  value={selectedOperation.id}
+                  exclusive
+                  onChange={handleOperationChange}
+                  size="small"
+                  sx={{
+                    position: 'relative',
+                    bgcolor: '#efefef',
+                    borderRadius: '999px',
+                    p: '4px',
+                    border: 'none',
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${operationDiagrams.length}, minmax(130px, 1fr))`,
+                    minWidth: `${operationDiagrams.length * 130}px`,
+                    width: '100%',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: '4px',
+                      left: '4px',
+                      width: `calc((100% - 8px) / ${operationDiagrams.length})`,
+                      height: 'calc(100% - 8px)',
+                      borderRadius: '999px',
+                      bgcolor: '#fff',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                      transform: `translateX(${selectedOperationIndex * 100}%)`,
+                      transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+                      zIndex: 0,
+                    },
+                    '& .MuiToggleButtonGroup-grouped': {
+                      border: 'none',
+                      borderRadius: '999px !important',
+                      mx: 0,
+                      minHeight: 42,
+                    },
+                  }}
+                >
+                  {operationDiagrams.map((op) => (
+                    <ToggleButton
+                      key={op.id}
+                      value={op.id}
+                      sx={{
+                        position: 'relative',
+                        zIndex: 1,
+                        px: 2,
+                        py: 0.8,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.86rem',
+                        color: '#666',
+                        transition: 'color 0.25s ease',
+                        '&.Mui-selected': {
+                          color: op.color,
+                          bgcolor: 'transparent',
+                          '&:hover': { bgcolor: 'transparent' },
+                        },
+                        '&:hover': { bgcolor: 'transparent' },
+                      }}
+                    >
+                      {op.title.replace(' Operation', '')}
+                    </ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
+              </Box>
+
+              <Card elevation={1} sx={{ borderTop: `3px solid ${selectedOperation.color}`, bgcolor: selectedOperation.color + '16' }}>
+                <CardContent sx={{ p: 2.2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    {selectedOperation.icon}
+                    <Typography variant="subtitle1" fontWeight="bold">{selectedOperation.title}</Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ display: 'block', color: 'text.secondary', mb: 1.5 }}>{selectedOperation.description}</Typography>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <ZoomableImageModal imageSrc={selectedOperation.image} altText={selectedOperation.title} caption={selectedOperation.title} sx={{ border: '1px solid #eee', borderRadius: 1, bgcolor: 'white', maxHeight: 230, minWidth: { xs: 0, md: 400 } }} />
+                  </Box>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </AccordionDetails>
       </Accordion>
     </Box>
@@ -306,11 +379,29 @@ export function AutoscalingDemoSection() {
           onChange={handleScaleTypeChange}
           size="medium"
           sx={{
+            position: 'relative',
             bgcolor: '#f0f0f0',
             borderRadius: '50px',
             p: '4px',
-            gap: '4px',
             border: 'none',
+            width: 'min(100%, 620px)',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: '4px',
+              left: '4px',
+              width: 'calc(50% - 6px)',
+              height: 'calc(100% - 8px)',
+              borderRadius: '999px',
+              bgcolor: '#fff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+              transform: scaleType === 'cpu' ? 'translateX(calc(100% + 4px))' : 'translateX(0)',
+              transition: 'transform 1s cubic-bezier(0.22, 1, 0.36, 1)',
+              zIndex: 0,
+            },
             '& .MuiToggleButtonGroup-grouped': {
               border: 'none',
               borderRadius: '50px !important',
@@ -321,20 +412,21 @@ export function AutoscalingDemoSection() {
           <ToggleButton
             value="memory"
             sx={{
+              position: 'relative',
+              zIndex: 1,
               px: 3, py: 1,
               borderRadius: '50px',
               textTransform: 'none',
               fontWeight: 600,
               fontSize: '0.9rem',
               color: '#888',
-              transition: 'all 0.25s ease',
+              transition: 'color 0.25s ease',
               '&.Mui-selected': {
-                bgcolor: '#fff',
                 color: '#ff9800',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                '&:hover': { bgcolor: '#fff' },
+                bgcolor: 'transparent',
+                '&:hover': { bgcolor: 'transparent' },
               },
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' },
+              '&:hover': { bgcolor: 'transparent' },
             }}
           >
             <MemoryIcon sx={{ mr: 1, fontSize: 20 }} /> Memory → Master 스케일링
@@ -342,20 +434,21 @@ export function AutoscalingDemoSection() {
           <ToggleButton
             value="cpu"
             sx={{
+              position: 'relative',
+              zIndex: 1,
               px: 3, py: 1,
               borderRadius: '50px',
               textTransform: 'none',
               fontWeight: 600,
               fontSize: '0.9rem',
               color: '#888',
-              transition: 'all 0.25s ease',
+              transition: 'color 0.25s ease',
               '&.Mui-selected': {
-                bgcolor: '#fff',
                 color: '#2196f3',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                '&:hover': { bgcolor: '#fff' },
+                bgcolor: 'transparent',
+                '&:hover': { bgcolor: 'transparent' },
               },
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' },
+              '&:hover': { bgcolor: 'transparent' },
             }}
           >
             <SpeedIcon sx={{ mr: 1, fontSize: 20 }} /> CPU → Replica 스케일링
@@ -579,7 +672,7 @@ export function TroubleshootingSection() {
                 <WarningIconMui color="error" />
                 <Typography variant="h6">{trouble.title}</Typography>
               </Stack>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, whiteSpace: 'pre-line' }}>
                 <strong>증상:</strong> {renderTextWithLinks(trouble.description)}
               </Typography>
               <Alert severity="success" sx={{ paddingTop: 0, paddingBottom: 0 }}>

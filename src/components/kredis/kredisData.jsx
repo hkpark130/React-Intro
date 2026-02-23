@@ -365,5 +365,28 @@ func (r *KredisReconciler) reconcilePods(ctx context.Context, kredis *cachev1alp
     title: '문제 7: 리밸런싱 시 슬롯이 없는 마스터 노드에서 발생하는 에러',
     description: '리밸런싱 작업을 할 때 슬롯이 없는 마스터가 있으면 "ERR Please use SETSLOT only with masters. error" 에러가 발생합니다. 이는 노드가 마스터에서 레플리카로 전환되는 과정에서 발생하는 문제입니다. 관련 이슈: https://github.com/redis/redis/issues/11104',
     solution: '바로 rebalance를 실행하지 말고, reshard로 먼저 슬롯을 분배한 후 rebalance로 균등 분배하는 방식으로 진행하면 위 에러가 발생하지 않습니다.'
+  },
+  {
+    title: '문제 8: Status Update Conflict ("the object has been modified")',
+    description: `여러 Reconcile 루프(혹은 다른 컨트롤러/사용자 업데이트)가 같은 CR Status를 동시에 수정할 때 resourceVersion 충돌이 발생했습니다. API 서버의 optimistic concurrency 제어로 인해 오래된 revision 기반 Update는 거절됩니다. 
+    참고 링크:  
+    https://hkpark130.p-e.kr/blog/88 
+    https://alenkacz.medium.com/kubernetes-operators-best-practices-understanding-conflict-errors-d05353dff421`,
+    solution: 'retry.RetryOnConflict 안에서 최신 리소스를 매번 다시 Get한 뒤 delta를 merge해서 Status().Update를 수행하도록 변경. 충돌이 나면 최신 revision으로 자동 재시도되어 상태 유실 없이 수렴됩니다.',
+    code: `err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+    var res apiv1.MyResource
+    err := r.Get(ctx, types.NamespacedName{
+        Name:      resourceName,
+        Namespace: resourceNamespace,
+    }, &res)
+    if err != nil {
+        return err
+    }
+    res.Status.Replicas = readyReplicas
+    return r.Status().Update(ctx, &res)
+})
+if err != nil {
+    return fmt.Errorf("failed to update resource status: %w", err)
+}`
   }
 ];

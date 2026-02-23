@@ -35,11 +35,34 @@ export default function CodeAccordion({
   const [expanded, setExpanded] = useState(initial);
 
   return (
-    <Accordion sx={{ mt: 3 }} expanded={expanded} onChange={() => setExpanded(prev => !prev)}>
+    <Accordion
+      disableGutters
+      sx={{
+        m: 0,
+        '&:before': {
+          display: 'none',
+        },
+        '&.Mui-expanded': {
+          margin: '0 !important',
+        },
+      }}
+      expanded={expanded}
+      onChange={() => setExpanded(prev => !prev)}
+    >
       <AccordionSummary 
         sx={{
           backgroundColor: "rgba(153,153,153,0.3)",
           flexDirection: 'row-reverse',
+          minHeight: 48,
+          '&.Mui-expanded': {
+            minHeight: 48,
+          },
+          '& .MuiAccordionSummary-content': {
+            margin: '12px 0',
+          },
+          '& .MuiAccordionSummary-content.Mui-expanded': {
+            margin: '12px 0',
+          },
           '& .MuiAccordionSummary-expandIconWrapper': {
             marginRight: 1,
             transform: 'none',
