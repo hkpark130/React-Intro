@@ -23,6 +23,7 @@
     "@notion-render/hljs-plugin": "^0.0.2",
     "@notionhq/client": "^4.0.2",
     "axios": "^1.8.4",
+    "cmdk": "^1.1.1",
     "framer-motion": "^12.7.3",
     "jwt-decode": "^4.0.0",
     "katex": "^0.16.22",
