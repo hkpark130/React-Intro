@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { to: '/about', label: 'About' },
 ];
 
-export default function TopNav({ onMenuClick }) {
+export default function TopNav({ onMenuClick, onCmdKClick }) {
   const { mode, toggleMode } = useTheme();
 
   return (
@@ -108,6 +108,7 @@ export default function TopNav({ onMenuClick }) {
       {/* Right: kbd + theme toggle */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box
+          onClick={onCmdKClick}
           sx={{
             display: { xs: 'none', md: 'inline-flex' },
             px: 0.8,
@@ -117,6 +118,8 @@ export default function TopNav({ onMenuClick }) {
             border: '1px solid var(--border)',
             color: 'var(--ink-subtle)',
             borderRadius: '4px',
+            cursor: 'pointer',
+            '&:hover': { borderColor: 'var(--ink)', color: 'var(--ink)' },
           }}
         >
           ⌘ K
