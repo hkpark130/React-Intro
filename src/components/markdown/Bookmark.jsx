@@ -78,21 +78,23 @@ const Bookmark = ({ url, title, description, imageUrl }) => {
 
   return (
     <Paper
-      elevation={1}
+      elevation={0}
       onClick={handleBookmarkClick}
       sx={{
         width: '100%',
         maxWidth: '700px',
-        my: 0,
-        borderRadius: 1,
+        my: 1.5,
+        borderRadius: 'var(--radius-md)',
         overflow: 'hidden',
-        border: '1px solid #e0e0e0',
-        transition: 'transform 0.2s, box-shadow 0.2s',
+        border: '1px solid var(--border)',
+        bgcolor: 'var(--bg-canvas)',
+        transition: 'transform 150ms ease-out, border-color 150ms ease-out',
         cursor: 'pointer',
+        boxShadow: 'none',
         '&:hover': {
-          boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-          transform: 'translateY(-2px)'
-        }
+          borderColor: 'var(--ink)',
+          transform: 'translateY(-2px)',
+        },
       }}
     >
       <Box sx={{ display: 'flex', p: 0 }}>
@@ -124,11 +126,10 @@ const Bookmark = ({ url, title, description, imageUrl }) => {
             {bookmarkData.isLoading ? (
               <Skeleton width="40%" />
             ) : (
-              <Typography 
-                variant="caption" 
-                color="text.secondary"
+              <Typography
+                variant="caption"
                 noWrap
-                sx={{ opacity: 0.7 }}
+                sx={{ color: 'var(--ink-subtle)' }}
               >
                 {(() => {
                   try {
@@ -145,10 +146,11 @@ const Bookmark = ({ url, title, description, imageUrl }) => {
           {bookmarkData.isLoading ? (
             <Skeleton width="80%" height={28} />
           ) : (
-            <Typography 
-              variant="subtitle1" 
-              component="h3" 
-              sx={{ 
+            <Typography
+              variant="subtitle1"
+              component="h3"
+              sx={{
+                color: 'var(--ink)',
                 fontWeight: 'bold',
                 mb: 0.5,
                 lineHeight: 1.2,
@@ -156,7 +158,7 @@ const Bookmark = ({ url, title, description, imageUrl }) => {
                 textOverflow: 'ellipsis',
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical'
+                WebkitBoxOrient: 'vertical',
               }}
             >
               {bookmarkData.title}
@@ -167,10 +169,10 @@ const Bookmark = ({ url, title, description, imageUrl }) => {
           {bookmarkData.isLoading ? (
             <Skeleton width="100%" height={20} />
           ) : (
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-              sx={{ 
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'var(--ink-muted)',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 display: '-webkit-box',
@@ -178,7 +180,7 @@ const Bookmark = ({ url, title, description, imageUrl }) => {
                 WebkitBoxOrient: 'vertical',
                 mb: 1,
                 fontSize: '0.875rem',
-                lineHeight: 1.3
+                lineHeight: 1.3,
               }}
             >
               {bookmarkData.description}
