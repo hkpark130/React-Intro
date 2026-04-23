@@ -3,7 +3,6 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Container,
   Stack,
   Divider,
@@ -38,68 +37,53 @@ const sectionVariant = {
 
 export default function Python() {
   return (
-    <Container 
-      maxWidth="lg" 
-      sx={{
-        mx: "auto",               // 중앙 정렬
-        py: { xs: 3, sm: 4, md: 6 }, // 반응형 상하 패딩
-        px: { xs: 2, sm: 3, md: 1, lg: 2 }, // 반응형 좌우 패딩
-        display: 'flex', 
-        flexDirection: 'column'
-      }}
+    <Container
+      maxWidth="lg"
+      sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 3 } }}
     >
-      <Paper 
-        elevation={3} 
-        sx={{
-          borderRadius: 3, 
-          p: { xs: 2, sm: 3, md: 4 },
-          mb: { xs: 3, sm: 4 },
-          bgcolor: '#f9f9ff'
-        }}
+      <motion.article
+        initial="hidden"
+        animate="visible"
+        variants={sectionVariant}
+        style={{ maxWidth: 1040, margin: '0 auto' }}
       >
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={sectionVariant}
-        >
-          {/* 한 모션으로 감싸고, 내부에서 각각 모션 적용 */}
-          <motion.div variants={sectionVariant} custom={0}>
-            <HeroSection />
-          </motion.div>
-          
-          <Divider sx={{ my: { xs: 2, sm: 3 } }} />
-          
-          <motion.div variants={sectionVariant} custom={1} style={{ marginTop: 32 }}>
-            <TechStackSection />
-          </motion.div>
-          
-          <motion.div variants={sectionVariant} custom={2} style={{ marginTop: 32 }}>
-            <OverviewSection />
-          </motion.div>
-          
-          <motion.div variants={sectionVariant} custom={3} style={{ marginTop: 32 }}>
-            <ProjectStructureSection />
-          </motion.div>
-
-          <motion.div variants={sectionVariant} custom={4} style={{ marginTop: 32 }}>
-            <DataFlowSection />
-          </motion.div>
-          
-          <motion.div variants={sectionVariant} custom={5} style={{ marginTop: 32 }}>
-            <CacheSection />
-          </motion.div>
-          
-          <motion.div variants={sectionVariant} custom={6} style={{ marginTop: 32 }}>
-            <ServerStructureSection />
-          </motion.div>
-          
-          <Divider sx={{ my: { xs: 2, sm: 3 } }} />
-          
-          <motion.div variants={sectionVariant} custom={7} style={{ marginTop: 32 }}>
-            <ReferenceSection />
-          </motion.div>
+        {/* 한 모션으로 감싸고, 내부에서 각각 모션 적용 */}
+        <motion.div variants={sectionVariant} custom={0}>
+          <HeroSection />
         </motion.div>
-      </Paper>
+
+        <Divider sx={{ my: { xs: 2, sm: 3 } }} />
+
+        <motion.div variants={sectionVariant} custom={1} style={{ marginTop: 32 }}>
+          <TechStackSection />
+        </motion.div>
+
+        <motion.div variants={sectionVariant} custom={2} style={{ marginTop: 32 }}>
+          <OverviewSection />
+        </motion.div>
+
+        <motion.div variants={sectionVariant} custom={3} style={{ marginTop: 32 }}>
+          <ProjectStructureSection />
+        </motion.div>
+
+        <motion.div variants={sectionVariant} custom={4} style={{ marginTop: 32 }}>
+          <DataFlowSection />
+        </motion.div>
+
+        <motion.div variants={sectionVariant} custom={5} style={{ marginTop: 32 }}>
+          <CacheSection />
+        </motion.div>
+
+        <motion.div variants={sectionVariant} custom={6} style={{ marginTop: 32 }}>
+          <ServerStructureSection />
+        </motion.div>
+
+        <Divider sx={{ my: { xs: 2, sm: 3 } }} />
+
+        <motion.div variants={sectionVariant} custom={7} style={{ marginTop: 32 }}>
+          <ReferenceSection />
+        </motion.div>
+      </motion.article>
     </Container>
   );
 }
