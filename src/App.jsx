@@ -19,6 +19,7 @@ import EditPost from './components/EditPost';
 import NotFound from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import { scheduleTokenRefresh } from '@/api/auth';
+import ProjectsGrid from './components/projects/ProjectsGrid';
 
 export default function App() {
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Intro />} />
+        <Route path="/projects" element={<ProjectsGrid />} />
         <Route path="/springboot" element={<SpringBoot />} />
         <Route path="/kredis" element={<KredisOperator />} />
         <Route path="/golang" element={<Golang />} />
