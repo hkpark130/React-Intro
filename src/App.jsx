@@ -17,11 +17,8 @@ import CreatePost from './components/CreatePost'
 import EditPost from './components/EditPost' // EditPost 컴포넌트 추가
 import ProtectedRoute from './components/ProtectedRoute';
 import { Box, useMediaQuery, useTheme } from '@mui/material';
-import CssBaseline from '@mui/material/CssBaseline';
 import Sidebar from './components/Sidebar';
 import { scheduleTokenRefresh } from '@/api/auth';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { yellow, purple } from '@mui/material/colors';
 import Chrome from '@/components/Chrome';
 import ChatBot from '@/components/ChatBot';
 import ChatWidget from '@/components/ChatWidget';
@@ -33,16 +30,6 @@ export const SidebarContext = createContext({
   setOpen: () => {},
 });
 
-const theme = createTheme({
-  palette: {
-    yellow: {
-      main: yellow[900],
-    },
-    purple: {
-      main: purple[900],
-    },
-  },
-});
 
 function App() {
   const appTheme = useTheme();
@@ -61,10 +48,8 @@ function App() {
   }, [isMobile]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <SidebarContext.Provider value={{ open: sidebarOpen, setOpen: setSidebarOpen }}>
+    <SidebarContext.Provider value={{ open: sidebarOpen, setOpen: setSidebarOpen }}>
         <Box sx={{ display: 'flex' }}>
-          <CssBaseline />
           <Sidebar />
           <Box 
             component="main" 
@@ -73,9 +58,9 @@ function App() {
               p: 3,
               display: 'flex',
               justifyContent: 'center',
-              transition: theme.transitions.create('margin', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen,
+              transition: appTheme.transitions.create('margin', {
+                easing: appTheme.transitions.easing.sharp,
+                duration: appTheme.transitions.duration.leavingScreen,
               }),
               ml: sidebarOpen && !isMobile ? `10px` : 0,
               pt: { xs: 6, sm: 5, md: 3 }, // 모바일에서는 상단 여백을 좀 더 주어 토글 버튼 공간 확보
@@ -120,8 +105,7 @@ function App() {
         
         {/* 채팅 위젯 - 화면 고정 */}
         <ChatWidget />
-      </SidebarContext.Provider>
-    </ThemeProvider>
+    </SidebarContext.Provider>
   )
 }
 
