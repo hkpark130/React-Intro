@@ -1,94 +1,84 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Typography
+  Accordion, AccordionSummary, AccordionDetails, Typography,
 } from '@mui/material';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { solarizedlight, vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useTheme } from '@/theme/ThemeProvider';
 
-/**
- * CodeAccordion
- * - 재사용 가능한 코드 보기용 아코디언 컴포넌트입니다.
- *
- * Props:
- *  - codeString: 렌더링할 코드 문자열 (필수)
- *  - title: 아코디언 헤더에 표시될 제목 (기본: "핵심 코드 살펴보기")
- *  - language: 하이라이팅 언어 (기본: "java")
- *  - showLineNumbers: 라인 번호 표시 여부 (기본: true)
- *  - wrapLines: 라인 래핑 여부 (기본: true)
- */
 export default function CodeAccordion({
   codeString,
-  title = "코드 살펴보기",
-  language = "java",
+  title = '코드 살펴보기',
+  language = 'java',
   showLineNumbers = true,
   wrapLines = true,
   defaultExpanded = false,
 }) {
+  const { mode } = useTheme();
   const initial = String(defaultExpanded) === 'true' || defaultExpanded === true;
   const [expanded, setExpanded] = useState(initial);
+  const prismStyle = mode === 'dark' ? vscDarkPlus : solarizedlight;
 
   return (
     <Accordion
       disableGutters
+      elevation={0}
       sx={{
         m: 0,
-        '&:before': {
-          display: 'none',
-        },
-        '&.Mui-expanded': {
-          margin: '0 !important',
-        },
+        my: 2,
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-md) !important',
+        bgcolor: 'var(--bg-canvas)',
+        '&:before': { display: 'none' },
+        '&.Mui-expanded': { margin: '16px 0 !important' },
       }}
       expanded={expanded}
-      onChange={() => setExpanded(prev => !prev)}
+      onChange={() => setExpanded((prev) => !prev)}
     >
-      <AccordionSummary 
+      <AccordionSummary
         sx={{
-          backgroundColor: "rgba(153,153,153,0.3)",
+          backgroundColor: 'var(--bg-subtle)',
           flexDirection: 'row-reverse',
-          minHeight: 48,
-          '&.Mui-expanded': {
-            minHeight: 48,
-          },
-          '& .MuiAccordionSummary-content': {
-            margin: '12px 0',
-          },
-          '& .MuiAccordionSummary-content.Mui-expanded': {
-            margin: '12px 0',
-          },
+          minHeight: 44,
+          borderRadius: 'var(--radius-md) var(--radius-md) 0 0',
+          '&.Mui-expanded': { minHeight: 44 },
+          '& .MuiAccordionSummary-content': { margin: '10px 0' },
+          '& .MuiAccordionSummary-content.Mui-expanded': { margin: '10px 0' },
           '& .MuiAccordionSummary-expandIconWrapper': {
             marginRight: 1,
+            color: 'var(--ink-muted)',
             transform: 'none',
             transition: 'none',
           },
-          '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-            transform: 'none',
-          },
-        }} 
-        expandIcon={expanded ? <ArrowDropDownIcon sx={{ fontSize: 30 }} /> : <ArrowRightIcon sx={{ fontSize: 30 }} />}
+          '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': { transform: 'none' },
+        }}
+        expandIcon={expanded ? <ArrowDropDownIcon sx={{ fontSize: 28 }} /> : <ArrowRightIcon sx={{ fontSize: 28 }} />}
       >
-        <Typography variant="subtitle1">{title}</Typography>
+        <Typography variant="subtitle2" sx={{ color: 'var(--ink)', fontWeight: 600 }}>
+          {title}
+        </Typography>
       </AccordionSummary>
-      <AccordionDetails>
+      <AccordionDetails sx={{ p: 0 }}>
         <SyntaxHighlighter
           language={language}
-          style={solarizedlight}
+          style={prismStyle}
           showLineNumbers={showLineNumbers}
           wrapLines={wrapLines}
           customStyle={{
-            background: 'transparent',
-            padding: '1rem',
-            fontSize: '0.9rem',
-            borderRadius: '4px'
+            background: mode === 'dark' ? '#0d1117' : undefined,
+            margin: 0,
+            padding: '16px',
+            fontSize: '0.85rem',
+            fontFamily: 'var(--font-mono)',
+            borderRadius: '0 0 var(--radius-md) var(--radius-md)',
           }}
-          lineNumberStyle={{ color: '#ccc', marginRight: '1em' }}
+          lineNumberStyle={{
+            color: mode === 'dark' ? 'var(--term-muted)' : '#94a3b8',
+            marginRight: '1em',
+          }}
         >
           {codeString}
         </SyntaxHighlighter>
@@ -103,5 +93,5 @@ CodeAccordion.propTypes = {
   language: PropTypes.string,
   showLineNumbers: PropTypes.bool,
   wrapLines: PropTypes.bool,
-  defaultExpanded: PropTypes.oneOfType([PropTypes.bool, PropTypes.string])
+  defaultExpanded: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
 };
