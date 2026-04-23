@@ -11,7 +11,7 @@ import Redmine from './components/Redmine';
 import Chrome from './components/Chrome';
 import ChatBot from './components/ChatBot';
 import KredisOperator from './components/KredisOperator';
-import Profile from './components/Profile';
+import About from './components/about/About';
 import Blog from './components/Blog';
 import BlogDetail from './components/BlogDetail';
 import CreatePost from './components/CreatePost';
@@ -43,7 +43,7 @@ export default function App() {
         <Route path="/redmine" element={<Redmine />} />
         {/* /profile → /about redirect (About 컴포넌트는 Phase 3에서 구현) */}
         <Route path="/profile" element={<Navigate to="/about" replace />} />
-        <Route path="/about" element={<Profile />} />
+        <Route path="/about" element={<About />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:id" element={<BlogDetail />} />
         <Route
