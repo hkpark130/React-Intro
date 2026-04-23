@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPost, fetchCategories } from '../api/api';
-import { 
+import {
   Typography, Container, Box, Button,
   Paper, CircularProgress, Alert,
-  FormControl, InputLabel, Select, MenuItem
+  FormControl, InputLabel, Select, MenuItem, TextField
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import MarkdownEditor from './markdown/MarkdownEditor';
@@ -67,7 +67,7 @@ export default function CreatePost() {
   
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>      
-      <Paper elevation={2} sx={{ p: 3, mt: 4 }}>
+      <Paper elevation={0} sx={{ p: 3, mt: 4, border: '1px solid var(--border)', bgcolor: 'var(--bg-canvas)', borderRadius: 'var(--radius-lg)' }}>
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
         
         <form onSubmit={handleSubmit}>
@@ -75,21 +75,14 @@ export default function CreatePost() {
             <Typography variant="subtitle1" gutterBottom>
               제목
             </Typography>
-            <input
-              type="text"
+            <TextField
               name="title"
               value={post.title}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                fontSize: '1.2rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                outline: 'none'
-              }}
+              fullWidth
               required
               placeholder="제목을 입력하세요"
+              inputProps={{ style: { fontSize: '1.2rem' } }}
             />
           </Box>
           
