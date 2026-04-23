@@ -21,7 +21,7 @@ import { sendChatMessage } from '../api/api';
 const renderMessageWithLinks = (text) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = text.split(urlRegex);
-  
+
   return parts.map((part, index) => {
     if (part.match(urlRegex)) {
       return (
@@ -31,11 +31,11 @@ const renderMessageWithLinks = (text) => {
           target="_blank"
           rel="noopener noreferrer"
           sx={{
-            color: '#667eea',
+            color: 'var(--accent)',
             fontWeight: 500,
             textDecoration: 'underline',
             '&:hover': {
-              color: '#764ba2',
+              color: 'var(--ink)',
             },
           }}
         >
@@ -111,13 +111,12 @@ export default function ChatWidget() {
           zIndex: 9999,
           width: 60,
           height: 60,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important',
-          boxShadow: '0 6px 25px rgba(102, 126, 234, 0.6) !important',
-          color: 'white !important',
+          bgcolor: 'var(--ink) !important',
+          boxShadow: 'var(--shadow-subtle) !important',
+          color: 'var(--on-ink) !important',
           '&:hover': {
-            background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%) !important',
-            transform: 'scale(1.1)',
-            boxShadow: '0 8px 30px rgba(102, 126, 234, 0.7) !important',
+            bgcolor: 'var(--ink) !important',
+            transform: 'scale(1.05)',
           },
           transition: 'all 0.3s ease-in-out',
         }}
@@ -128,7 +127,7 @@ export default function ChatWidget() {
       {/* 채팅창 */}
       <Fade in={isOpen}>
         <Paper
-          elevation={8}
+          elevation={0}
           sx={{
             position: 'fixed',
             bottom: 90,
@@ -141,17 +140,20 @@ export default function ChatWidget() {
             flexDirection: 'column',
             borderRadius: 3,
             overflow: 'hidden',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow-popover)',
           }}
         >
           {/* 헤더 */}
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
+              bgcolor: 'var(--bg-subtle)',
+              color: 'var(--ink)',
               p: 2,
               display: 'flex',
               alignItems: 'center',
               gap: 1,
+              borderBottom: '1px solid var(--border)',
             }}
           >
             <SmartToyIcon />
@@ -161,7 +163,7 @@ export default function ChatWidget() {
             <IconButton
               size="small"
               onClick={() => setIsOpen(false)}
-              sx={{ color: 'white' }}
+              sx={{ color: 'var(--ink-muted)' }}
             >
               <CloseIcon />
             </IconButton>
@@ -176,7 +178,7 @@ export default function ChatWidget() {
               display: 'flex',
               flexDirection: 'column',
               gap: 1.5,
-              bgcolor: '#f8f9fa',
+              bgcolor: 'var(--bg-subtle)',
             }}
           >
             {messages.map((msg, idx) => (
@@ -195,14 +197,14 @@ export default function ChatWidget() {
                       width: 28,
                       height: 28,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      bgcolor: 'var(--ink)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
                     }}
                   >
-                    <SmartToyIcon sx={{ fontSize: 16, color: 'white' }} />
+                    <SmartToyIcon sx={{ fontSize: 16, color: 'var(--on-ink)' }} />
                   </Box>
                 )}
                 <Paper
@@ -210,12 +212,13 @@ export default function ChatWidget() {
                   sx={{
                     p: 1.5,
                     maxWidth: '75%',
-                    borderRadius: msg.type === 'user' 
-                      ? '16px 16px 4px 16px' 
+                    borderRadius: msg.type === 'user'
+                      ? '16px 16px 4px 16px'
                       : '16px 16px 16px 4px',
-                    bgcolor: msg.type === 'user' ? '#667eea' : 'white',
-                    color: msg.type === 'user' ? 'white' : 'inherit',
+                    bgcolor: msg.type === 'user' ? 'var(--ink)' : 'var(--bg-canvas)',
+                    color: msg.type === 'user' ? 'var(--on-ink)' : 'inherit',
                     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                    border: msg.type === 'bot' ? '1px solid var(--border)' : 'none',
                   }}
                 >
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -247,21 +250,22 @@ export default function ChatWidget() {
                     width: 28,
                     height: 28,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    bgcolor: 'var(--ink)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <SmartToyIcon sx={{ fontSize: 16, color: 'white' }} />
+                  <SmartToyIcon sx={{ fontSize: 16, color: 'var(--on-ink)' }} />
                 </Box>
                 <Paper
                   elevation={0}
                   sx={{
                     p: 1.5,
                     borderRadius: '16px 16px 16px 4px',
-                    bgcolor: 'white',
+                    bgcolor: 'var(--bg-canvas)',
                     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                    border: '1px solid var(--border)',
                   }}
                 >
                   <CircularProgress size={16} />
@@ -275,8 +279,8 @@ export default function ChatWidget() {
           <Box
             sx={{
               p: 1.5,
-              borderTop: '1px solid #e0e0e0',
-              bgcolor: 'white',
+              borderTop: '1px solid var(--border)',
+              bgcolor: 'var(--bg-canvas)',
               display: 'flex',
               gap: 1,
             }}
@@ -294,7 +298,7 @@ export default function ChatWidget() {
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 3,
-                  bgcolor: '#f5f5f5',
+                  bgcolor: 'var(--bg-subtle)',
                 },
                 '& .MuiFormHelperText-root': {
                   textAlign: 'right',
@@ -303,7 +307,7 @@ export default function ChatWidget() {
                   fontSize: '0.7rem',
                   minHeight: '18px',
                   lineHeight: 1,
-                  color: input.length >= 40 ? '#f44336' : '#999',
+                  color: input.length >= 40 ? '#ef4444' : 'var(--ink-subtle)',
                 },
               }}
             />
@@ -319,14 +323,15 @@ export default function ChatWidget() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                bgcolor: 'var(--ink)',
+                color: 'var(--on-ink)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%)',
+                  bgcolor: 'var(--ink)',
+                  opacity: 0.9,
                 },
                 '&:disabled': {
-                  bgcolor: '#e0e0e0',
-                  color: '#999',
+                  bgcolor: 'var(--border)',
+                  color: 'var(--ink-disabled)',
                 },
               }}
               aria-label="send"
@@ -339,4 +344,3 @@ export default function ChatWidget() {
     </>
   );
 }
-
