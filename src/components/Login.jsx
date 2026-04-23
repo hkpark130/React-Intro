@@ -118,9 +118,23 @@ export default function Login({ open, onClose, redirectTo = null }) {
   };
 
   return (
-    <Dialog open={open} onClose={loading ? null : handleClose} maxWidth="xs" fullWidth>
+    <Dialog
+      open={open}
+      onClose={loading ? null : handleClose}
+      maxWidth="xs"
+      fullWidth
+      PaperProps={{
+        sx: {
+          bgcolor: 'var(--bg-canvas)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-lg)',
+        }
+      }}
+    >
       <DialogTitle>
-        {isRegisterMode ? '회원가입' : '로그인'}
+        <Typography sx={{ color: 'var(--ink)' }}>
+          {isRegisterMode ? '회원가입' : '로그인'}
+        </Typography>
       </DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -186,12 +200,13 @@ export default function Login({ open, onClose, redirectTo = null }) {
           <Button onClick={handleClose} disabled={loading} sx={{ mr: 1 }}>
             취소
           </Button>
-          <Button 
+          <Button
             type="submit"
             form="login-form"
-            variant="contained" 
+            variant="contained"
             disabled={loading}
             startIcon={loading && <CircularProgress size={16} />}
+            sx={{ bgcolor: 'var(--ink)', color: 'var(--on-ink)', textTransform: 'none', '&:hover': { bgcolor: 'var(--ink)', opacity: 0.9 } }}
           >
             {loading ? (isRegisterMode ? '처리 중...' : '로그인 중...') : (isRegisterMode ? '회원가입' : '로그인')}
           </Button>
