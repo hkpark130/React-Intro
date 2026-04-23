@@ -135,7 +135,7 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
           margin: '2px', // 상하좌우 여백 추가
           objectFit: 'contain',
           borderRadius: 2,
-          border: '2px solid #ddd',
+          border: '1px solid var(--border)',
           cursor: 'zoom-in',
           boxSizing: 'border-box',
           '&:hover': {
@@ -158,8 +158,7 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
           display="block"
           align="center"
           fontSize={16}
-          color="textSecondary"
-          sx={{ mt: 1 }}
+          sx={{ mt: 1, color: 'var(--ink-subtle)' }}
         >
           {caption}
         </Typography>
@@ -212,7 +211,7 @@ export default function ZoomableImageModal({ imageSrc, altText, caption, sx }) {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            bgcolor: 'background.paper'
+            bgcolor: 'var(--bg-canvas)'
           }}
         >
           {/* 리사이즈 핸들 오버레이 */}

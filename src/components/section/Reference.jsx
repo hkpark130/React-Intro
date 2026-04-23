@@ -48,7 +48,7 @@ export default function Reference({ spaLinks, externalLinks }) {
           ) : (
             <Typography variant="body1" component="p">
               {prefix}{' '}
-              <MuiLink component={RouterLink} to={to} underline="hover" sx={{ ml: 0.5 }}>
+              <MuiLink component={RouterLink} to={to} underline="hover" sx={{ ml: 0.5, color: 'var(--accent)' }}>
                 {label}
               </MuiLink>
             </Typography>
@@ -86,7 +86,7 @@ export default function Reference({ spaLinks, externalLinks }) {
           ) : (
             <Typography variant="body1" component="p">
               {prefix}{' '}
-              <MuiLink href={href} target="_blank" rel="noopener noreferrer" sx={{ ml: 0.5 }}>
+              <MuiLink href={href} target="_blank" rel="noopener noreferrer" sx={{ ml: 0.5, color: 'var(--accent)' }}>
                 {label}
               </MuiLink>
             </Typography>
