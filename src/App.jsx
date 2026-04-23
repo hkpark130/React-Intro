@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './Layout';
-import Intro from './components/Intro';
+import Home from './components/home/Home';
 import SpringBoot from './components/SpringBoot';
 import Python from './components/Python';
 import Golang from './components/Golang';
@@ -30,7 +30,7 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Intro />} />
+        <Route path="/" element={<Home />} />
         <Route path="/projects" element={<ProjectsGrid />} />
         <Route path="/springboot" element={<SpringBoot />} />
         <Route path="/kredis" element={<KredisOperator />} />
