@@ -24,7 +24,7 @@ export default function Blog() {
 
   useEffect(() => {
     fetchCategories()
-      .then(({ data }) => setCategories(data || []))
+      .then(({ data }) => setCategories(Array.isArray(data) ? data : []))
       .catch(() => setCategories([]));
   }, []);
 
