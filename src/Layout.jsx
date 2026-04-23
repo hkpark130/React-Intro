@@ -1,24 +1,23 @@
-import React from 'react'
-import Box from '@mui/material/Box'
-import Sidebar from './components/Sidebar'
-import ChatWidget from './components/ChatWidget'
+import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import { Box } from '@mui/material';
+import TopNav from './components/layout/TopNav';
+import Footer from './components/layout/Footer';
+import MobileNavDrawer from './components/layout/MobileNavDrawer';
+import ChatWidget from './components/ChatWidget';
 
-export default function Layout({ children }) {
+export default function Layout() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <Box sx={{ display: 'flex', height: '100vh'}}>
-      {/* 왼쪽 사이드바 */}
-      <Sidebar />
-
-      {/* 메인 콘텐츠 영역 */}
-      <Box 
-        component="main" 
-        sx={{ flexGrow: 1, p: 2}}
-      >
-        {children}
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <TopNav onMenuClick={() => setMobileOpen(true)} />
+      <MobileNavDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <Box component="main" sx={{ flex: 1 }}>
+        <Outlet />
       </Box>
-
-      {/* 채팅 위젯 */}
+      <Footer />
       <ChatWidget />
     </Box>
-  )
+  );
 }
