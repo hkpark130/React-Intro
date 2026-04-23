@@ -1,21 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Typography, Container, Paper, Box, Button, Stack, Divider, 
-  TextField, CircularProgress, Chip, Avatar, IconButton, 
+import {
+  Typography, Container, Paper, Box, Button, Stack, Divider,
+  TextField, CircularProgress, Chip, Avatar, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions, Alert,
-  Pagination, FormControl, InputLabel, Select, MenuItem 
+  Pagination
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { 
-  fetchPost, deletePost, updatePost, fetchComments, createComment, 
-  updateGuestComment, updateUserComment, deleteGuestComment, deleteUserComment,
-  fetchCategories
+import {
+  fetchPost, deletePost, fetchComments, createComment,
+  updateGuestComment, updateUserComment, deleteGuestComment, deleteUserComment
 } from '../api/api';
 import { isAuthenticated, getCurrentUser } from '../api/auth';
-import Login from './Login';
 import MarkdownRenderer from './markdown/MarkdownRenderer';
 
 export default function BlogDetail() {
@@ -28,15 +26,9 @@ export default function BlogDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newComment, setNewComment] = useState('');
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editedPost, setEditedPost] = useState({ title: '', content: '', categoryId: '' });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [guestName, setGuestName] = useState('');
   const [commentPassword, setCommentPassword] = useState('');
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  
-  // 카테고리 관련 상태
-  const [categories, setCategories] = useState([]);
   
   // 댓글 상태 관리
   const [editingCommentId, setEditingCommentId] = useState(null);
@@ -60,20 +52,6 @@ export default function BlogDetail() {
   useEffect(() => {
     loadPostDetails();
   }, [id]);
-  
-  // 카테고리 목록 로드
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const response = await fetchCategories();
-        setCategories(response.data || []);
-      } catch (error) {
-        console.error('카테고리를 불러오는 중 오류 발생:', error);
-      }
-    };
-    
-    loadCategories();
-  }, []);
   
   // 게시글 및 댓글 불러오기
   const loadPostDetails = async () => {
@@ -113,25 +91,6 @@ export default function BlogDetail() {
     } finally {
       setLoading(false);
       setIsDeleteDialogOpen(false);
-    }
-  };
-  
-  // 게시글 수정
-  const handleUpdatePost = async () => {
-    if (!editedPost.title || !editedPost.content) {
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      const response = await updatePost(id, editedPost);
-      setPost(response.data);
-      setIsEditDialogOpen(false);
-    } catch (error) {
-      console.error('게시글 수정 중 오류 발생:', error);
-      setError('게시글을 수정할 수 없습니다.');
-    } finally {
-      setLoading(false);
     }
   };
   
@@ -327,7 +286,7 @@ export default function BlogDetail() {
   
   // 메인 렌더링
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: { xs: 4, md: 6 } }}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
           <Button 
@@ -363,10 +322,10 @@ export default function BlogDetail() {
         
         {/* 게시글 본문 */}
         <Paper
-          elevation={3}
-          sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 4 }}
+          elevation={0}
+          sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 4, border: '1px solid var(--border)', bgcolor: 'var(--bg-canvas)', borderRadius: 'var(--radius-lg)' }}
         >
-          <Typography variant="h4" gutterBottom>
+          <Typography variant="h4" gutterBottom sx={{ color: 'var(--ink)', letterSpacing: '-0.5px' }}>
             {post.title}
           </Typography>
           
@@ -387,7 +346,7 @@ export default function BlogDetail() {
                 />
               )}
             </Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: 'var(--ink-subtle)' }}>
               {new Date(post.createdAt).toLocaleString()}
             </Typography>
           </Box>
@@ -395,37 +354,42 @@ export default function BlogDetail() {
           <Divider sx={{ my: 2 }} />
           
           {/* 마크다운으로 렌더링된 게시글 내용 */}
-          <Box sx={{ 
-            mb: 1,
-            overflow: 'hidden',   // 내용이 넘치면 숨김
-            width: '100%',        // 너비 100%
-            '& img': {            // 이미지에 대한 스타일
-              maxWidth: '100%',   // 이미지가 부모보다 크지 않도록
-              height: 'auto'      // 이미지 비율 유지
+          <Box sx={{
+            mb: 3,
+            maxWidth: 680,
+            mx: 'auto',
+            '& h2, & h3': { mt: '2em', mb: '0.5em', color: 'var(--ink)' },
+            '& p, & li': { fontSize: 16, lineHeight: 1.75, color: 'var(--ink)' },
+            '& blockquote': {
+              borderLeft: '3px solid var(--accent)',
+              pl: 2,
+              color: 'var(--ink-muted)',
+              fontStyle: 'italic',
+              margin: 0,
+              my: 2,
             },
-            '& pre, & code': {    // 코드 블록 스타일
-              whiteSpace: 'pre-wrap', // 긴 코드 줄 바꿈
-              wordBreak: 'break-word', // 단어 중간에서도 줄 바꿈 가능
-              overflowX: 'auto'    // 가로 스크롤만 필요할 때 표시
+            '& a': { color: 'var(--accent)' },
+            '& img': { maxWidth: '100%', height: 'auto', borderRadius: 'var(--radius-md)' },
+            '& code': {
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.85em',
+              bgcolor: 'var(--bg-subtle)',
+              px: 0.6,
+              py: 0.15,
+              borderRadius: 'var(--radius-xs)',
             },
-            '& table': {          // 표 스타일
-              width: '100%',
-              maxWidth: '100%',
-              overflowX: 'auto',
-              display: 'block'
-            },
-            '& *': {              // 모든 요소에 적용
-              maxWidth: '100%',   // 최대 너비 제한
-              boxSizing: 'border-box' // 패딩과 테두리를 너비에 포함
-            },
+            '& pre code': { bgcolor: 'transparent', p: 0 },
+            '& *': { maxWidth: '100%', boxSizing: 'border-box' },
             wordWrap: 'break-word',
+            width: '100%',
+            overflow: 'hidden',
           }}>
             <MarkdownRenderer content={post.content} />
           </Box>
         </Paper>
         
         {/* 댓글 섹션 */}
-        <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, mb: 4 }}>
+        <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, mb: 4, border: '1px solid var(--border)', bgcolor: 'var(--bg-canvas)', borderRadius: 'var(--radius-lg)' }}>
           <Typography variant="h5" gutterBottom>
             댓글 {comments.length}개
           </Typography>
@@ -433,11 +397,11 @@ export default function BlogDetail() {
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           
           {/* 댓글 작성 영역 */}
-          <Box sx={{ 
-            mb: 3, 
-            p: 2, 
-            borderRadius: 1, 
-            bgcolor: '#f5f7fa' 
+          <Box sx={{
+            mb: 3,
+            p: 2,
+            borderRadius: 1,
+            bgcolor: 'var(--bg-subtle)'
           }}>
             <Typography variant="subtitle1" gutterBottom fontWeight="medium">
               댓글 작성
@@ -497,7 +461,7 @@ export default function BlogDetail() {
               comments
                 .slice((commentPage - 1) * commentsPerPage, commentPage * commentsPerPage) // 페이지네이션 적용
                 .map((comment) => (
-                  <Box key={comment.id} sx={{ mb: 2, pb: 2, borderBottom: '1px solid #eee' }}>
+                  <Box key={comment.id} sx={{ mb: 2, pb: 2, borderBottom: '1px solid var(--border-muted)' }}>
                     {/* 댓글 헤더 */}
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -587,7 +551,7 @@ export default function BlogDetail() {
                       </Box>
                     ) : commentToDeleteId === comment.id ? (
                       // 댓글 삭제 UI (다이얼로그 없이 인라인 표시)
-                      <Box sx={{ mt: 1, p: 2, bgcolor: '#ffebee', borderRadius: 1 }}>
+                      <Box sx={{ mt: 1, p: 2, bgcolor: 'rgba(239,68,68,0.08)', borderRadius: 1 }}>
                         <Typography variant="body2" gutterBottom>
                           이 댓글을 정말 삭제하시겠습니까?
                         </Typography>
@@ -658,52 +622,6 @@ export default function BlogDetail() {
         </Paper>
       </motion.div>
       
-      {/* 게시글 수정 다이얼로그 */}
-      <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>게시글 수정</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="제목"
-            fullWidth
-            variant="outlined"
-            value={editedPost.title}
-            onChange={(e) => setEditedPost({ ...editedPost, title: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="내용"
-            multiline
-            rows={8}
-            fullWidth
-            variant="outlined"
-            value={editedPost.content}
-            onChange={(e) => setEditedPost({ ...editedPost, content: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
-            <InputLabel>카테고리</InputLabel>
-            <Select
-              value={editedPost.category}
-              onChange={(e) => setEditedPost({ ...editedPost, category: e.target.value })}
-              label="카테고리"
-            >
-              {/* 카테고리 목록을 불러와서 선택할 수 있도록 합니다 */}
-              {categories.map((category) => (
-                <MenuItem key={category.id} value={category.name}>
-                  {category.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsEditDialogOpen(false)}>취소</Button>
-          <Button onClick={handleUpdatePost} variant="contained" color="primary">수정하기</Button>
-        </DialogActions>
-      </Dialog>
-      
       {/* 게시글 삭제 확인 다이얼로그 */}
       <Dialog open={isDeleteDialogOpen} onClose={() => setIsDeleteDialogOpen(false)}>
         <DialogTitle>게시글 삭제</DialogTitle>
@@ -716,11 +634,6 @@ export default function BlogDetail() {
         </DialogActions>
       </Dialog>
 
-      {/* 로그인 다이얼로그 */}
-      <Login 
-        open={isLoginOpen} 
-        onClose={() => setIsLoginOpen(false)} 
-      />
     </Container>
   );
 }
