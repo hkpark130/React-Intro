@@ -6,6 +6,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, Alert,
   Pagination
 } from '@mui/material';
+import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
