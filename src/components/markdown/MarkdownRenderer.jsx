@@ -17,7 +17,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import './markdown-styles.css';
 
 // ===== 상수 =====
-const CUSTOM_TAGS = ['CodeAccordion', 'ZoomableImageModal', 'Bookmark', 'Alert', 'AlertBlock'];
+const CUSTOM_TAGS = ['CodeAccordion', 'ZoomableImageModal', 'Bookmark', 'AlertBlock'];
 
 // ===== 유틸리티 함수 =====
 
@@ -94,7 +94,7 @@ const extractCustomComponents = (markdown) => {
 
 /** 허용되지 않은 HTML 태그를 이스케이프 */
 const sanitizeUnknownTags = (markdown) => {
-  const allowedTags = `custom|section|p|div|span|h[1-6]|a|ul|ol|li|pre|code|em|strong|br|hr|blockquote|table|thead|tbody|tr|th|td|img|figure|figcaption|details|summary|video|source|u|small|mark|b`;
+  const allowedTags = `p|div|span|h[1-6]|a|ul|ol|li|pre|code|em|strong|br|hr|blockquote|table|thead|tbody|tr|th|td|img|figure|figcaption|details|summary|video|source|u|small|mark|b`;
   return markdown.replace(
     new RegExp(`<(?!\\/?(?:${allowedTags})\\b)([a-zA-Z][\\w\\d-]*)([^>]*)>`, 'g'),
     match => match.replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -113,7 +113,19 @@ const preprocessMarkdown = (content) => {
 // ===== 공통 스타일 상수 =====
 const LIST_STYLE = { paddingLeft: '20px', paddingTop: 0, paddingBottom: 0, lineHeight: '0.3', listStylePosition: 'outside' };
 const LIST_ITEM_STYLE = { marginTop: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0, lineHeight: '1.3' };
-const CODE_BLOCK_STYLE = { marginTop: 0, marginBottom: 0, backgroundColor: 'rgb(224, 224, 224)', padding: '10px', borderRadius: '4px', overflowX: 'auto' };
+const CODE_BLOCK_STYLE = {
+  marginTop: 0,
+  marginBottom: 0,
+  backgroundColor: 'var(--term-bg)',
+  color: 'var(--term-text)',
+  border: '1px solid var(--term-border)',
+  padding: '12px 14px',
+  borderRadius: 'var(--radius-md)',
+  overflowX: 'auto',
+  fontFamily: 'var(--font-mono)',
+  fontSize: '13px',
+  lineHeight: 1.7,
+};
 
 
 // ===== 메인 컴포넌트 =====
@@ -174,8 +186,7 @@ export default function MarkdownRenderer({ content }) {
           imageUrl={attrs.imageurl || attrs.imageUrl || ''}
         />
       ),
-      alert: () => <AlertBlock severity={attrs.severity || 'info'}>{innerContent}</AlertBlock>,
-      alertblock: () => <AlertBlock severity={attrs.severity || 'info'}>{innerContent}</AlertBlock>
+      alertblock: () => <AlertBlock severity={attrs.severity || 'info'}>{innerContent}</AlertBlock>,
     };
     
     return componentMap[normalizedTag]?.() ?? null;
