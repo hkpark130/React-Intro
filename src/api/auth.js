@@ -83,8 +83,12 @@ export const getCurrentUser = () => {
 };
 
 export function scheduleTokenRefresh(token) {
-    // 토큰이 null, undefined 또는 문자열이 아닐 경우의 예외 처리
-    if (!token || typeof token !== 'string') {
+    // 로그인 전 상태는 조용히 리턴 (정상).
+    if (!token) {
+      return;
+    }
+    // 문자열이 아니면 형식 오류로 리포트.
+    if (typeof token !== 'string') {
       console.error("유효하지 않은 토큰 형식입니다.");
       return;
     }
