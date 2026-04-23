@@ -77,8 +77,6 @@ export default function MarkdownEditor({ value, onChange }) {
   const [notionError, setNotionError] = useState('');
   const [notionKey, setNotionKey] = useState('');
   const [useCustomKey, setUseCustomKey] = useState(false);
-  // Html 경로 제거: 마크다운만 지원
-
   const handleTabChange = (_, newValue) => setTabValue(newValue);
 
   // 작성 탭 복귀 시 포커스 복원 (Undo 단축키가 바로 동작하도록)
@@ -258,8 +256,6 @@ export default function MarkdownEditor({ value, onChange }) {
       setNotionLoading(false);
     }
   };
-
-  // 마크다운 붙여넣기 기능 제거
 
   // 북마크 폼 입력값 변경 처리
   const handleBookmarkFormChange = (e) => {
@@ -644,8 +640,6 @@ export default function MarkdownEditor({ value, onChange }) {
             반드시 이미지를 개인/영구 저장소(S3/CloudFront, GitHub 등)에 업로드한 뒤
             마크다운의 이미지 URL(<code>![](url)</code>)을 해당 저장소 주소로 교체하세요.
           </Alert>
-          {/* HTML 삽입 형식 제거: 항상 마크다운만 */}
-
           <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
             <Button
               size="small"
@@ -754,8 +748,6 @@ export default function MarkdownEditor({ value, onChange }) {
             </Box>
           )}
 
-          {/* 마크다운 붙여넣기 모드 제거 */}
-
           {notionError && (
             <Typography color="error" variant="body2" sx={{ mt: 1 }}>{notionError}</Typography>
           )}
@@ -797,7 +789,7 @@ export default function MarkdownEditor({ value, onChange }) {
                 label="언어"
                 onChange={handleCodeFormChange}
               >
-                {['bash','json','yaml','yml','java','kotlin','go','python','javascript','typescript','tsx','tsx','sql','xml','html','css','dockerfile','ini','toml'].map(lang => (
+                {['bash','json','yaml','yml','java','kotlin','go','python','javascript','typescript','tsx','sql','xml','html','css','dockerfile','ini','toml'].map(lang => (
                   <MenuItem key={lang} value={lang}>{lang}</MenuItem>
                 ))}
               </Select>
