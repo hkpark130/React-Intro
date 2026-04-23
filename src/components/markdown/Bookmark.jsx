@@ -66,7 +66,7 @@ const Bookmark = ({ url, title, description, imageUrl }) => {
     try {
       const urlObj = new URL(url);
       return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=32`;
-    } catch (error) {
+    } catch {
       return '';
     }
   };
@@ -133,7 +133,7 @@ const Bookmark = ({ url, title, description, imageUrl }) => {
                 {(() => {
                   try {
                     return new URL(url).hostname;
-                  } catch (error) {
+                  } catch {
                     return 'Invalid URL';
                   }
                 })()}

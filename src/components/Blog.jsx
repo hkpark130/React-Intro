@@ -135,7 +135,7 @@ export default function Blog() {
     }
   }, [searchTerm]);
   
-  const loadPosts = async () => {
+  const _loadPosts = async () => {
     try {
       setLoading(true);
       const offset = (page - 1) * postsPerPage;
