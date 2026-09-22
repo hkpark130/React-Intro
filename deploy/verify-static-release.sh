@@ -36,6 +36,28 @@ docker exec "$CONTAINER" sh -ceu '
   wget -q --no-check-certificate -T 5 -O /dev/null https://127.0.0.1/
   wget -q --no-check-certificate -T 5 -O /dev/null https://127.0.0.1/robots.txt
 '
+docker exec "$CONTAINER" sh -ceu '
+  for path in /blog /blog/ /blog/1; do
+    headers="$(mktemp)"
+    body="$(mktemp)"
+    if ! wget -S --no-check-certificate -T 5 -O "$body" "https://127.0.0.1$path" 2>"$headers"; then
+      rm -f "$headers" "$body"
+      exit 1
+    fi
+    if ! grep -q "HTTP/.* 200" "$headers" || grep -q "HTTP/.* 30[0-9]" "$headers"; then
+      rm -f "$headers" "$body"
+      exit 1
+    fi
+    cmp -s "$body" /usr/share/nginx/html/index.html || { rm -f "$headers" "$body"; exit 1; }
+    rm -f "$headers" "$body"
+  done
+  asset=/blog/diagrams/44-frontend-flow.svg
+  test -s "/usr/share/nginx/html$asset"
+  asset_body="$(mktemp)"
+  wget -q --no-check-certificate -T 5 -O "$asset_body" "https://127.0.0.1$asset"
+  cmp -s "$asset_body" "/usr/share/nginx/html$asset"
+  rm -f "$asset_body"
+'
 case "$require_rag_health" in
   0) ;;
   1) docker exec "$CONTAINER" sh -ceu "wget -q -T 5 -O /dev/null '${RAG_UPSTREAM_URL}/api/chat/health'" ;;

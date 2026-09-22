@@ -146,6 +146,28 @@ verify_frontend_health() {
     wget -q --no-check-certificate -T 5 -O /dev/null https://127.0.0.1/
     wget -q --no-check-certificate -T 5 -O /dev/null https://127.0.0.1/robots.txt
   '
+  docker exec "$CONTAINER" sh -ceu '
+    for path in /blog /blog/ /blog/1; do
+      headers="$(mktemp)"
+      body="$(mktemp)"
+      if ! wget -S --no-check-certificate -T 5 -O "$body" "https://127.0.0.1$path" 2>"$headers"; then
+        rm -f "$headers" "$body"
+        exit 1
+      fi
+      if ! grep -q "HTTP/.* 200" "$headers" || grep -q "HTTP/.* 30[0-9]" "$headers"; then
+        rm -f "$headers" "$body"
+        exit 1
+      fi
+      cmp -s "$body" /usr/share/nginx/html/index.html || { rm -f "$headers" "$body"; exit 1; }
+      rm -f "$headers" "$body"
+    done
+    asset=/blog/diagrams/44-frontend-flow.svg
+    test -s "/usr/share/nginx/html$asset"
+    asset_body="$(mktemp)"
+    wget -q --no-check-certificate -T 5 -O "$asset_body" "https://127.0.0.1$asset"
+    cmp -s "$asset_body" "/usr/share/nginx/html$asset"
+    rm -f "$asset_body"
+  '
 }
 
 capture_ssr_container() {
@@ -287,6 +309,29 @@ pattern = r'(location\s+(?:=\s+)?/api/chat\s*\{[^{}]*?proxy_pass\s+)http://[^;\s
 updated, count = re.subn(pattern, lambda match: match.group(1) + upstream + ';', content)
 if count != 1:
     raise SystemExit('Expected exactly one portfolio chat proxy location')
+blog_marker = '# portfolio-spa-blog-root-routes'
+blog_routes = '''    # portfolio-spa-blog-root-routes
+    # /blog is also the static-asset directory; these exact SPA routes must not
+    # fall through to nginx directory redirect or index lookup.
+    location = /blog {
+        try_files /__portfolio_spa_blog_route__ /index.html;
+    }
+
+    location = /blog/ {
+        try_files /__portfolio_spa_blog_route__ /index.html;
+    }
+
+'''
+if blog_marker in updated:
+    if updated.count(blog_marker) != 1 or blog_routes not in updated:
+        raise SystemExit('Existing portfolio blog root routes differ from the pinned safe configuration')
+else:
+    if re.search(r'location\s+=\s+/blog\s*\{', updated) or re.search(r'location\s+=\s+/blog/\s*\{', updated):
+        raise SystemExit('Existing exact blog root route requires manual review')
+    anchor = '    location @ssr_blog {'
+    if updated.count(anchor) != 1:
+        raise SystemExit('Expected exactly one SSR blog location anchor')
+    updated = updated.replace(anchor, blog_routes + anchor)
 pathlib.Path(destination).write_text(updated, encoding='utf-8')
 PY
 docker cp "${backup_dir}/nginx.next.conf" "${CONTAINER}:/etc/nginx/conf.d/default.conf"
