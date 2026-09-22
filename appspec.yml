@@ -11,19 +11,6 @@ permissions:
     pattern: "**"
     owner: ec2-user
     group: ec2-user
-  - object: /home/ec2-user/portfolio-codedeploy/source/deploy.sh
-    owner: ec2-user
-    group: ec2-user
-    mode: 755
-  - object: /home/ec2-user/portfolio-codedeploy/source/verify-deploy.sh
-    owner: ec2-user
-    group: ec2-user
-    mode: 755
-  - object: /home/ec2-user/portfolio-codedeploy/source/deploy/
-    pattern: "*.sh"
-    owner: ec2-user
-    group: ec2-user
-    mode: 755
 
 hooks:
   ApplicationStart:
