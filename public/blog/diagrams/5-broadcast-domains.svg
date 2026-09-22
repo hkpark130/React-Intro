@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 960 330" role="img" aria-labelledby="title desc">
+  <title id="title">VLAN별 브로드캐스트 도메인과 L3 경계</title>
+  <desc id="desc">VLAN 10의 호스트 A가 보낸 브로드캐스트는 같은 VLAN의 B와 L3 인터페이스에 도달한다. L3 장비를 거쳐 VLAN 20의 호스트 C로 동일 프레임이 중계되지는 않는다.</desc>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 Z" fill="#287961"/></marker></defs>
+  <rect width="960" height="330" rx="18" fill="#f5f7fb"/>
+  <g font-family="system-ui, sans-serif" fill="#14283f">
+    <text x="30" y="38" font-size="21" font-weight="700">L2 브로드캐스트의 경계는 VLAN과 L3 구성으로 나뉜다</text>
+    <rect x="28" y="68" width="390" height="206" rx="15" fill="#e6f3ed" stroke="#287961" stroke-width="2"/>
+    <rect x="638" y="68" width="292" height="206" rx="15" fill="#e8eef9" stroke="#5772a6" stroke-width="2"/>
+    <text x="48" y="98" font-size="20" font-weight="700">VLAN 10</text><text x="658" y="98" font-size="20" font-weight="700">VLAN 20</text>
+    <g fill="none" stroke-width="3"><path d="M164 146 L249 160" stroke="#287961" marker-end="url(#arrow)"/><path d="M249 188 L164 226" stroke="#287961" marker-end="url(#arrow)"/><path d="M344 174 H462" stroke="#287961" marker-end="url(#arrow)"/><path d="M582 174 H748" stroke="#5772a6"/></g>
+    <g text-anchor="middle" font-size="18"><rect x="58" y="122" width="105" height="45" rx="8" fill="#fff" stroke="#287961"/><text x="110" y="151">Host A</text><rect x="58" y="206" width="105" height="45" rx="8" fill="#fff" stroke="#287961"/><text x="110" y="235">Host B</text><rect x="249" y="144" width="95" height="60" rx="8" fill="#fff" stroke="#287961"/><text x="296" y="180">Switch</text><rect x="462" y="124" width="120" height="102" rx="10" fill="#fff" stroke="#52687f" stroke-width="2"/><text x="522" y="165">L3 장비</text><text x="522" y="193" font-size="15">라우팅 경계</text><rect x="748" y="147" width="105" height="54" rx="8" fill="#fff" stroke="#5772a6"/><text x="800" y="181">Host C</text></g>
+    <text x="351" y="154" font-size="14" fill="#287961">L2 전달</text><text x="651" y="237" font-size="16">같은 프레임 전달 없음</text>
+    <text x="32" y="306" font-size="16">초록 화살표: A의 브로드캐스트 전달 범위 · VLAN 20으로 통신하려면 별도의 L3 전달이 필요</text>
+  </g>
+</svg>

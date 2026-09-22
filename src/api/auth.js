@@ -2,84 +2,126 @@ import { api } from "./api";
 import { jwtDecode } from "jwt-decode";
 
 let timeoutRef = null;
+const AUTH_CHANGE_EVENT = 'blog-auth-change';
+
+const emitAuthChange = () => {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+};
+
+const storeAccessToken = token => {
+  localStorage.setItem('accessToken', token);
+  emitAuthChange();
+};
+
+const clearLocalAuth = () => {
+  if (timeoutRef) {
+    clearTimeout(timeoutRef);
+    timeoutRef = null;
+  }
+  localStorage.removeItem('accessToken');
+  emitAuthChange();
+};
+
+const readAuthState = () => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return { user: null, expiresAt: null };
+
+  try {
+    const decoded = jwtDecode(token);
+    const expiresAt = Number(decoded.exp) * 1000;
+    const username = decoded.sub || decoded.username;
+    if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt || !username) {
+      return { user: null, expiresAt: null };
+    }
+
+    const isAdmin =
+      decoded.role === 'ADMIN' ||
+      decoded.authorities?.includes('ROLE_ADMIN') ||
+      decoded.roles?.includes('ADMIN') ||
+      decoded.scopes?.includes('ADMIN') ||
+      decoded.auth === 'ADMIN';
+
+    return { user: { username, isAdmin }, expiresAt };
+  } catch {
+    return { user: null, expiresAt: null };
+  }
+};
 
 export const login = async (username, password) => {
     const res = await api.post("/users/login", { username, password });
-    localStorage.setItem("accessToken", res.data.accessToken);
+    storeAccessToken(res.data.accessToken);
     scheduleTokenRefresh(res.data.accessToken);
 };
 
 export const refreshAccessToken = async () => {
     const res = await api.post("/users/refresh");
     const accessToken = res.data.accessToken;
-    console.log("토큰 갱신함");
-    localStorage.setItem("accessToken", accessToken);
-  
+    storeAccessToken(accessToken);
+
     scheduleTokenRefresh(accessToken);
+    return accessToken;
+};
+
+/**
+ * 화면에 다시 들어왔을 때 세션을 잇는다.
+ * access token은 30분이지만 refresh 쿠키는 7일이다. 탭을 닫거나 절전에 들어가면
+ * 갱신 타이머가 돌지 못해 access token만 만료되므로, 그때도 쿠키로 한 번 시도한다.
+ * @returns {Promise<boolean>} 사용 가능한 세션이 남아 있으면 true
+ */
+export const restoreSession = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (readAuthState().user) {
+        scheduleTokenRefresh(token);
+        return true;
+    }
+
+    // 로그인한 적이 있어야 refresh 쿠키도 있다. 흔적이 없으면 서버를 부르지 않는다.
+    if (!token) return false;
+
+    try {
+        await refreshAccessToken();
+        return true;
+    } catch {
+        // 쿠키까지 만료됐거나 서버가 거부한 경우다. 다시 로그인해야 한다.
+        clearLocalAuth();
+        return false;
+    }
 };
 
 export const logout = async () => {
   const token = localStorage.getItem("accessToken");
-  await api.post(
-    "/users/logout",
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (timeoutRef) {
-    clearTimeout(timeoutRef);
-    timeoutRef = null;
-  }
-  localStorage.removeItem("accessToken");
-};
-
-// 사용자 인증 상태 확인 함수 추가
-export const isAuthenticated = () => {
-  const token = localStorage.getItem("accessToken");
-  if (!token) return false;
-  
   try {
-    const payload = jwtDecode(token);
-    return Date.now() < payload.exp * 1000;
-  } catch (err) {
-    return false;
+    await api.post(
+      "/users/logout",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  } finally {
+    clearLocalAuth();
   }
 };
+
+export const isAuthenticated = () => getCurrentUser() !== null;
 
 // 현재 사용자 정보 가져오기 함수
-export const getCurrentUser = () => {
-  const token = localStorage.getItem("accessToken");
-  if (!token) return null;
-  
-  try {
-    const decoded = jwtDecode(token);
-    
-    // 토큰에서 권한 정보 확인하는 부분 수정
-    // 역할/권한 정보는 아래 중 하나의 형태일 수 있음
-    const isAdmin = 
-      // 일반 역할 확인
-      decoded.role === 'ADMIN' || 
-      // Spring Security 기본 형식 확인
-      decoded.authorities?.includes('ROLE_ADMIN') ||
-      // 다른 가능한 형식 확인
-      decoded.roles?.includes('ADMIN') || 
-      decoded.scopes?.includes('ADMIN') ||
-      // JWT 내 권한 맵 형태 확인
-      decoded.auth === 'ADMIN';
-    
-    return {
-      username: decoded.sub || decoded.username,
-      isAdmin: isAdmin
-    };
-  } catch (error) {
-    console.error("토큰 디코딩 오류:", error);
-    localStorage.removeItem("accessToken");
-    return null;
-  }
+export const getCurrentUser = () => readAuthState().user;
+
+export const getAccessTokenExpiration = () => readAuthState().expiresAt;
+
+export const subscribeAuthChanges = listener => {
+  const onStorage = event => {
+    if (event.key === 'accessToken') listener();
+  };
+  window.addEventListener(AUTH_CHANGE_EVENT, listener);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    window.removeEventListener(AUTH_CHANGE_EVENT, listener);
+    window.removeEventListener('storage', onStorage);
+  };
 };
 
 export function scheduleTokenRefresh(token) {
@@ -106,11 +148,11 @@ export function scheduleTokenRefresh(token) {
           });
         }, timeToRefresh);
       } else {
-        console.warn("이미 토큰 만료임 (refresh 시도 안 함)");
+        // 이미 만료된 토큰이다. 타이머 대신 restoreSession이 쿠키로 복구한다.
+        refreshAccessToken().catch(() => clearLocalAuth());
       }
     } catch (error) {
       console.error("토큰 디코딩 중 오류 발생:", error.message);
-      // 유효하지 않은 토큰이면 localStorage에서 제거
-      localStorage.removeItem("accessToken");
+      clearLocalAuth();
     }
 }

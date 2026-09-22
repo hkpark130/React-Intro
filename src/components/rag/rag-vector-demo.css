@@ -1,0 +1,54 @@
+.rag-vector-demo {
+  margin: 20px 0 0;
+  padding: 20px;
+  border: 1px solid #d9e4df;
+  border-radius: 12px;
+  background: #fbfdfc;
+  color: #192d2e;
+}
+.rag-vector-demo > figcaption { color: #536a64; font-size: 13px; line-height: 1.7; }
+.rag-vector-demo .rag-vector-demo-body { display: grid; grid-template-columns: minmax(190px, 1fr) minmax(235px, 1fr); align-items: center; gap: 20px; }
+.rag-vector-demo .rag-vector-plot { display: block; width: 100%; max-width: 320px; height: auto; margin-inline: auto; overflow: visible; }
+.rag-vector-demo .rag-vector-plot text { font-family: inherit; }
+.rag-vector-demo .rag-vector-unit-circle { fill: #fff; stroke: #dae5df; stroke-width: 1.5; }
+.rag-vector-demo .rag-vector-axes { fill: none; stroke: #e2eae6; stroke-width: 1; }
+.rag-vector-demo .rag-vector-angle-area { fill: #dceee7; stroke: #75a292; stroke-width: 1; }
+.rag-vector-demo .rag-vector-angle-symbol { fill: #17685e; font-size: 14px; }
+.rag-vector-demo .rag-vector-document-label { font-size: 15px; font-weight: 700; }
+.rag-vector-demo .rag-vector-query { stroke: #17685e; stroke-width: 3.5; }
+.rag-vector-demo .rag-vector-query-label { fill: #17685e; font-size: 14px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+.rag-vector-demo .rag-vector-origin { fill: #62766e; font-size: 12px; }
+.rag-vector-demo .rag-vector-unit-label { fill: #62766e; font-size: 12px; }
+.rag-vector-demo .rag-vector-controls { min-width: 0; padding-block: 16px; }
+.rag-vector-demo .rag-vector-slider-heading { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 650; }
+.rag-vector-demo .rag-vector-slider-heading > span { font-variant-numeric: tabular-nums; }
+.rag-vector-demo .rag-vector-slider { display: block; box-sizing: border-box; width: 100%; min-width: 0; height: 40px; margin: 0; padding: 0; accent-color: #17685e; cursor: pointer; }
+.rag-vector-demo .rag-vector-slider:focus-visible { outline: 2px solid #17685e; outline-offset: 3px; border-radius: 4px; }
+.rag-vector-demo .rag-vector-slider-ticks { display: flex; justify-content: space-between; margin-top: 6px; color: #62766e; font-size: 11px; font-variant-numeric: tabular-nums; }
+.rag-vector-demo .rag-vector-explanation { margin: 14px 0 16px; color: #536a64; font-size: 13px; line-height: 1.7; }
+.rag-vector-demo .rag-vector-score-heading,
+.rag-vector-demo .rag-vector-scores > li { display: grid; grid-template-columns: 26px minmax(54px, 1fr) 48px 46px 40px; align-items: center; gap: 4px; }
+.rag-vector-demo .rag-vector-score-heading { padding-bottom: 8px; color: #62766e; font-size: 11px; }
+.rag-vector-demo .rag-vector-score-heading > :nth-child(n+3) { text-align: right; }
+.rag-vector-demo .rag-vector-scores { margin: 0; padding: 0; list-style: none; }
+.rag-vector-demo .rag-vector-scores > li { margin: 0; padding: 10px 0; border-top: 1px solid #e0e8e3; font-size: 13px; font-variant-numeric: tabular-nums; }
+.rag-vector-demo .rag-vector-rank { color: #62766e; font-size: 11px; }
+.rag-vector-demo .rag-vector-document { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.rag-vector-demo .rag-vector-document > i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.rag-vector-demo .rag-vector-difference,
+.rag-vector-demo .rag-vector-score { text-align: right; }
+.rag-vector-demo .rag-vector-score { font-weight: 700; }
+.rag-vector-demo .rag-vector-result { justify-self: end; padding: 2px 6px; border-radius: 999px; background: #edf0ed; color: #62766e; font-size: 11px; white-space: nowrap; }
+.rag-vector-demo .rag-vector-result[data-recommended="true"] { background: #deeee7; color: #17685e; font-weight: 650; }
+.rag-vector-demo .rag-vector-formula { display: block; padding-top: 14px; border-top: 1px solid #e0e8e3; font-size: 13px; line-height: 1.7; }
+.rag-vector-demo .rag-vector-formula > span { display: block; margin-bottom: 3px; color: #536a64; font-size: 12px; }
+.rag-vector-demo .rag-vector-formula > code { display: block; color: #17685e; font-size: 12px; white-space: normal; }
+.rag-vector-demo .rag-vector-formula > .rag-vector-coordinates { color: #536a64; }
+.rag-vector-demo .rag-vector-formula > .rag-vector-dot-calculation { display: flex; flex-wrap: wrap; column-gap: 5px; margin-block: 5px; }
+.rag-vector-demo .rag-vector-dot-calculation > span { white-space: nowrap; }
+@media (max-width: 680px) {
+  .rag-vector-demo { padding: 16px; }
+  .rag-vector-demo .rag-vector-demo-body { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .rag-vector-demo .rag-vector-plot { max-width: 280px; }
+  .rag-vector-demo .rag-vector-controls { padding: 0; }
+}

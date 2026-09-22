@@ -1,77 +1,41 @@
-:root {
-    --bg-main: #F5F5F5;
-    --bg-sidebar: #E0E0E0;
-    --bg-page: #E0E0E0;
-    --border-light: #DCDCDC;
-    
-    /* 반응형 글꼴 크기 변수 */
-    --font-size-base: 16px;
-    --font-size-small: 14px;
-    --font-size-large: 18px;
-  }
-  
-  /* 모바일 최적화를 위한 기본 설정 */
-  html {
-    font-size: var(--font-size-base);
-    -webkit-text-size-adjust: 100%;
-  }
-  
-  html, body, #root {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background-color: var(--bg-page);
-  }
-  
-  /* 기본 텍스트 최적화 */
-  body {
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  #root > * {
-    background: transparent;
-  }
-  
-  /* 모바일에서 사이드바 최적화 */
-  .sidebar {
-    width: 240px;
-    background-color: var(--bg-sidebar);
-  }
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/PretendardVariable.woff2') format('woff2');
+}
 
-/* Sidebar scrolling and hidden scrollbar styles */
-.sidebar {
-  height: 100vh;
-  overflow-y: auto;
-  scrollbar-width: none;      /* Firefox */
-  -ms-overflow-style: none;   /* Internet Explorer 10+ */
+:root {
+  --canvas: #f6f8f7;
+  --surface: #ffffff;
+  --ink: #192d2e;
+  --muted: #5e716e;
+  --line: #dde5e2;
+  --accent: #17685e;
+  --soft: #eaf3f0;
+  --portfolio-header-height: 64px;
+  font-family: 'Pretendard Variable', Pretendard, 'Malgun Gothic', sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--canvas);
+  font-synthesis: none;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-.sidebar::-webkit-scrollbar {
-  display: none;              /* Chrome, Safari, Edge */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: calc(var(--portfolio-header-height) + 24px); }
+html, body, #root { min-height: 100%; margin: 0; }
+body { line-height: 1.75; }
+button, input, textarea, select { font: inherit; }
+button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+a { color: var(--accent); text-underline-offset: 4px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+::selection { background: #d9ebe4; color: #16392f; }
+img { max-width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
 }
-  
-  /* 작은 화면에 대한 미디어 쿼리 */
-  @media (max-width: 600px) {
-    html {
-      font-size: calc(var(--font-size-base) * 1.1); /* 모바일에서 글꼴 약간 키움 */
-    }
-    
-    /* 모바일에서 여백 조정 */
-    .MuiContainer-root {
-      padding-left: 12px !important;
-      padding-right: 12px !important;
-    }
-    
-    /* 테이블 스크롤 최적화 */
-    .MuiTableContainer-root {
-      overflow-x: auto;
-    }
-  }
-  
-  /* 태블릿에 대한 미디어 쿼리 */
-  @media (min-width: 601px) and (max-width: 960px) {
-    html {
-      font-size: calc(var(--font-size-base) * 1.05);
-    }
-  }

@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import {
-  Typography, Container, Box, Button,
-  Paper, CircularProgress, Alert,
-  FormControl, InputLabel, Select, MenuItem
-} from '@mui/material';
+import { CircularProgress, Container } from '@mui/material';
 import { fetchPost, updatePost, fetchCategories } from '../api/api';
-import MarkdownEditor from './markdown/MarkdownEditor';
+import PostComposer from './PostComposer';
+import { postSaveErrorMessage } from './postSaveError';
+import { usePostDraft } from './usePostDraft';
 
 export default function EditPost() {
   const { id } = useParams();
@@ -22,6 +20,10 @@ export default function EditPost() {
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [expectedUpdatedAt, setExpectedUpdatedAt] = useState(null);
+  // 불러온 서버 내용이 기준선이다. 이것과 같으면 남길 초안이 없다.
+  const [baseline, setBaseline] = useState(null);
+  const { offer, acceptOffer, discardOffer, releaseDraft } = usePostDraft({ mode: 'edit', id, post, baseline, ready: Boolean(baseline) });
   
   // 카테고리 목록 로드 및 게시글 내용 가져오기
   useEffect(() => {
@@ -36,17 +38,20 @@ export default function EditPost() {
         // 게시글 내용 가져오기
         const postResponse = await fetchPost(id);
         const postData = postResponse.data;
+        setExpectedUpdatedAt(postData.updatedAt || null);
         
         // 현재 게시글의 카테고리 ID 찾기
         const categoryObj = categoriesResponse.data.find(cat => cat.name === postData.category);
         const categoryId = categoryObj ? categoryObj.id : null;
         
         // 게시글 정보 세팅 (카테고리 ID 포함)
-        setPost({ 
+        const loaded = {
           title: postData.title || '',
           content: postData.content || '',
           categoryId: categoryId // 카테고리 ID 설정
-        });
+        };
+        setPost(loaded);
+        setBaseline(loaded);
         
         setError(null);
       } catch (err) {
@@ -82,7 +87,8 @@ export default function EditPost() {
     
     try {
       setLoading(true);
-      await updatePost(id, post);
+      await updatePost(id, { ...post, ...(expectedUpdatedAt ? { expectedUpdatedAt } : {}) });
+      releaseDraft();
       
       // URL 쿼리 파라미터 유지하여 상세 페이지로 리다이렉트
       const queryParams = new URLSearchParams(location.search).toString();
@@ -90,12 +96,16 @@ export default function EditPost() {
       navigate(redirectPath);
     } catch (err) {
       console.error('게시글 수정 실패:', err);
-      setError('게시글을 수정하는 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setError(err.response?.status === 409
+        ? '다른 창에서 이 글이 먼저 수정되었습니다. 현재 작성 내용은 유지했습니다. 내용을 복사해 둔 뒤 최신 글을 새로 불러와 변경 내용을 합쳐 주세요.'
+        : postSaveErrorMessage(err, '게시글을 수정하는 중 오류가 발생했습니다. 다시 시도해주세요.'));
     } finally {
       setLoading(false);
     }
   };
   
+  const restoreDraft = () => { setPost({ title: offer.title, content: offer.content, categoryId: offer.categoryId ?? post.categoryId }); acceptOffer(); };
+
   // 취소 핸들러
   const handleCancel = () => {
     // URL 쿼리 파라미터 유지하여 상세 페이지로 리다이렉트
@@ -112,86 +122,7 @@ export default function EditPost() {
     );
   }
   
-  return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      
-      <Paper elevation={2} sx={{ p: 3, mt: 4 }}>
-        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-        
-        <form onSubmit={handleSubmit}>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              제목
-            </Typography>
-            <input
-              type="text"
-              name="title"
-              value={post.title}
-              onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                fontSize: '1.2rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                outline: 'none'
-              }}
-              required
-              placeholder="제목을 입력하세요"
-            />
-          </Box>
-          
-          {/* 카테고리 선택 */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              카테고리
-            </Typography>
-            <FormControl fullWidth required>
-              <Select
-                name="categoryId"
-                value={post.categoryId || ''}
-                onChange={handleChange}
-                displayEmpty
-              >
-                <MenuItem value="" disabled>카테고리를 선택하세요</MenuItem>
-                {categories.map((category) => (
-                  <MenuItem key={category.id} value={category.id}>
-                    {category.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-          
-          {/* 마크다운 에디터 */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              내용
-            </Typography>
-            <MarkdownEditor value={post.content} onChange={handleContentChange} />
-          </Box>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-            <Button 
-              variant="outlined"
-              onClick={handleCancel}
-              disabled={loading}
-            >
-              취소
-            </Button>
-            
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={loading}
-              startIcon={loading && <CircularProgress size={20} color="inherit" />}
-            >
-              {loading ? '수정 중...' : '수정완료'}
-            </Button>
-          </Box>
-        </form>
-      </Paper>
-    </Container>
-  );
+  return <PostComposer mode="edit" post={post} categories={categories} error={error} loading={loading}
+    onChange={handleChange} onContentChange={handleContentChange} onSubmit={handleSubmit}
+    onCancel={handleCancel} draftOffer={offer} onRestoreDraft={restoreDraft} onDiscardDraft={discardOffer} returnTo={'/blog/' + id + location.search} />;
 }

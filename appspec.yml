@@ -1,17 +1,36 @@
 version: 0.0
 os: linux
+file_exists_behavior: OVERWRITE
+
 files:
   - source: /
-    destination: /home/ec2-user/build/
+    destination: /home/ec2-user/portfolio-codedeploy/source/
 
 permissions:
-  - object: /
+  - object: /home/ec2-user/portfolio-codedeploy/source/
     pattern: "**"
     owner: ec2-user
     group: ec2-user
+  - object: /home/ec2-user/portfolio-codedeploy/source/deploy.sh
+    owner: ec2-user
+    group: ec2-user
+    mode: 755
+  - object: /home/ec2-user/portfolio-codedeploy/source/verify-deploy.sh
+    owner: ec2-user
+    group: ec2-user
+    mode: 755
+  - object: /home/ec2-user/portfolio-codedeploy/source/deploy/
+    pattern: "*.sh"
+    owner: ec2-user
+    group: ec2-user
+    mode: 755
 
 hooks:
   ApplicationStart:
     - location: deploy.sh
-      timeout: 600
+      timeout: 180
+      runas: ec2-user
+  ValidateService:
+    - location: verify-deploy.sh
+      timeout: 60
       runas: ec2-user

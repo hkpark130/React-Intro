@@ -1,0 +1,47 @@
+.portfolio-layout { min-height: 100dvh; color: var(--ink); background: var(--surface); }
+.portfolio-header { position: sticky; top: 0; z-index: 1200; height: var(--portfolio-header-height); background: #f6f9f8; border-bottom: 1px solid #cddbd6; }
+.portfolio-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: min(1160px, calc(100% - 64px)); height: 100%; margin-inline: auto; }
+.portfolio-brand { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.portfolio-brand strong { padding: 6px 10px 7px; border-radius: 4px; background: var(--ink); color: #fff; font-size: 20px; font-weight: 760; line-height: 1.3; letter-spacing: -.055em; }
+.portfolio-brand > span { font-size: 14px; font-weight: 600; color: var(--muted); letter-spacing: -.02em; }
+.portfolio-brand:hover strong { background: var(--accent); }
+.portfolio-navigation { display: flex; align-items: stretch; gap: 18px; height: 100%; }
+.portfolio-navigation > a, .portfolio-project-trigger { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 44px; padding: 0 7px; border: 0; border-radius: 0; background: transparent; color: var(--muted); font: inherit; font-size: 15px; font-weight: 600; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.portfolio-navigation > a::after, .portfolio-project-trigger::after { position: absolute; right: 7px; bottom: -1px; left: 7px; height: 3px; border-radius: 2px 2px 0 0; background: transparent; content: ''; }
+.portfolio-navigation > a:hover, .portfolio-project-trigger:hover { color: var(--ink); }
+.portfolio-navigation > a:hover::after, .portfolio-project-trigger:hover::after { background: #bccfc9; }
+.portfolio-navigation > .is-active { color: var(--accent); font-weight: 750; }
+.portfolio-navigation > .is-active::after { background: var(--accent); }
+.portfolio-project-trigger svg { width: 19px; height: 19px; transition: transform 140ms ease; }
+.portfolio-project-trigger[aria-expanded='true'] svg { transform: rotate(180deg); }
+.portfolio-project-menu.MuiPaper-root { width: 510px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 88px); margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 40px #192d2e1a; }
+.portfolio-project-menu .MuiMenu-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; padding: 10px; }
+.portfolio-project-menu .MuiMenuItem-root { display: flex; gap: 11px; min-height: 53px; padding: 10px 12px; border-radius: 5px; color: var(--ink); font-size: 14px; line-height: 1.5; white-space: normal; }
+.portfolio-project-menu .MuiMenuItem-root.Mui-selected { background: var(--soft); color: var(--accent); font-weight: 650; }
+.portfolio-project-menu .MuiMenuItem-root:hover { background: var(--canvas); }
+.portfolio-menu-icon { display: grid; place-items: center; flex: 0 0 24px; width: 24px; height: 26px; color: var(--accent); }
+.portfolio-menu-icon img { width: 24px; height: 24px; object-fit: contain; }
+.portfolio-menu-icon svg { width: 23px; height: 23px; }
+.portfolio-project { width: min(1160px, calc(100% - 64px)); min-width: 0; margin-inline: auto; padding-block: 40px 72px; }
+.portfolio-project:focus { outline: none; }
+.portfolio-blog { min-width: 0; }
+.portfolio-loading { padding: 28px 20px; color: var(--muted); }
+.portfolio-skip-link { position: fixed; top: 8px; left: 16px; z-index: 1500; padding: 10px 16px; border-radius: 4px; background: var(--ink); color: #fff; transform: translateY(-150%); text-decoration: none; }
+.portfolio-skip-link:focus { transform: translateY(0); }
+
+@media (max-width: 640px) {
+  .portfolio-header-inner { width: calc(100% - 40px); gap: 8px; }
+  .portfolio-brand strong { padding: 5px 7px 6px; font-size: 18px; }
+  .portfolio-brand > span { display: none; }
+  .portfolio-navigation { gap: 4px; }
+  .portfolio-navigation > a, .portfolio-project-trigger { padding-inline: 6px; font-size: 13px; }
+  .portfolio-navigation > a::after, .portfolio-project-trigger::after { right: 6px; left: 6px; }
+  .portfolio-project-menu.MuiPaper-root { width: 300px; }
+  .portfolio-project-menu .MuiMenu-list { grid-template-columns: 1fr; padding: 8px; }
+  .portfolio-project-menu .MuiMenuItem-root { min-height: 44px; font-size: 14px; }
+  .portfolio-project { width: calc(100% - 40px); padding-block: 28px 48px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-project-trigger svg { transition: none; }
+}

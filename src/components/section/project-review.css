@@ -1,0 +1,42 @@
+.project-review { margin-top: 52px; padding-top: 32px; border-top: 2px solid var(--ink); color: var(--ink); }
+.project-review-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; }
+.project-review-heading h2 { margin: 0; font-size: clamp(23px, 2.3vw, 28px); font-weight: 720; line-height: 1.4; letter-spacing: -.04em; }
+.project-review-heading time { color: var(--muted); font-size: 13px; }
+.project-review-summary { max-width: 85ch; margin: 16px 0 8px; font-size: 17px; line-height: 1.85; word-break: keep-all; overflow-wrap: anywhere; }
+.project-review-scope { margin: 0 0 28px; color: var(--muted); font-size: 14px; line-height: 1.8; word-break: keep-all; overflow-wrap: anywhere; }
+.project-review-items { border-top: 1px solid var(--line); }
+.project-review-item { border-bottom: 1px solid var(--line); scroll-margin-top: calc(var(--portfolio-header-height) + 20px); }
+.project-review-item > summary { display: flex; align-items: center; gap: 14px; padding: 20px 0; list-style: none; cursor: pointer; }
+.project-review-item > summary::-webkit-details-marker { display: none; }
+.project-review-item > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 3px; }
+.project-review-item > summary h3 { flex: 1; margin: 0; font-size: 18px; font-weight: 660; line-height: 1.6; letter-spacing: -.025em; word-break: keep-all; overflow-wrap: anywhere; }
+.project-review-item > summary:hover h3 { color: var(--accent); }
+.project-review-priority { flex: 0 0 auto; padding: 3px 8px; border-radius: 3px; background: var(--canvas); color: var(--muted); font-size: 12px; font-weight: 650; white-space: nowrap; }
+.project-review-priority[data-priority='high'] { color: #8a4a25; background: #fcf1e9; }
+.project-review-priority[data-priority='medium'] { color: var(--accent); background: var(--soft); }
+.project-review-priority[data-implementation] { color: #205e51; background: #e9f2ee; }
+.project-review-toggle { position: relative; flex: 0 0 14px; width: 14px; height: 14px; margin-right: 6px; }
+.project-review-toggle::before, .project-review-toggle::after { position: absolute; top: 6px; left: 1px; width: 12px; height: 2px; border-radius: 1px; background: var(--muted); content: ''; }
+.project-review-toggle::after { transform: rotate(90deg); }
+.project-review-item[open] .project-review-toggle::after { display: none; }
+.project-review-body { max-width: 950px; padding: 0 0 26px; }
+.project-review-body dl { display: grid; gap: 14px; margin: 0; }
+.project-review-body dl > div { display: grid; grid-template-columns: 94px minmax(0, 1fr); gap: 16px; }
+.project-review-body dt { padding-top: 3px; color: var(--muted); font-size: 14px; font-weight: 600; line-height: 1.8; }
+.project-review-body dd { margin: 0; font-size: 16px; line-height: 1.9; word-break: keep-all; overflow-wrap: anywhere; }
+.project-review code { padding: 1px 4px; border-radius: 3px; background: var(--canvas); font-family: Consolas, monospace; font-size: .88em; overflow-wrap: anywhere; }
+.project-review-references { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 20px 0 0 110px; padding: 0; list-style: none; }
+.project-review-references a { color: var(--accent); font-size: 13px; line-height: 1.8; text-decoration: underline; text-decoration-color: #9bbfb6; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.project-review-references a:hover { text-decoration-color: currentColor; }
+@media (max-width: 640px) {
+  .project-review { margin-top: 36px; padding-top: 26px; }
+  .project-review-summary { font-size: 16px; }
+  .project-review-item > summary { display: grid; grid-template-columns: minmax(0, 1fr) 24px; align-items: start; gap: 7px 12px; padding: 18px 0; }
+  .project-review-priority { grid-column: 1; justify-self: start; margin: 0; }
+  .project-review-item > summary h3 { grid-column: 1; grid-row: 2; min-width: 0; font-size: 17px; }
+  .project-review-toggle { grid-column: 2; grid-row: 2; margin: 7px 0 0; }
+  .project-review-body dl > div { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .project-review-body dt { font-size: 13px; }
+  .project-review-body dd { font-size: 15px; }
+  .project-review-references { margin-left: 0; }
+}

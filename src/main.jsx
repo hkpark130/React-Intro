@@ -6,7 +6,7 @@ import './index.css'
 
 // 서비스 워커 등록 함수
 const registerServiceWorker = () => {
-  if ('serviceWorker' in navigator) {
+  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/serviceWorker.js')
         .then(registration => {

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
+<title id="title">내부 통신의 논리 스위치 아키텍처</title><desc id="desc">VM A와 VM B가 하나의 user1_net 논리 스위치에 연결됩니다. 입력 파이프라인, L2 전달, 출력 파이프라인은 그 스위치 내부 처리이며, 라우터로 연결된 포트는 이번 패킷이 선택하지 않습니다.</desc>
+<defs><marker id="packetArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#087d9a"/></marker><marker id="mutedArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#9daeb8"/></marker></defs>
+<rect width="1440" height="1080" fill="white"/><g font-family="Malgun Gothic,Segoe UI,sans-serif"><text x="30" y="48" font-size="34" fill="#173b49" font-weight="700" >내부 통신 · 하나의 논리 스위치에 연결된 두 VM</text>
+<text x="30" y="91" font-size="23" fill="#546b78" font-weight="400" >큰 파란 테두리 전체가 user1_net 한 개입니다. ls_in_* / ls_out_*는 그 안에서 실행하는 처리 단계입니다.</text>
+<rect x="260" y="150" width="920" height="485" rx="18" fill="#edf5fc" stroke="#2569a0" stroke-width="2" /><text x="288" y="192" font-size="30" fill="#2569a0" font-weight="700" font-family="Consolas,ui-monospace,monospace">user1_net</text><text x="1156" y="191" font-size="23" fill="#2569a0" font-weight="700" text-anchor="end">논리 스위치</text><text x="288" y="228" font-size="21" fill="#546b78" font-weight="400" >10.0.0.0/24 · VM 포트와 라우터 연결 포트를 가진 하나의 L2 네트워크</text>
+<rect x="296" y="264" width="286" height="312" rx="14" fill="#fff" stroke="#b4cee4" stroke-width="2" />
+<text x="313" y="298" font-size="24" fill="#2569a0" font-weight="700" >입력 처리 · ingress</text>
+<text x="313" y="336" font-size="20" fill="#2569a0" font-weight="700" font-family="Consolas,ui-monospace,monospace">00</text><text x="353" y="336" font-size="18" fill="#2569a0" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_in_check_port_sec</text>
+<text x="313" y="366" font-size="20" fill="#2569a0" font-weight="700" font-family="Consolas,ui-monospace,monospace">04</text><text x="353" y="366" font-size="18" fill="#2569a0" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_in_pre_acl</text>
+<text x="313" y="396" font-size="20" fill="#2569a0" font-weight="700" font-family="Consolas,ui-monospace,monospace">06</text><text x="353" y="396" font-size="18" fill="#2569a0" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_in_pre_stateful</text>
+<text x="313" y="426" font-size="20" fill="#2569a0" font-weight="700" font-family="Consolas,ui-monospace,monospace">07</text><text x="353" y="426" font-size="18" fill="#2569a0" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_in_acl_hint</text>
+<text x="313" y="456" font-size="20" fill="#2569a0" font-weight="700" font-family="Consolas,ui-monospace,monospace">08</text><text x="353" y="456" font-size="18" fill="#2569a0" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_in_acl</text>
+<text x="313" y="486" font-size="20" fill="#2569a0" font-weight="700" font-family="Consolas,ui-monospace,monospace">10</text><text x="353" y="486" font-size="18" fill="#2569a0" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_in_qos_meter</text>
+<rect x="618" y="410" width="208" height="166" rx="14" fill="#fff" stroke="#2569a0" stroke-width="2" />
+<text x="639" y="447" font-size="24" fill="#2569a0" font-weight="700" >23  L2 포워딩</text>
+<text x="632" y="480" font-size="20" fill="#2569a0" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_in_l2_lkup</text>
+<text x="640" y="513" font-size="23" fill="#2569a0" font-weight="700" >30170d 선택</text>
+<rect x="862" y="264" width="282" height="312" rx="14" fill="#fff" stroke="#b2d5c9" stroke-width="2" />
+<text x="879" y="298" font-size="24" fill="#237c66" font-weight="700" >출력 처리 · egress</text>
+<text x="879" y="332" font-size="20" fill="#237c66" font-weight="700" font-family="Consolas,ui-monospace,monospace">01</text><text x="919" y="332" font-size="18" fill="#237c66" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_out_pre_acl</text>
+<text x="879" y="359" font-size="20" fill="#237c66" font-weight="700" font-family="Consolas,ui-monospace,monospace">02</text><text x="919" y="359" font-size="18" fill="#237c66" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_out_pre_stateful</text>
+<text x="879" y="386" font-size="20" fill="#237c66" font-weight="700" font-family="Consolas,ui-monospace,monospace">03</text><text x="919" y="386" font-size="18" fill="#237c66" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_out_acl_hint</text>
+<text x="879" y="413" font-size="20" fill="#237c66" font-weight="700" font-family="Consolas,ui-monospace,monospace">04</text><text x="919" y="413" font-size="18" fill="#237c66" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_out_acl</text>
+<text x="879" y="440" font-size="20" fill="#237c66" font-weight="700" font-family="Consolas,ui-monospace,monospace">06</text><text x="919" y="440" font-size="18" fill="#237c66" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_out_qos_meter</text>
+<text x="879" y="467" font-size="20" fill="#237c66" font-weight="700" font-family="Consolas,ui-monospace,monospace">08</text><text x="919" y="467" font-size="18" fill="#237c66" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_out_check_port_sec</text>
+<text x="879" y="494" font-size="20" fill="#237c66" font-weight="700" font-family="Consolas,ui-monospace,monospace">09</text><text x="919" y="494" font-size="18" fill="#237c66" font-weight="400" font-family="Consolas,ui-monospace,monospace">ls_out_apply_port_sec</text>
+<text x="625" y="310" font-size="22" fill="#546b78" font-weight="400" >목적지 MAC</text>
+<text x="611" y="342" font-size="18" fill="#173b49" font-weight="600" font-family="Consolas,ui-monospace,monospace">fa:16:3e:b2:5d:b1</text>
+<path d="M720 353 V397" fill="none" stroke="#9daeb8" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 7" />
+<path d="M722 576 V740" fill="none" stroke="#9daeb8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"  />
+<rect x="713" y="626" width="18" height="18" rx="3" fill="white" stroke="#546b78" stroke-width="3"/><text x="745" y="669" font-size="19" fill="#546b78" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="start">387a59</text>
+<rect x="536" y="740" width="374" height="104" rx="14" fill="#f4f6f8" stroke="#9daeb8" stroke-width="2" />
+<text x="563" y="779" font-size="27" fill="#546b78" font-weight="600" font-family="Consolas,ui-monospace,monospace">user1_router</text>
+<text x="563" y="816" font-size="22" fill="#546b78" font-weight="400" >10.0.0.1 · 라우터 연결</text>
+<rect x="713" y="731" width="18" height="18" rx="3" fill="white" stroke="#546b78" stroke-width="3"/><text x="745" y="726" font-size="19" fill="#546b78" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="start">lrp-387a59</text>
+<text x="336" y="683" font-size="20" fill="#546b78" font-weight="400" >회색 선: 연결은 있지만</text>
+<text x="336" y="711" font-size="20" fill="#546b78" font-weight="400" >이번 패킷이 선택하지 않은 경로</text>
+<rect x="24" y="472" width="212" height="130" rx="14" fill="#fff" stroke="#2569a0" stroke-width="2" /><rect x="42" y="492" width="30" height="23" rx="3" fill="none" stroke="#173b49" stroke-width="2"/><path d="M50 521 h14 m-7 -6 v6" stroke="#173b49" stroke-width="2"/><text x="86" y="515" font-size="26" fill="#173b49" font-weight="700" >VM A</text><text x="130" y="554" font-size="22" fill="#173b49" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="middle">10.0.0.217</text><text x="130" y="582" font-size="19" fill="#546b78" font-weight="400" text-anchor="middle">출발지 VM</text>
+<rect x="1204" y="472" width="212" height="130" rx="14" fill="#fff" stroke="#237c66" stroke-width="2" />
+<text x="1226" y="513" font-size="27" fill="#237c66" font-weight="700" >VM B</text>
+<text x="1226" y="551" font-size="23" fill="#173b49" font-weight="600" font-family="Consolas,ui-monospace,monospace">10.0.0.76</text>
+<text x="1226" y="582" font-size="20" fill="#546b78" font-weight="400" >목적지 VM</text>
+<path d="M236 537 H296" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<path d="M316 537 H613" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<path d="M638 537 H857" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<path d="M879 537 H1201" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<rect x="251" y="528" width="18" height="18" rx="3" fill="white" stroke="#2569a0" stroke-width="3"/><text x="250" y="452" font-size="19" fill="#2569a0" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="end">125d8a</text>
+<rect x="1171" y="528" width="18" height="18" rx="3" fill="white" stroke="#237c66" stroke-width="3"/><text x="1192" y="452" font-size="19" fill="#237c66" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="start">30170d</text>
+<text x="308" y="609" font-size="20" fill="#546b78" font-weight="400" >포트 보안 · 연결 추적 · ACL · QoS</text>
+<text x="880" y="609" font-size="20" fill="#546b78" font-weight="400" >목적지 포트의 출력 검사</text>
+<rect x="948" y="669" width="439" height="141" rx="14" fill="#f0fafb" stroke="#a8d4dc" stroke-width="2" />
+<text x="970" y="703" font-size="23" fill="#087d9a" font-weight="700" >이 경로의 패킷</text>
+<text x="970" y="739" font-size="24" fill="#173b49" font-weight="600" font-family="Consolas,ui-monospace,monospace">10.0.0.217 → 10.0.0.76</text>
+<text x="970" y="775" font-size="22" fill="#546b78" font-weight="400" >IP 유지 · TTL 64 유지</text>
+<text x="30" y="895" font-size="24" fill="#173b49" font-weight="700" >물리 호스트에서는 OVS가 이 논리 동작을 실행합니다</text>
+<rect x="30" y="917" width="669" height="102" rx="14" fill="#f8fafb" stroke="#d5dfe5" stroke-width="2" />
+<text x="49" y="949" font-size="22" fill="#546b78" font-weight="700" >같은 호스트에 있을 때</text>
+<text x="49" y="987" font-size="22" fill="#173b49" font-weight="400" font-family="Consolas,ui-monospace,monospace">VM A → tap → br-int → tap → VM B</text>
+<rect x="719" y="917" width="691" height="102" rx="14" fill="#f8fafb" stroke="#d5dfe5" stroke-width="2" />
+<text x="738" y="949" font-size="22" fill="#546b78" font-weight="700" >서로 다른 호스트에 있을 때</text>
+<text x="738" y="987" font-size="20" fill="#173b49" font-weight="400" >출발 br-int (ingress) → Geneve → 도착 br-int (egress)</text>
+<text x="30" y="1055" font-size="21" fill="#546b78" font-weight="400" >숫자는 본문 trace의 테이블 번호입니다. VM B의 실제 호스트 위치는 이 논리 trace만으로 결정하지 않습니다.</text></g></svg>

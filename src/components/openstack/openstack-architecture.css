@@ -1,0 +1,99 @@
+.os-architecture {
+  --os-architecture-ink: #192d2e;
+  --os-architecture-muted: #5a6d69;
+  --os-architecture-border: #dde5e2;
+  --os-architecture-accent: #17685e;
+  width: 100%;
+  min-width: 0;
+  margin-block: 28px;
+  color: var(--os-architecture-ink);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.os-architecture * { box-sizing: border-box; }
+.os-architecture p { margin: 0; }
+.os-architecture__heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; }
+.os-architecture__heading h2 { margin: 0; font-size: clamp(22px, 2.4vw, 26px); font-weight: 700; line-height: 1.45; color: var(--os-architecture-ink); }
+.os-architecture__date { font-size: 14px; color: var(--os-architecture-muted); white-space: nowrap; }
+.os-architecture .os-architecture__lead { margin-top: 8px; max-width: 760px; }
+.os-architecture__tabs { margin-top: 20px; border-bottom: 1px solid var(--os-architecture-border); min-width: 0; }
+.os-architecture__tabs .MuiTab-root { min-height: 48px; padding: 10px 16px; font-size: 15px; font-weight: 600; text-transform: none; color: var(--os-architecture-muted); }
+.os-architecture__tabs .MuiTab-root.Mui-selected { color: var(--os-architecture-accent); }
+.os-architecture__tabs .MuiTabs-indicator { background: var(--os-architecture-accent); height: 2px; }
+.os-architecture__panel { padding-top: 22px; min-width: 0; }
+.os-architecture__panel[hidden] { display: none; }
+.os-architecture .os-architecture__subtitle { font-size: 20px; font-weight: 650; line-height: 1.5; }
+.os-architecture__deployment-intro > p { margin-top: 8px; max-width: 780px; }
+.os-architecture__facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 20px 0; padding: 14px 0; border-block: 1px solid var(--os-architecture-border); }
+.os-architecture__facts > div { padding: 0 20px; border-left: 1px solid var(--os-architecture-border); }
+.os-architecture__facts > div:first-child { padding-left: 0; border-left: 0; }
+.os-architecture__facts dt { font-size: 14px; color: var(--os-architecture-muted); }
+.os-architecture__facts dd { margin: 3px 0 0; font-size: 28px; line-height: 1.3; font-weight: 650; }
+.os-architecture__facts dd span { margin-left: 5px; font-size: 16px; font-weight: 400; }
+.os-architecture__figure { margin: 0; min-width: 0; container: os-deployment-figure / inline-size; }
+.os-architecture__diagram-scroll { max-width: 100%; overflow: auto; border: 1px solid var(--os-architecture-border); border-radius: 5px; background: #fff; overscroll-behavior-inline: contain; }
+.os-architecture__figure figcaption { margin-top: 10px; color: var(--os-architecture-muted); font-size: 14px; line-height: 1.7; }
+.os-architecture__reading-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 20px; }
+.os-architecture__reading-notes > div { padding-left: 14px; border-left: 2px solid var(--os-architecture-border); }
+.os-architecture__reading-notes strong { display: block; font-size: 16px; font-weight: 600; }
+.os-architecture__reading-notes p { margin-top: 6px; font-size: 15px; }
+.os-architecture .os-architecture__scope-note { margin-top: 18px; font-size: 14px; color: var(--os-architecture-muted); }
+.os-architecture .os-architecture__inventory-summary { margin-top: 8px; max-width: 800px; }
+.os-architecture__unit-explanation { margin-top: 16px; padding-left: 16px; border-left: 2px solid var(--os-architecture-accent); font-size: 15px; }
+.os-architecture__unit-explanation p + p { margin-top: 6px; }
+.os-architecture .os-architecture__router-count { margin-top: 14px; font-size: 15px; }
+.os-architecture__role-list { display: grid; gap: 0; margin-top: 20px; border-top: 1px solid var(--os-architecture-border); }
+.os-architecture__role { min-width: 0; border-bottom: 1px solid var(--os-architecture-border); background: #fff; overflow: clip; }
+.os-architecture__role > summary { display: flex; position: relative; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 34px 16px 0; cursor: pointer; list-style: none; }
+.os-architecture__role > summary::-webkit-details-marker { display: none; }
+.os-architecture__role > summary::after { content: '+'; position: absolute; top: 50%; right: 10px; transform: translateY(-50%); color: var(--os-architecture-accent); font-size: 24px; }
+.os-architecture__role[open] > summary::after { content: '−'; }
+.os-architecture__role[open] > summary { border-bottom: 1px solid var(--os-architecture-border); }
+.os-architecture__role-description { display: block; margin-top: 3px; font-size: 14px; color: var(--os-architecture-muted); font-weight: 400; }
+.os-architecture__role-count { flex-shrink: 0; font-size: 14px; font-weight: 600; }
+.os-architecture__role-body { padding: 0 12px; }
+.os-architecture__application { padding: 18px 0; min-width: 0; }
+.os-architecture__application + .os-architecture__application { border-top: 1px solid var(--os-architecture-border); }
+.os-architecture__app-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
+.os-architecture__app-heading h4 { margin: 0; font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+.os-architecture__kind { font-size: 12px; color: var(--os-architecture-accent); border: 1px solid var(--os-architecture-border); border-radius: 3px; padding: 1px 6px; }
+.os-architecture__kind--subordinate { background: #f5f8f6; }
+.os-architecture__kind--unplaced { color: var(--os-architecture-muted); }
+.os-architecture .os-architecture__app-description { margin-top: 5px; color: var(--os-architecture-muted); font-size: 14px; }
+.os-architecture__unit-list { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 12px 0 0; padding: 0; }
+.os-architecture__unit-list > li { min-width: 0; border-left: 2px solid var(--os-architecture-border); padding: 4px 0 4px 10px; }
+.os-architecture__unit-location { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 9px; font-size: 14px; }
+.os-architecture__unit-alias { color: var(--os-architecture-muted); }
+.os-architecture__unit-location > span:last-child { flex-basis: 100%; font-size: 13px; overflow-wrap: anywhere; }
+.os-architecture__unit-list li > p { margin-top: 3px; font-size: 12px; color: var(--os-architecture-muted); overflow-wrap: anywhere; }
+.os-architecture .os-architecture__empty-unit { margin-top: 12px; font-size: 14px; }
+.os-architecture__references { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--os-architecture-border); font-size: 14px; }
+.os-architecture__references > div { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 6px; }
+.os-architecture__references a { display: inline-flex; align-items: center; min-height: 36px; font-size: 14px; color: var(--os-architecture-accent); text-underline-offset: 3px; }
+.os-architecture__references p { margin-top: 6px; color: var(--os-architecture-muted); }
+.os-architecture :is(button, a, summary, [tabindex]):focus-visible { outline: 3px solid var(--os-architecture-accent); outline-offset: 3px; }
+.os-architecture__diagram-scroll:focus-visible,
+.os-architecture__diagram-scroll .zoomable-image-trigger:focus-visible { outline-offset: -3px; }
+
+@container os-deployment-figure (max-width: 800px) {
+  .os-architecture__diagram-scroll .zoomable-image-trigger { min-width: 1120px; }
+}
+
+@media (max-width: 700px) {
+  .os-architecture { margin-block: 24px; }
+  .os-architecture__heading { gap: 6px; }
+  .os-architecture__date { flex-basis: 100%; }
+  .os-architecture__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 0; }
+  .os-architecture__facts > div { padding-inline: 14px; }
+  .os-architecture__facts > div:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .os-architecture__reading-notes { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .os-architecture__role > summary { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .os-architecture__role-body { padding-inline: 0; }
+  .os-architecture__unit-list { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 400px) {
+  .os-architecture__tabs .MuiTab-root { font-size: 14px; padding-inline: 12px; min-width: 108px; }
+  .os-architecture__tabs .MuiTabs-scrollButtons { width: 22px; }
+}

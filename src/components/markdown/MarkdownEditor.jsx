@@ -1,888 +1,256 @@
-import React, { useState, useRef, useEffect } from "react";
-import MarkdownRenderer from "./MarkdownRenderer";
-import { notionApi, notionConvert, getNotionApiKey, setNotionApiKey } from "@/api/api";
-import { 
-  Box, Typography, TextField, Button, Paper, Tab, Tabs, Divider,
-  Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, 
-  OutlinedInput, FormHelperText, CircularProgress, LinearProgress, Alert
-} from '@mui/material';
-import CodeIcon from '@mui/icons-material/Code';
-import ImageIcon from '@mui/icons-material/Image';
-import TableChartIcon from '@mui/icons-material/TableChart';
-import InsertLinkIcon from '@mui/icons-material/InsertLink';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import {
-  FormControlLabel,
-  RadioGroup,
-  Radio,
-  MenuItem,
-  Select,
-  Switch
-} from '@mui/material';
+import { memo, useDeferredValue, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import MarkdownRenderer from './MarkdownRenderer';
+import EditorBlockDialog from './editor/EditorBlockDialog';
+import NotionImportDialog from './editor/NotionImportDialog';
+import useEditorHistory from './editor/useEditorHistory';
+import { applyMarkdownCommand, canOpenSlashMenu, findCustomBlock, getActiveMarkdownColors, insertMarkdown, makeCodeFence, makeMarkdownLink, makeTable, serializeCustomBlock } from './editor/editorCommands';
+import EditorToolbar, { EditorToolButton as ToolButton } from './editor/EditorToolbar';
+import EditorCommandMenu from './editor/EditorCommandMenu';
+import EditorColorMenu from './editor/EditorColorMenu';
+import { editorMenuPosition } from './editor/editorMenuPosition';
+import './editor/markdown-editor.css';
 
-export default function MarkdownEditor({ value, onChange }) {
-  const [tabValue, setTabValue] = useState(0);
-  const textareaRef = useRef(null);
-  const [bookmarkDialog, setBookmarkDialog] = useState(false);
-  const [bookmarkForm, setBookmarkForm] = useState({
-    url: '',
-    title: '',
-    description: '',
-    imageUrl: ''
-  });
-  const [bookmarkError, setBookmarkError] = useState('');
+const EditorPreview = memo(function EditorPreview({ content }) {
+  return content.trim() ? <MarkdownRenderer content={content} /> : <p className="editor-empty-preview">본문을 작성하면 서식이 여기에 나타납니다.</p>;
+});
 
-  // CodeAccordion dialog state
-  const [codeDialog, setCodeDialog] = useState(false);
-  const [codeError, setCodeError] = useState('');
-  const [codeForm, setCodeForm] = useState({
-    title: '',
-    language: 'java',
-    codeString: '',
-    openState: 'hidden' // 'open' | 'hidden'
-  });
+const initialForm = (type, selected) => ({
+  code: { title: '', language: 'bash', codeString: selected, defaultExpanded: false, showLineNumbers: true, wrapLines: true },
+  image: { src: '', alt: selected, caption: '' },
+  bookmark: { url: /^https?:\/\//.test(selected) ? selected : '', title: /^https?:\/\//.test(selected) ? '' : selected, description: '', imageUrl: '' },
+  alert: { severity: 'info', message: selected },
+  table: { rows: 3, columns: 3 },
+  link: { url: '', text: selected },
+}[type]);
 
-  // Alert dialog state
-  const [alertDialog, setAlertDialog] = useState(false);
-  const [alertForm, setAlertForm] = useState({
-    severity: 'info', // 'info' | 'warning' | 'error'
-    message: ''
-  });
+export default function MarkdownEditor({ value = '', onChange, disabled = false }) {
+  const content = value ?? '';
+  const editorId = useId();
+  const shellRef = useRef(null);
+  const history = useEditorHistory(content, onChange);
+  const { restoreSelection } = history;
+  const [view, setView] = useState('split');
+  const [canSplit, setCanSplit] = useState(false);
+  const [dialog, setDialog] = useState(null);
+  const [notionOpen, setNotionOpen] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [commandMenu, setCommandMenu] = useState(null);
+  const [colorMenu, setColorMenu] = useState(null);
+  const menuRestore = useRef(null);
+  const colorRestore = useRef(null);
+  const dialogSelection = useRef(null);
+  const notionAnchor = useRef(null);
+  const focusAfterView = useRef(false);
+  const previewContent = useDeferredValue(content);
+  const displayMode = view === 'split' && !canSplit ? 'write' : view;
+  const toolsDisabled = disabled || history.isComposing;
 
-  // Zoomable dialog state
-  const [zoomDialog, setZoomDialog] = useState(false);
-  const [zoomForm, setZoomForm] = useState({
-    src: '',
-    alt: '',
-    caption: ''
-  });
-  const [zoomError, setZoomError] = useState('');
-
-  // Table dialog state
-  const [tableDialog, setTableDialog] = useState(false);
-  const [tableForm, setTableForm] = useState({
-    rows: 3,
-    cols: 3
-  });
-  const [tableError, setTableError] = useState('');
-
-
-  // Notion dialog state
-  const [notionDialog, setNotionDialog] = useState(false);
-  const [notionMode, setNotionMode] = useState('page'); // 'page' | 'db'
-  const [pageId, setPageId] = useState('');
-  const [dbId, setDbId] = useState('');
-  const [dbResults, setDbResults] = useState([]);
-  const [notionLoading, setNotionLoading] = useState(false);
-  const [notionError, setNotionError] = useState('');
-  const [notionKey, setNotionKey] = useState('');
-  const [useCustomKey, setUseCustomKey] = useState(false);
-  // Html 경로 제거: 마크다운만 지원
-
-  const handleTabChange = (_, newValue) => setTabValue(newValue);
-
-  // 작성 탭 복귀 시 포커스 복원 (Undo 단축키가 바로 동작하도록)
   useEffect(() => {
-    if (tabValue === 0 && textareaRef.current) {
-      textareaRef.current.focus();
+    const element = shellRef.current;
+    const measure = () => setCanSplit((element?.getBoundingClientRect().width || window.innerWidth - 160) >= 860);
+    measure();
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    if (element) observer?.observe(element);
+    window.addEventListener('resize', measure);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (focusAfterView.current && displayMode !== 'preview') {
+      restoreSelection();
+      focusAfterView.current = false;
     }
-  }, [tabValue]);
+  }, [displayMode, restoreSelection]);
 
-  const insertAtCursor = (insertText) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const { selectionStart, selectionEnd } = textarea;
-    const newValue =
-      value.substring(0, selectionStart) +
-      insertText +
-      value.substring(selectionEnd);
-
-    onChange(newValue);
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = textarea.selectionEnd = selectionStart + insertText.length;
-    }, 0);
+  const showWriting = () => {
+    if (displayMode === 'preview') setView(canSplit ? 'split' : 'write');
   };
-
-  const handleContentChange = (e) => {
-    const newValue = e.target.value;
-    onChange(newValue);
+  const changeView = next => {
+    history.captureSelection();
+    if (next !== 'preview') focusAfterView.current = true;
+    setView(next);
+    if (next === displayMode && next !== 'preview') history.restoreSelection();
   };
-  
-  // Zoomable 다이얼로그 열기
-  const openZoomDialog = () => {
-    setZoomDialog(true);
-    setZoomForm({ src: '', alt: '', caption: '' });
-    setZoomError('');
+  const command = action => {
+    if (toolsDisabled) return;
+    const range = history.captureSelection();
+    history.commit(applyMarkdownCommand(content, range, action));
+    showWriting();
+    setNotice('서식을 적용했습니다. 실행 취소로 되돌릴 수 있습니다.');
   };
-
-  const handleZoomFormChange = (e) => {
-    const { name, value } = e.target;
-    setZoomForm(prev => ({ ...prev, [name]: value }));
+  const openColor = (event, savedAnchor, savedPosition) => {
+    if (toolsDisabled) return;
+    const anchor = savedAnchor || history.captureSelection();
+    const bounds = event?.currentTarget?.getBoundingClientRect();
+    const position = savedPosition || { top: Math.round(bounds.bottom + 6), left: Math.round(bounds.left) };
+    colorRestore.current = anchor;
+    setColorMenu({ anchor, position, colors: getActiveMarkdownColors(content, anchor) });
   };
-
-  const insertZoomable = () => {
-    if (!zoomForm.src.trim()) {
-      setZoomError('이미지 경로(src)를 입력하세요.');
+  const closeColor = () => setColorMenu(null);
+  const applyColor = (kind, color) => {
+    if (!colorMenu || disabled) return;
+    if (colorMenu.anchor.value !== content) {
+      colorRestore.current = null;
+      setColorMenu(null);
+      setNotice('본문이 바뀌었습니다. 색상을 적용할 문구를 다시 선택하세요.');
       return;
     }
-    let tag = `<ZoomableImageModal src="${zoomForm.src.trim()}"`;
-    if (zoomForm.alt.trim()) tag += ` alt="${zoomForm.alt.trim()}"`;
-    if (zoomForm.caption.trim()) tag += ` caption="${zoomForm.caption.trim()}"`;
-    tag += ' />';
-    insertAtCursor(`\n${tag}\n`);
-    setZoomDialog(false);
-  };
-
-  // 테이블 다이얼로그 열기
-  const openTableDialog = () => {
-    setTableDialog(true);
-  setTableForm({ rows: 3, cols: 3 });
-    setTableError('');
-  };
-
-  const handleTableFormChange = (e) => {
-    const { name, value } = e.target;
-    if (value === '') {
-      setTableForm(prev => ({ ...prev, [name]: '' }));
-      return;
-    }
-    const numeric = Math.max(1, Math.min(20, parseInt(value, 10) || 1));
-    setTableForm(prev => ({ ...prev, [name]: numeric }));
-  };
-
-  const insertTableFromDialog = () => {
-    let rows = parseInt(tableForm.rows, 10);
-    let cols = parseInt(tableForm.cols, 10);
-    if (!(rows > 0 && cols > 0)) {
-      setTableError('행과 열은 1 이상이어야 합니다.');
-      return;
-    }
-    rows = Math.min(rows, 20);
-    cols = Math.min(cols, 20);
-
-    const lines = [];
-    const makeRow = (arr) => `| ${arr.join(' | ')} |`;
-
-    // 항상 헤더 행 포함
-    const header = Array.from({ length: cols }, (_, i) => `헤더 ${i + 1}`);
-    const divider = Array.from({ length: cols }, () => '------');
-    lines.push(makeRow(header));
-    lines.push(makeRow(divider));
-    for (let r = 0; r < Math.max(rows - 1, 0); r++) {
-      const cells = Array.from({ length: cols }, (_, c) => `내용 ${r + 1}-${c + 1}`);
-      lines.push(makeRow(cells));
-    }
-
-    insertAtCursor(`\n${lines.join('\n')}\n`);
-    setTableDialog(false);
-  };
-
-  // 북마크 다이얼로그 열기
-  const openBookmarkDialog = () => {
-    setBookmarkDialog(true);
-    setBookmarkForm({
-      url: '',
-      title: '',
-      description: '',
-      imageUrl: ''
-    });
-    setBookmarkError('');
-  };
-
-  // Open Notion Dialog
-  const openNotionDialog = () => {
-    setNotionDialog(true);
-    setNotionMode('page');
-    setPageId('');
-    setDbId('');
-    setDbResults([]);
-    setNotionError('');
-  // load saved key
-  const saved = getNotionApiKey();
-  setNotionKey(saved || '');
-  setUseCustomKey(!!saved);
-  };
-
-  const handleNotionFetchPage = async () => {
-    if (!pageId.trim()) {
-      setNotionError('페이지 ID를 입력하세요.');
-      return;
-    }
-  // persist key if toggled on
-  if (useCustomKey) setNotionApiKey(notionKey.trim()); else setNotionApiKey('');
-    setNotionLoading(true);
-    setNotionError('');
     try {
-  const { data } = await notionConvert({ pageId: pageId.trim() });
-  insertAtCursor(`\n${data.markdown}\n`);
-      setNotionDialog(false);
-  } catch {
-      setNotionError('페이지 변환에 실패했습니다.');
-    } finally {
-      setNotionLoading(false);
+      const result = applyMarkdownCommand(content, colorMenu.anchor, `${kind}:${color}`);
+      history.commit(result);
+      history.restoreSelection(result);
+      setTimeout(() => history.restoreSelection(result), 0);
+      colorRestore.current = result;
+      setColorMenu(null);
+      showWriting();
+      setNotice(color === 'default' ? '선택한 색상을 해제했습니다.' : '선택한 문구에 색상을 적용했습니다.');
+    } catch (error) {
+      setColorMenu(null);
+      setNotice(error.message);
     }
   };
-
-  const handleNotionFetchDb = async () => {
-    if (!dbId.trim()) {
-      setNotionError('데이터베이스 ID를 입력하세요.');
+  const restoreAfterColor = () => {
+    if (colorRestore.current?.value === content) history.restoreSelection(colorRestore.current, displayMode !== 'preview');
+    else if (displayMode !== 'preview') history.restoreSelection();
+    else shellRef.current?.querySelector('.editor-color-trigger')?.focus();
+    colorRestore.current = null;
+  };
+  const openBlock = type => {
+    if (toolsDisabled) return;
+    const anchor = history.captureSelection();
+    dialogSelection.current = anchor;
+    const plain = type === 'fence';
+    const blockType = plain ? 'code' : type;
+    setDialog({ type: blockType, plain, form: initialForm(blockType, content.slice(anchor.start, anchor.end)), anchor, error: '' });
+  };
+  const editBlock = () => {
+    if (toolsDisabled) return;
+    const anchor = history.captureSelection();
+    const block = findCustomBlock(content, anchor);
+    if (!block) { setNotice('수정할 접는 코드, 확대 이미지, 링크 카드 또는 안내 상자 안에 커서를 놓고 블록 수정을 선택하세요.'); return; }
+    dialogSelection.current = anchor;
+    setDialog({ type: block.type, form: block.form, anchor, block, error: '' });
+  };
+  const closeBlock = () => { if (dialog) dialogSelection.current = dialog.anchor; setDialog(null); };
+  const restoreAfterDialog = () => {
+    if (dialogSelection.current) history.restoreSelection(dialogSelection.current, displayMode !== 'preview');
+    if (displayMode === 'preview') shellRef.current?.querySelector('.editor-mode-buttons button[aria-pressed="true"]')?.focus();
+  };
+  const submitBlock = ({ asFence = false } = {}) => {
+    if (!dialog || disabled) return;
+    try {
+      if (dialog.anchor.value !== content) throw new Error('대화 상자를 연 뒤 본문이 바뀌었습니다. 닫고 삽입할 위치를 다시 선택하세요.');
+      const { type, form, block, anchor } = dialog;
+      let source;
+      if (type === 'table') source = makeTable(Number(form.rows), Number(form.columns));
+      else if (type === 'link') source = makeMarkdownLink(form.text, form.url);
+      else if (asFence || dialog.plain) {
+        if (!form.codeString.trim()) throw new Error('코드 내용을 입력하세요.');
+        source = makeCodeFence(form.codeString, form.language);
+        if (block?.continuationPrefix) source = source.split('\n').map((line, index) => (index ? block.continuationPrefix : '') + line).join('\n');
+      } else source = serializeCustomBlock(type, form, block);
+      const result = insertMarkdown(content, block || anchor, source, { block: !block && type !== 'link' });
+      history.commit(result);
+      dialogSelection.current = result;
+      setDialog(null);
+      showWriting();
+      setNotice(block ? '블록을 수정했습니다.' : '커서 위치에 내용을 넣었습니다.');
+    } catch (error) { setDialog(previous => ({ ...previous, error: error.message })); }
+  };
+  const openNotion = () => {
+    if (toolsDisabled) return;
+    const anchor = history.captureSelection();
+    notionAnchor.current = anchor;
+    dialogSelection.current = anchor;
+    setNotionOpen(true);
+  };
+  const insertNotion = markdown => {
+    const latest = history.captureSelection();
+    if (disabled || notionAnchor.current?.value !== latest.value) throw new Error('가져오는 동안 본문이 바뀌었습니다. 닫고 삽입할 위치를 다시 선택하세요.');
+    const result = insertMarkdown(latest.value, notionAnchor.current, markdown, { block: true });
+    history.commit(result);
+    dialogSelection.current = result;
+    showWriting();
+    setNotice('Notion 내용을 넣었습니다. 게시 전에 미리보기에서 확인하세요.');
+  };
+  const performAction = (action, event) => {
+    if (toolsDisabled) return;
+    if (action === 'color') openColor(event);
+    else if (['code', 'fence', 'image', 'table', 'bookmark', 'alert', 'link'].includes(action)) openBlock(action);
+    else if (action === 'edit') editBlock();
+    else if (action === 'notion') openNotion();
+    else command(action);
+  };
+  const openCommandMenu = (event, fromCaret = false) => {
+    if (toolsDisabled) return;
+    const anchor = history.captureSelection();
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const position = fromCaret ? editorMenuPosition(history.textareaRef.current) : { top: Math.round(bounds.bottom + 6), left: Math.round(bounds.left) };
+    menuRestore.current = anchor;
+    setCommandMenu({ anchor, position });
+  };
+  const chooseCommand = action => {
+    if (disabled || commandMenu?.anchor.value !== content) {
+      menuRestore.current = null;
+      setCommandMenu(null);
+      setNotice('본문이 바뀌었습니다. 삽입할 위치에서 도구를 다시 선택하세요.');
       return;
     }
-  if (useCustomKey) setNotionApiKey(notionKey.trim()); else setNotionApiKey('');
-    setNotionLoading(true);
-    setNotionError('');
-    try {
-      const { data } = await notionApi.get(`/notion/render-db/${dbId.trim()}?pageSize=10`);
-      setDbResults(data.results || []);
-  } catch {
-      setNotionError('데이터베이스 로드에 실패했습니다.');
-    } finally {
-      setNotionLoading(false);
+    // The textarea keeps its selection while the palette has focus.
+    const selectedMenu = commandMenu;
+    menuRestore.current = null;
+    setCommandMenu(null);
+    if (action === 'color') openColor(null, selectedMenu.anchor, selectedMenu.position);
+    else performAction(action);
+  };
+  const restoreAfterMenu = () => {
+    if (dialog || notionOpen || colorMenu) return;
+    if (menuRestore.current?.value === content) history.restoreSelection(menuRestore.current, displayMode !== 'preview');
+    else if (displayMode !== 'preview') history.restoreSelection();
+    else shellRef.current?.querySelector('.editor-search-trigger')?.focus();
+  };
+  const handleKeyDown = event => {
+    if (history.handleHistoryKey(event)) return;
+    if (toolsDisabled || event.nativeEvent.isComposing || event.keyCode === 229) return;
+    if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && canOpenSlashMenu(content, history.captureSelection())) {
+      event.preventDefault(); openCommandMenu(event, true); return;
     }
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+    const key = event.key.toLowerCase();
+    if (key === 'b' || key === 'i') { event.preventDefault(); command(key === 'b' ? 'bold' : 'italic'); }
+    else if (key === 'k') { event.preventDefault(); openBlock('link'); }
   };
+  const undo = () => { history.undo(); showWriting(); setNotice('이전 편집으로 되돌렸습니다.'); };
+  const redo = () => { history.redo(); showWriting(); setNotice('편집을 다시 적용했습니다.'); };
 
-  const handleInsertDbPage = async (pId) => {
-  if (useCustomKey) setNotionApiKey(notionKey.trim()); else setNotionApiKey('');
-    setNotionLoading(true);
-    setNotionError('');
-    try {
-  const { data } = await notionConvert({ pageId: pId });
-  insertAtCursor(`\n${data.markdown}\n`);
-      setNotionDialog(false);
-  } catch {
-      setNotionError('페이지 변환에 실패했습니다.');
-    } finally {
-      setNotionLoading(false);
-    }
-  };
-
-  // 마크다운 붙여넣기 기능 제거
-
-  // 북마크 폼 입력값 변경 처리
-  const handleBookmarkFormChange = (e) => {
-    const { name, value } = e.target;
-    setBookmarkForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // 코드 아코디언 다이얼로그 열기
-  const openCodeDialog = () => {
-    setCodeDialog(true);
-    setCodeError('');
-    setCodeForm({ title: '', language: 'java', codeString: '', openState: 'hidden' });
-  };
-
-  // Alert 다이얼로그 열기
-  const openAlertDialog = () => {
-    setAlertDialog(true);
-    setAlertForm({ severity: 'info', message: '' });
-  };
-
-  const handleCodeFormChange = (e) => {
-    const { name, value } = e.target;
-    setCodeForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const insertCodeAccordion = () => {
-    if (!codeForm.codeString.trim()) {
-      setCodeError('코드 내용을 입력하세요.');
-      return;
-    }
-    // 속성 문자열 구성
-    const attrs = [];
-    if (codeForm.title.trim()) {
-      const safeTitle = codeForm.title.replace(/"/g, '\\"');
-      attrs.push(` title="${safeTitle}"`);
-    }
-    if (codeForm.language.trim()) {
-      attrs.push(` language="${codeForm.language.trim()}"`);
-    }
-    if (codeForm.openState === 'open') {
-      attrs.push(` defaultExpanded="true"`);
-    }
-
-    const openTag = `<CodeAccordion${attrs.join('')}>`;
-    const closeTag = `</CodeAccordion>`;
-    const block = `\n${openTag}\n${codeForm.codeString}\n${closeTag}\n`;
-    insertAtCursor(block);
-    setCodeDialog(false);
-  };
-
-  const handleAlertFormChange = (e) => {
-    const { name, value } = e.target;
-    setAlertForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const insertAlert = () => {
-    // severity만 출력, 스타일은 렌더러의 AlertBlock이 결정
-    const sev = (alertForm.severity || 'info').toLowerCase();
-    const defaultMessage = sev === 'error' ? '경고문' : sev === 'warning' ? '주의문' : '인포 문구';
-    const msg = (alertForm.message || '').trim() || defaultMessage;
-    // 태그 내부 개행 없이 삽입 (미리보기 pre-wrap 영향 방지)
-    const block = `\n<AlertBlock severity="${sev}">${msg}</AlertBlock>\n`;
-    insertAtCursor(block);
-    setAlertDialog(false);
-  };
-
-  // 북마크 삽입하기
-  const insertBookmark = () => {
-    try {
-      // URL 형식 검증
-      new URL(bookmarkForm.url);
-      
-      let bookmarkCode = `<Bookmark url="${bookmarkForm.url}"`;
-      
-      if (bookmarkForm.title) {
-        bookmarkCode += ` title="${bookmarkForm.title}"`;
-      }
-      
-      if (bookmarkForm.description) {
-        bookmarkCode += ` description="${bookmarkForm.description}"`;
-      }
-      
-      if (bookmarkForm.imageUrl) {
-        bookmarkCode += ` imageUrl="${bookmarkForm.imageUrl}"`;
-      }
-      
-      bookmarkCode += ' />';
-      
-      insertAtCursor(bookmarkCode);
-      setBookmarkDialog(false);
-      
-  } catch {
-      setBookmarkError('유효한 URL을 입력해주세요. (예: https://example.com)');
-    }
-  };
-
-  return (
-    <Box>
-      <Box sx={{ borderBottom: 1, mb: 2, borderColor: 'divider' }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab label="작성" />
-          <Tab label="미리보기" />
-        </Tabs>
-      </Box>
-
-      <Box sx={{ display: tabValue === 0 ? 'block' : 'none' }}>
-        <TextField
-          inputRef={textareaRef}
-          value={value}
-          onChange={handleContentChange}
-          multiline
-          fullWidth
-          rows={15}
-          variant="outlined"
-          placeholder="마크다운을 입력하세요..."
-        />
-
-        <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<CodeIcon />}
-            onClick={openCodeDialog}
-          >
-            코드 블록 삽입
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<ImageIcon />}
-            onClick={openZoomDialog}
-          >
-            Zoomable 이미지 삽입
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<TableChartIcon />}
-            onClick={openTableDialog}
-          >
-            테이블 삽입
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<InsertLinkIcon />}
-            onClick={openBookmarkDialog}
-          >
-            프리뷰 삽입
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<WarningAmberIcon />}
-            onClick={openAlertDialog}
-          >
-            Alert 삽입
-          </Button>
-          <Button
-            size="small"
-            variant="contained"
-            onClick={openNotionDialog}
-          >
-            노션 가져오기
-          </Button>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        <Typography variant="subtitle2" color="text.secondary">
-          마크다운 문법 가이드:
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          # 제목, **굵게**, *기울임*, `코드`, [링크](url), - 목록, | 테이블 |
-        </Typography>
-      </Box>
-
-    <Paper
-        variant="outlined"
-        sx={{
-      display: tabValue === 1 ? 'block' : 'none',
-      p: 3,
-      minHeight: '400px',
-      wordBreak: 'break-word'
-        }}
-      >
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-          미리보기
-        </Typography>
-        <MarkdownRenderer content={value} />
-      </Paper>
-
-      {/* 북마크 추가 다이얼로그 */}
-      <Dialog
-        open={bookmarkDialog}
-        onClose={() => setBookmarkDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>북마크 추가</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth margin="normal" error={!!bookmarkError}>
-            <InputLabel htmlFor="bookmark-url">URL (필수)</InputLabel>
-            <OutlinedInput
-              id="bookmark-url"
-              name="url"
-              value={bookmarkForm.url}
-              onChange={handleBookmarkFormChange}
-              label="URL (필수)"
-              placeholder="https://example.com"
-              fullWidth
-            />
-            {bookmarkError && (
-              <FormHelperText error>{bookmarkError}</FormHelperText>
-            )}
-          </FormControl>
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel htmlFor="bookmark-title">제목 (선택)</InputLabel>
-            <OutlinedInput
-              id="bookmark-title"
-              name="title"
-              value={bookmarkForm.title}
-              onChange={handleBookmarkFormChange}
-              label="제목 (선택)"
-              placeholder="북마크 제목"
-              fullWidth
-            />
-          </FormControl>
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel htmlFor="bookmark-desc">설명 (선택)</InputLabel>
-            <OutlinedInput
-              id="bookmark-desc"
-              name="description"
-              value={bookmarkForm.description}
-              onChange={handleBookmarkFormChange}
-              label="설명 (선택)"
-              placeholder="북마크에 대한 간략한 설명"
-              multiline
-              rows={2}
-              fullWidth
-            />
-          </FormControl>
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel htmlFor="bookmark-image">이미지 URL (선택)</InputLabel>
-            <OutlinedInput
-              id="bookmark-image"
-              name="imageUrl"
-              value={bookmarkForm.imageUrl}
-              onChange={handleBookmarkFormChange}
-              label="이미지 URL (선택)"
-              placeholder="https://example.com/image.jpg"
-              fullWidth
-            />
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setBookmarkDialog(false)}>취소</Button>
-          <Button onClick={insertBookmark} variant="contained" color="primary">
-            북마크 삽입
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Zoomable 이미지 다이얼로그 */}
-      <Dialog
-        open={zoomDialog}
-        onClose={() => setZoomDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Zoomable 이미지 삽입</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth margin="normal" error={!!zoomError}>
-            <InputLabel htmlFor="zoom-src">이미지 src (필수)</InputLabel>
-            <OutlinedInput
-              id="zoom-src"
-              name="src"
-              value={zoomForm.src}
-              onChange={handleZoomFormChange}
-              label="이미지 src (필수)"
-              placeholder="https://..."
-              fullWidth
-            />
-            {zoomError && <FormHelperText error>{zoomError}</FormHelperText>}
-          </FormControl>
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel htmlFor="zoom-alt">대체 텍스트 (선택)</InputLabel>
-            <OutlinedInput
-              id="zoom-alt"
-              name="alt"
-              value={zoomForm.alt}
-              onChange={handleZoomFormChange}
-              label="대체 텍스트 (선택)"
-              placeholder="이미지 설명"
-              fullWidth
-            />
-          </FormControl>
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel htmlFor="zoom-caption">캡션 (선택)</InputLabel>
-            <OutlinedInput
-              id="zoom-caption"
-              name="caption"
-              value={zoomForm.caption}
-              onChange={handleZoomFormChange}
-              label="캡션 (선택)"
-              placeholder="이미지 아래 설명"
-              fullWidth
-            />
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setZoomDialog(false)}>취소</Button>
-          <Button onClick={insertZoomable} variant="contained">삽입</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* 테이블 삽입 다이얼로그 */}
-      <Dialog
-        open={tableDialog}
-        onClose={() => setTableDialog(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>테이블 삽입</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', pl: 0.5 }}>
-                행 수
-              </Typography>
-              <TextField
-                name="rows"
-                type="number"
-                size="small"
-                value={tableForm.rows}
-                onChange={handleTableFormChange}
-                inputProps={{ min: 1, max: 20 }}
-              />
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', pl: 0.5 }}>
-                열 수
-              </Typography>
-              <TextField
-                name="cols"
-                type="number"
-                size="small"
-                value={tableForm.cols}
-                onChange={handleTableFormChange}
-                inputProps={{ min: 1, max: 20 }}
-              />
-            </Box>
-          </Box>
-          {/* 헤더 행은 기본 포함 */}
-          {tableError && <FormHelperText error sx={{ mt: 1 }}>{tableError}</FormHelperText>}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setTableDialog(false)}>취소</Button>
-          <Button onClick={insertTableFromDialog} variant="contained">삽입</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Notion 가져오기 다이얼로그 */}
-      <Dialog
-        open={notionDialog}
-        onClose={() => setNotionDialog(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>노션 가져오기</DialogTitle>
-        <DialogContent>
-          <Alert severity="warning" color="warning" sx={{ mb: 2, lineHeight: 1.6 }}>
-            노션에서 가져온 이미지 링크(예: <code>https://prod-files-secure.s3...</code>)는 유효기간이 있어 일정 시간이 지나면 깨질 수 있습니다.
-            반드시 이미지를 개인/영구 저장소(S3/CloudFront, GitHub 등)에 업로드한 뒤
-            마크다운의 이미지 URL(<code>![](url)</code>)을 해당 저장소 주소로 교체하세요.
-          </Alert>
-          {/* HTML 삽입 형식 제거: 항상 마크다운만 */}
-
-          <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
-            <Button
-              size="small"
-              variant={notionMode === 'page' ? 'contained' : 'outlined'}
-              onClick={() => { setNotionMode('page'); setNotionError(''); }}
-            >페이지 ID</Button>
-            <Button
-              size="small"
-              variant={notionMode === 'db' ? 'contained' : 'outlined'}
-              onClick={() => { setNotionMode('db'); setNotionError(''); }}
-            >데이터베이스 ID</Button>
-          </Box>
-
-          {/* 사용자 Notion 키 설정 */}
-          <Box sx={{ mb: 2 }}>
-            <FormControlLabel
-              control={<Switch checked={useCustomKey} onChange={() => setUseCustomKey(v => !v)} />}
-              label="사용자 Notion API 키 사용"
-            />
-            {useCustomKey && (
-              <TextField
-                label="Notion API 키 (x-notion-api-key)"
-                fullWidth
-                size="small"
-                type="password"
-                value={notionKey}
-                onChange={(e) => setNotionKey(e.target.value)}
-                placeholder="secret_..."
-                sx={{ mt: 1 }}
-              />
-            )}
-            {!useCustomKey && (
-              <Typography variant="caption" color="text.secondary">
-                기본값(.env)의 서버 키를 사용합니다.
-              </Typography>
-            )}
-          </Box>
-
-          {/* 로딩 바 */}
-          {notionLoading && <LinearProgress sx={{ mb: 2 }} />}
-
-          {notionMode === 'page' && (
-            <Box>
-              <TextField
-                label="페이지 ID"
-                fullWidth
-                size="small"
-                value={pageId}
-                onChange={(e) => setPageId(e.target.value)}
-                disabled={notionLoading}
-              />
-              <Box sx={{ mt: 1 }}>
-                <Button onClick={handleNotionFetchPage} variant="contained" disabled={notionLoading}>
-                  {notionLoading ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CircularProgress size={16} />
-                      <span>변환중...</span>
-                    </Box>
-                  ) : (
-                    '변환하여 삽입'
-                  )}
-                </Button>
-              </Box>
-            </Box>
-          )}
-
-          {notionMode === 'db' && (
-            <Box>
-              <TextField
-                label="데이터베이스 ID"
-                fullWidth
-                size="small"
-                value={dbId}
-                onChange={(e) => setDbId(e.target.value)}
-                disabled={notionLoading}
-              />
-              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                <Button onClick={handleNotionFetchDb} variant="contained" disabled={notionLoading}>
-                  {notionLoading ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CircularProgress size={16} />
-                      <span>불러오는 중...</span>
-                    </Box>
-                  ) : (
-                    '목록 불러오기'
-                  )}
-                </Button>
-              </Box>
-              <Box sx={{ mt: 2, maxHeight: 300, overflowY: 'auto' }}>
-                {dbResults.map((item) => (
-                  <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, borderBottom: '1px solid #eee' }}>
-                    <Typography variant="body2" sx={{ mr: 2 }}>{item.title || '(제목 없음)'}</Typography>
-                    <Button size="small" variant="outlined" onClick={() => handleInsertDbPage(item.id)} disabled={notionLoading}>
-                      {notionLoading ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <CircularProgress size={14} />
-                          <span>삽입중...</span>
-                        </Box>
-                      ) : (
-                        '삽입'
-                      )}
-                    </Button>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          )}
-
-          {/* 마크다운 붙여넣기 모드 제거 */}
-
-          {notionError && (
-            <Typography color="error" variant="body2" sx={{ mt: 1 }}>{notionError}</Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setNotionDialog(false)}>닫기</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* 코드 블록 삽입 다이얼로그 */}
-      <Dialog
-        open={codeDialog}
-        onClose={() => setCodeDialog(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>코드 블록 삽입</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
-            <FormControl fullWidth margin="dense">
-              <InputLabel htmlFor="code-title">제목 (선택)</InputLabel>
-              <OutlinedInput
-                id="code-title"
-                name="title"
-                value={codeForm.title}
-                onChange={handleCodeFormChange}
-                label="제목 (선택)"
-                placeholder="코드 살펴보기"
-              />
-            </FormControl>
-
-            <FormControl fullWidth margin="dense">
-              <InputLabel id="code-language-label">언어</InputLabel>
-              <Select
-                labelId="code-language-label"
-                id="code-language"
-                name="language"
-                value={codeForm.language}
-                label="언어"
-                onChange={handleCodeFormChange}
-              >
-                {['bash','json','yaml','yml','java','kotlin','go','python','javascript','typescript','tsx','tsx','sql','xml','html','css','dockerfile','ini','toml'].map(lang => (
-                  <MenuItem key={lang} value={lang}>{lang}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl component="fieldset" margin="dense">
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>초기 상태</Typography>
-              <RadioGroup
-                row
-                name="openState"
-                value={codeForm.openState}
-                onChange={handleCodeFormChange}
-              >
-                <FormControlLabel value="hidden" control={<Radio />} label="숨김" />
-                <FormControlLabel value="open" control={<Radio />} label="오픈" />
-              </RadioGroup>
-            </FormControl>
-
-            <FormControl fullWidth margin="dense" error={!!codeError}>
-              <TextField
-                id="code-string"
-                name="codeString"
-                value={codeForm.codeString}
-                onChange={handleCodeFormChange}
-                label="코드 내용 (필수)"
-                placeholder={`// 코드를 여기에 작성하세요`}
-                multiline
-                minRows={8}
-                maxRows={24}
-              />
-              {codeError && (
-                <FormHelperText error>{codeError}</FormHelperText>
-              )}
-            </FormControl>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCodeDialog(false)}>취소</Button>
-          <Button onClick={insertCodeAccordion} variant="contained">삽입</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Alert 삽입 다이얼로그 */}
-      <Dialog
-        open={alertDialog}
-        onClose={() => setAlertDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Alert 삽입</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <FormControl component="fieldset">
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>타입</Typography>
-              <RadioGroup
-                row
-                name="severity"
-                value={alertForm.severity}
-                onChange={handleAlertFormChange}
-              >
-                <FormControlLabel value="info" control={<Radio />} label="info" />
-                <FormControlLabel value="warning" control={<Radio />} label="warning" />
-                <FormControlLabel value="error" control={<Radio />} label="error" />
-              </RadioGroup>
-            </FormControl>
-
-            <FormControl fullWidth>
-              <TextField
-                id="alert-message"
-                name="message"
-                value={alertForm.message}
-                onChange={handleAlertFormChange}
-                label="메시지"
-                placeholder="알림 내용을 입력하세요 (미입력 시 기본 문구가 들어갑니다)"
-                multiline
-                minRows={3}
-              />
-            </FormControl>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAlertDialog(false)}>취소</Button>
-          <Button onClick={insertAlert} variant="contained">삽입</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
+  return <div className="markdown-editor" ref={shellRef} data-view={displayMode}>
+    <div className="editor-topline">
+      <div className="editor-mode-buttons" role="group" aria-label="본문 보기 방식">
+        <button type="button" aria-pressed={displayMode === 'write'} onClick={() => changeView('write')}>작성</button>
+        {canSplit && <button type="button" aria-pressed={displayMode === 'split'} onClick={() => changeView('split')}>나란히</button>}
+        <button type="button" aria-pressed={displayMode === 'preview'} onClick={() => changeView('preview')}>미리보기</button>
+      </div>
+      <div className="editor-history" role="group" aria-label="편집 이력">
+        <ToolButton icon="undo" onClick={undo} disabled={toolsDisabled || !history.canUndo} shortcut="Ctrl/⌘ + Z">실행 취소</ToolButton>
+        <ToolButton icon="redo" onClick={redo} disabled={toolsDisabled || !history.canRedo} shortcut="Ctrl/⌘ + Shift + Z">다시 실행</ToolButton>
+      </div>
+    </div>
+    <EditorToolbar onAction={performAction} onSearch={openCommandMenu} disabled={toolsDisabled} />
+    <div className="editor-workspace">
+      <section className="editor-writing-pane" hidden={displayMode === 'preview'} aria-label="Markdown 작성">
+        <div className="editor-pane-heading"><label htmlFor={`${editorId}-source`}>Markdown</label><span>문구 선택 후 서식 적용 · 빈 줄에서 /</span></div>
+        <textarea id={`${editorId}-source`} ref={history.textareaRef} value={content} onChange={history.handleChange} onKeyDown={handleKeyDown} onSelect={history.captureSelection} onBlur={history.captureSelection} onCompositionStart={history.handleCompositionStart} onCompositionEnd={history.handleCompositionEnd} aria-label="게시글 Markdown 본문" aria-describedby={`${editorId}-help`} disabled={disabled} spellCheck={false} rows={22} placeholder="첫 문단부터 작성해 보세요. Markdown을 붙여넣어도 됩니다." />
+      </section>
+      {displayMode !== 'write' && <section className="editor-preview-pane" aria-label="본문 미리보기" aria-busy={content !== previewContent} tabIndex={0}>
+        <div className="editor-pane-heading"><span>미리보기</span><span>게시글과 같은 서식</span></div>
+        <div className="editor-preview-content" tabIndex={0} aria-label="미리보기 스크롤 영역"><EditorPreview content={previewContent} /></div>
+      </section>}
+    </div>
+    <div className="editor-footline"><p id={`${editorId}-help`}>블록 안에 커서를 놓으면 <b>블록 수정</b>으로 내용을 바꿀 수 있습니다.</p><span>{Array.from(content).length.toLocaleString('ko-KR')}자</span></div>
+    <p className="editor-status" role="status">{history.isComposing ? '한글 조합 중…' : notice || '입력한 내용은 게시하기 전까지 저장되지 않습니다.'}</p>
+    <EditorCommandMenu menu={commandMenu} onClose={() => setCommandMenu(null)} onAction={chooseCommand} onExited={restoreAfterMenu} />
+    <EditorColorMenu menu={colorMenu} onClose={closeColor} onSelect={applyColor} onExited={restoreAfterColor} />
+    <EditorBlockDialog dialog={dialog} onChange={form => setDialog(previous => ({ ...previous, form, error: '' }))} onSubmit={submitBlock} onClose={closeBlock} onExited={restoreAfterDialog} />
+    <NotionImportDialog open={notionOpen} onClose={() => setNotionOpen(false)} onExited={restoreAfterDialog} onInsert={insertNotion} />
+  </div>;
 }

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Drawer,
@@ -20,7 +20,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import { SidebarContext } from '../App';
+import { SidebarContext } from '../legacySidebarContext';
 
 export default function Sidebar() {
   const drawerWidth = 240;
@@ -28,8 +28,15 @@ export default function Sidebar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  // App.jsx에서 공유하는 사이드바 상태 사용
+  // 블로그와 포트폴리오가 같은 사이드바 상태를 유지한다.
   const { open, setOpen } = useContext(SidebarContext);
+  const toggleRef = useRef(null);
+  const previousOpen = useRef(open);
+
+  useEffect(() => {
+    if (isMobile && previousOpen.current && !open) toggleRef.current?.focus();
+    previousOpen.current = open;
+  }, [open, isMobile]);
 
   const handleDrawerToggle = () => {
     setOpen(!open);
@@ -47,6 +54,12 @@ export default function Sidebar() {
   const items = [
     { to: '/', primary: 'Intro', secondary: '', icon: <HomeIcon /> },
     { to: '/blog', primary: 'Blog', secondary: '', icon: <StorageIcon /> },
+    {
+      to: '/openstack',
+      primary: 'OpenStack',
+      secondary: '클라우드 구축',
+      icon: <Box component="img" src="/brands/openstack.svg" alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} />,
+    },
     {
       to: '/springboot',
       primary: 'Spring Boot',
@@ -209,8 +222,11 @@ export default function Sidebar() {
   // 사이드바 토글 버튼 (모바일에서는 항상 표시, 데스크탑에서는 사이드바가 접혔을 때 표시)
   const toggleButton = (
     <IconButton
+      ref={toggleRef}
       color="primary"
       aria-label={open ? '사이드바 닫기' : '사이드바 열기'}
+      aria-expanded={open}
+      aria-controls="portfolio-sidebar"
       onClick={handleDrawerToggle}
       sx={{
         position: 'fixed',
@@ -231,12 +247,12 @@ export default function Sidebar() {
 
   return (
     <>
-      {toggleButton}
+      {!(isMobile && open) && toggleButton}
       <Drawer
         variant={isMobile ? 'temporary' : 'persistent'}
         open={open}
         onClose={isMobile ? handleDrawerToggle : undefined}
-        PaperProps={{ className: 'sidebar' }}
+        PaperProps={{ className: 'sidebar', id: 'portfolio-sidebar' }}
         sx={{
           width: open ? drawerWidth : 0,
           flexShrink: 0,
@@ -266,6 +282,7 @@ export default function Sidebar() {
           }
         }}
       >
+        {isMobile && open && toggleButton}
         {/* 프로필 영역 */}
         <Box 
           sx={{ 
@@ -307,7 +324,7 @@ export default function Sidebar() {
         <Divider sx={{ mx: 2 }} />
         
         {/* 메뉴 영역 */}
-        <List sx={{ pt: 2, px: 1 }}>
+        <List component="nav" aria-label="포트폴리오 메뉴" sx={{ pt: 2, px: 1 }}>
           {items.map(({ to, primary, secondary, icon }) => {
             const selected = isPathSelected(to);
             return (
@@ -316,6 +333,7 @@ export default function Sidebar() {
                 component={Link}
                 to={to}
                 selected={selected}
+                aria-current={selected ? 'page' : undefined}
                 onClick={isMobile ? handleDrawerToggle : undefined}
                 sx={{
                   my: 0.5,

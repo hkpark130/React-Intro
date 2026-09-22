@@ -1,0 +1,22 @@
+.markdown-body .markdown-bookmark, .markdown-bookmark {
+  display: flex; align-items: center; gap: 18px; width: 100%; min-width: 0;
+  padding: 20px; border: 1px solid var(--line, #dce4e1); border-radius: 8px;
+  background: var(--paper, #fff); color: var(--ink, #172f36); text-decoration: none;
+  box-sizing: border-box; transition: border-color .15s, background .15s;
+}
+a.markdown-bookmark:hover { border-color: var(--accent, #176d65); background: #f8faf9; }
+a.markdown-bookmark:focus-visible { outline: 2px solid var(--accent, #176d65); outline-offset: 4px; }
+.markdown-bookmark-content { min-width: 0; flex: 1; }
+.markdown-bookmark-source { display: flex; align-items: center; gap: 7px; color: var(--muted, #64777c); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.markdown-bookmark-source svg { flex: 0 0 16px; }
+.markdown-bookmark strong { display: block; margin-top: 7px; color: inherit; font-size: 17px; line-height: 1.6; overflow-wrap: anywhere; }
+.markdown-body .markdown-bookmark p, .markdown-bookmark p { margin: 6px 0 0; color: var(--muted, #64777c); font-size: 14px; line-height: 1.75; }
+.markdown-body .markdown-bookmark img, .markdown-bookmark img { flex: 0 0 112px; width: 112px; height: 84px; object-fit: cover; border-radius: 5px; }
+.markdown-bookmark-arrow { align-self: flex-start; font-size: 21px; color: var(--accent, #176d65); }
+.markdown-bookmark-invalid { border-style: dashed; }
+@media (max-width: 560px) {
+  .markdown-body .markdown-bookmark, .markdown-bookmark { padding: 16px; gap: 12px; }
+  .markdown-body .markdown-bookmark img, .markdown-bookmark img { flex-basis: 64px; width: 64px; height: 64px; }
+  .markdown-bookmark strong { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .markdown-bookmark { transition: none; } }

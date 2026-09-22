@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1250" viewBox="0 0 1440 1250" role="img" aria-labelledby="title desc">
+<title id="title">외부 통신의 논리 스위치·라우터 아키텍처</title><desc id="desc">VM A는 user1_net의 라우터 연결 포트를 선택합니다. user1_router에서 경로 선택, TTL 감소와 SNAT을 수행하고 ext_net의 localnet 포트를 거쳐 물리망에 연결됩니다. 파이프라인 단계는 해당 논리 장치 안에 놓여 있습니다.</desc>
+<defs><marker id="packetArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#087d9a"/></marker><marker id="mutedArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#9daeb8"/></marker></defs>
+<rect width="1440" height="1250" fill="white"/><g font-family="Malgun Gothic,Segoe UI,sans-serif"><text x="30" y="48" font-size="34" fill="#173b49" font-weight="700" >외부 통신 · 스위치에서 라우터를 거쳐 물리망으로</text>
+<text x="30" y="91" font-size="23" fill="#546b78" font-weight="400" >논리 장치 3개와 연결 포트를 따라갑니다. ls_*는 스위치 내부, lr_*는 라우터 내부 처리입니다.</text>
+<rect x="270" y="144" width="650" height="332" rx="18" fill="#edf5fc" stroke="#2569a0" stroke-width="2" /><text x="298" y="186" font-size="30" fill="#2569a0" font-weight="700" font-family="Consolas,ui-monospace,monospace">user1_net</text><text x="896" y="185" font-size="23" fill="#2569a0" font-weight="700" text-anchor="end">논리 스위치</text><text x="298" y="222" font-size="21" fill="#546b78" font-weight="400" >10.0.0.0/24</text>
+<rect x="24" y="263" width="212" height="130" rx="14" fill="#fff" stroke="#2569a0" stroke-width="2" /><rect x="42" y="283" width="30" height="23" rx="3" fill="none" stroke="#173b49" stroke-width="2"/><path d="M50 312 h14 m-7 -6 v6" stroke="#173b49" stroke-width="2"/><text x="86" y="306" font-size="26" fill="#173b49" font-weight="700" >VM A</text><text x="130" y="345" font-size="22" fill="#173b49" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="middle">10.0.0.217</text><text x="130" y="373" font-size="19" fill="#546b78" font-weight="400" text-anchor="middle">출발지 VM</text>
+<rect x="1190" y="263" width="212" height="130" rx="14" fill="#f4f6f8" stroke="#9daeb8" stroke-width="2" /><rect x="1208" y="283" width="30" height="23" rx="3" fill="none" stroke="#546b78" stroke-width="2"/><path d="M1216 312 h14 m-7 -6 v6" stroke="#546b78" stroke-width="2"/><text x="1252" y="306" font-size="26" fill="#546b78" font-weight="700" >VM B</text><text x="1296" y="345" font-size="22" fill="#546b78" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="middle">10.0.0.76</text><text x="1296" y="373" font-size="19" fill="#546b78" font-weight="400" text-anchor="middle">이번 목적지가 아님</text>
+<rect x="301" y="257" width="258" height="136" rx="14" fill="#fff" stroke="#b4cee4" stroke-width="2" />
+<text x="316" y="289" font-size="20" fill="#2569a0" font-weight="700" >ingress 0·4·6·7·8·10</text>
+<text x="316" y="321" font-size="21" fill="#546b78" font-weight="400" >포트 보안 · 연결 추적</text>
+<text x="316" y="350" font-size="21" fill="#546b78" font-weight="400" >ACL · QoS</text>
+<rect x="598" y="257" width="290" height="136" rx="14" fill="#fff" stroke="#2569a0" stroke-width="2" />
+<text x="614" y="289" font-size="21" fill="#2569a0" font-weight="700" font-family="Consolas,ui-monospace,monospace">23  ls_in_l2_lkup</text>
+<text x="614" y="321" font-size="21" fill="#173b49" font-weight="700" >목적지 MAC = 라우터 포트</text>
+<text x="614" y="350" font-size="21" fill="#2569a0" font-weight="600" font-family="Consolas,ui-monospace,monospace">outport = 387a59</text>
+<path d="M236 375 H298" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<path d="M321 373 H594" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<path d="M888 330 H1187" fill="none" stroke="#9daeb8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"  />
+<rect x="911" y="321" width="18" height="18" rx="3" fill="white" stroke="#546b78" stroke-width="3"/><text x="947" y="312" font-size="19" fill="#546b78" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="start">30170d</text>
+<text x="951" y="365" font-size="20" fill="#546b78" font-weight="400" >VM 쪽은 미선택</text>
+<path d="M742 393 V426 H421 V470" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<rect x="304" y="405" width="348" height="42" rx="8" fill="white" stroke="#b4cee4" stroke-width="2" />
+<text x="317" y="433" font-size="20" fill="#2569a0" font-weight="600" >egress 0~9 통과 · 원문 요약</text>
+<rect x="261" y="366" width="18" height="18" rx="3" fill="white" stroke="#2569a0" stroke-width="3"/><text x="250" y="239" font-size="19" fill="#2569a0" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="end">125d8a</text>
+<rect x="412" y="467" width="18" height="18" rx="3" fill="white" stroke="#2569a0" stroke-width="3"/><text x="444" y="499" font-size="19" fill="#2569a0" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="start">387a59</text>
+<path d="M421 488 V540 H230 V850 H266" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<text x="454" y="537" font-size="21" fill="#546b78" font-weight="400" >논리 포트끼리 연결</text>
+<rect x="270" y="580" width="650" height="334" rx="18" fill="#fff5e9" stroke="#aa5e16" stroke-width="2" /><text x="298" y="622" font-size="30" fill="#aa5e16" font-weight="700" font-family="Consolas,ui-monospace,monospace">user1_router</text><text x="896" y="621" font-size="23" fill="#aa5e16" font-weight="700" text-anchor="end">논리 라우터</text>
+<rect x="261" y="841" width="18" height="18" rx="3" fill="white" stroke="#aa5e16" stroke-width="3"/><text x="42" y="823" font-size="19" fill="#aa5e16" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="start">lrp-387a59</text>
+<text x="299" y="655" font-size="22" fill="#aa5e16" font-weight="600" >내부 포트 10.0.0.1</text>
+<rect x="300" y="676" width="284" height="194" rx="14" fill="#fff" stroke="#e4c7a8" stroke-width="2" />
+<text x="316" y="707" font-size="23" fill="#aa5e16" font-weight="700" >ingress · 경로 선택</text>
+<text x="316" y="739" font-size="20" fill="#546b78" font-weight="400" >0  도착 MAC 검사</text>
+<text x="316" y="769" font-size="20" fill="#173b49" font-weight="600" >11  기본 경로 · TTL 64→63</text>
+<text x="316" y="798" font-size="20" fill="#546b78" font-weight="400" >15  다음 홉 MAC 확인</text>
+<text x="316" y="827" font-size="20" fill="#546b78" font-weight="400" >18  gateway chassis로</text>
+<rect x="618" y="676" width="270" height="194" rx="14" fill="#fff" stroke="#e4c7a8" stroke-width="2" />
+<text x="634" y="707" font-size="23" fill="#aa5e16" font-weight="700" >egress · SNAT</text>
+<text x="634" y="739" font-size="20" fill="#546b78" font-weight="400" >1  UNDNAT 처리</text>
+<text x="634" y="769" font-size="21" fill="#173b49" font-weight="700" >3  출발지 IP 변환</text>
+<text x="634" y="798" font-size="21" fill="#aa5e16" font-weight="600" font-family="Consolas,ui-monospace,monospace">10.0.0.217</text>
+<text x="634" y="827" font-size="21" fill="#aa5e16" font-weight="700" font-family="Consolas,ui-monospace,monospace">→ 192.168.3.77</text>
+<path d="M279 850 H297" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<path d="M318 850 H613" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<path d="M637 850 H915" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<text x="304" y="899" font-size="18" fill="#aa5e16" font-weight="400" >18 → cr-lrp-e1392d (gateway chassis)</text>
+<text x="939" y="803" font-size="19" fill="#aa5e16" font-weight="600" font-family="Consolas,ui-monospace,monospace">192.168.3.209</text>
+<rect x="911" y="841" width="18" height="18" rx="3" fill="white" stroke="#aa5e16" stroke-width="3"/><text x="939" y="833" font-size="19" fill="#aa5e16" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="start">lrp-e1392d</text>
+<text x="755" y="899" font-size="19" fill="#aa5e16" font-weight="400" font-family="Consolas,ui-monospace,monospace">6: output</text>
+<rect x="1100" y="580" width="310" height="334" rx="18" fill="#f5f0fb" stroke="#7156a4" stroke-width="2" /><text x="1128" y="622" font-size="30" fill="#7156a4" font-weight="700" font-family="Consolas,ui-monospace,monospace">ext_net</text><text x="1386" y="621" font-size="23" fill="#7156a4" font-weight="700" text-anchor="end">논리 스위치</text>
+<rect x="1122" y="665" width="266" height="216" rx="14" fill="#fff" stroke="#d4c6e8" stroke-width="2" />
+<text x="1138" y="699" font-size="23" fill="#7156a4" font-weight="700" >ingress 23 → 24</text>
+<text x="1138" y="734" font-size="20" fill="#546b78" font-weight="400" >FDB에서 MAC 못 찾음</text>
+<text x="1138" y="765" font-size="21" fill="#7156a4" font-weight="600" font-family="Consolas,ui-monospace,monospace">_MC_unknown 분기</text>
+<text x="1138" y="800" font-size="21" fill="#546b78" font-weight="400" >localnet 쪽 egress</text>
+<path d="M932 850 H1118" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<path d="M1138 850 H1247 V908" fill="none" stroke="#087d9a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#packetArrow)"/>
+<rect x="1091" y="841" width="18" height="18" rx="3" fill="white" stroke="#7156a4" stroke-width="3"/><text x="1047" y="883" font-size="19" fill="#7156a4" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="middle">e1392d</text>
+<rect x="1238" y="905" width="18" height="18" rx="3" fill="white" stroke="#7156a4" stroke-width="3"/><text x="1225" y="947" font-size="19" fill="#7156a4" font-weight="600" font-family="Consolas,ui-monospace,monospace" text-anchor="end">provnet-45bbae</text>
+<text x="1270" y="947" font-size="20" fill="#7156a4" font-weight="600" font-family="Consolas,ui-monospace,monospace">localnet</text>
+<rect x="30" y="984" width="1380" height="200" rx="16" fill="#f5f7f9" stroke="#c5d1d9" stroke-width="2" />
+<text x="51" y="1020" font-size="25" fill="#173b49" font-weight="700" >물리망 연결</text>
+<text x="51" y="1056" font-size="21" fill="#546b78" font-weight="400" >localnet 이후의 연결 구조</text>
+<text x="51" y="1090" font-size="20" fill="#546b78" font-weight="400" >ovn-trace의 출력 범위는</text>
+<text x="51" y="1120" font-size="20" fill="#546b78" font-weight="400" >위 localnet 포트까지입니다.</text>
+<path d="M1247 926 V1000 H518 V1044" fill="none" stroke="#9daeb8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 7" />
+<rect x="338" y="1049" width="300" height="90" rx="14" fill="white" stroke="#bdcbd5" stroke-width="2" />
+<text x="358" y="1086" font-size="24" fill="#173b49" font-weight="600" font-family="Consolas,ui-monospace,monospace">br-int → br-ex</text>
+<text x="358" y="1121" font-size="20" fill="#546b78" font-weight="400" >bridge mapping · bond0</text>
+<rect x="722" y="1049" width="291" height="90" rx="14" fill="white" stroke="#bdcbd5" stroke-width="2" />
+<text x="742" y="1086" font-size="23" fill="#173b49" font-weight="600" >물리 게이트웨이</text>
+<text x="742" y="1121" font-size="24" fill="#173b49" font-weight="600" font-family="Consolas,ui-monospace,monospace">192.168.2.1</text>
+<rect x="1110" y="1049" width="268" height="90" rx="14" fill="white" stroke="#bdcbd5" stroke-width="2" />
+<text x="1130" y="1086" font-size="23" fill="#173b49" font-weight="600" >외부 목적지</text>
+<text x="1130" y="1121" font-size="24" fill="#173b49" font-weight="600" font-family="Consolas,ui-monospace,monospace">8.8.8.8</text>
+<path d="M638 1094 H715" fill="none" stroke="#9daeb8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#mutedArrow)"/>
+<path d="M1013 1094 H1103" fill="none" stroke="#9daeb8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#mutedArrow)"/>
+<text x="338" y="1167" font-size="23" fill="#087d9a" font-weight="700" >출력 패킷: SRC 192.168.3.77 → DST 8.8.8.8 · TTL 63</text>
+<text x="30" y="1223" font-size="20" fill="#546b78" font-weight="400" >청록 화살표 = 기록된 논리 패킷 경로   ·   회색 실선 = 미선택 연결 / 물리 연결   ·   점선 = 논리 포트와 물리망의 대응</text></g></svg>

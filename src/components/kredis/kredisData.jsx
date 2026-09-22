@@ -75,7 +75,7 @@ export const architectureComponents = [
 // Reconcile Flow 단계 데이터
 export const reconcileSteps = [
   { step: '1', title: 'CR 이벤트 수신', desc: 'Kredis CR의 생성/수정/삭제 이벤트 감지', color: '#e3f2fd' },
-  { step: '2', title: '리소스 동기화', desc: 'Pod, Service, PVC 등 하위 리소스 생성/업데이트', color: '#fff8e1' },
+  { step: '2', title: '리소스 동기화', desc: 'Pod, Service, PVC 등 필요한 하위 리소스 생성', color: '#fff8e1' },
   { step: '3', title: '클러스터 상태 확인', desc: 'Redis CLUSTER INFO로 현재 상태 파악', color: '#e8f5e9' },
   { step: '4', title: '작업 결정', desc: 'Create/Scale/Heal/Rebalance 중 필요한 작업 판단', color: '#fce4ec' },
   { step: '5', title: '작업 실행', desc: 'Job을 통한 클러스터 명령 실행 (redis-cli)', color: '#f3e5f5' },
@@ -243,7 +243,8 @@ podAntiAffinity := &corev1.PodAntiAffinity{
 ];
 
 // CRD YAML 예시
-export const crdYaml = `apiVersion: cache.docker.direa.synology.me/v1alpha1
+export const crdYaml = `# 공개용 예제: 내부 API 그룹과 이미지 레지스트리는 예시 도메인으로 대체했습니다.
+apiVersion: cache.example.com/v1alpha1
 kind: Kredis
 metadata:
   labels:
@@ -260,7 +261,7 @@ spec:
   replicas: 1 # 각 마스터당 슬레이브(복제본) 노드 수
   maxMemory: "700Mi" # redis.conf maxmemory
   basePort: 6379
-  image: "docker.direa.synology.me/redis-cluster:8.2-rc1"
+  image: "registry.example.com/redis-cluster:8.2-rc1"
   resources:
     limits:
       cpu: "1"
@@ -313,12 +314,12 @@ export const troubleshootingItems = [
   {
     title: '문제 3: Reconcile Loop 무한 재시도',
     description: '특정 오류 상황에서 Reconcile이 무한 반복되며 API Server에 부하 발생',
-    solution: 'LastClusterOperation에 작업 상태와 타임스탬프를 기록하여 상태 기반 처리. RequeueAfter를 적절히 설정하여 exponential backoff 효과 구현.'
+    solution: 'LastClusterOperation에 작업 상태와 타임스탬프를 기록하고, 상태별 RequeueAfter로 후속 확인 간격을 구분합니다. 이 고정 재조회 간격 자체가 지수 백오프를 구현하는 것은 아닙니다.'
   },
   {
     title: '문제 4: Autoscaling 플래핑',
     description: '메트릭이 임계값 근처에서 변동할 때 Scale Up/Down이 반복됨',
-    solution: 'Stabilization Window 도입: Scale Up: 60초 대기 (빠른 대응), Scale Down: 600초 대기 (보수적 접근). LastScaleTime을 기록하여 Window 내 중복 스케일링 방지'
+    solution: '예시 설정은 Scale Up 60초·Scale Down 600초이며 코드의 기본 대기 시간은 각각 60초·300초입니다. LastScaleTime 이후 대기 시간을 확인하는 방식으로, 임계값 변화 이력을 이용한 안정화와 관측 누락 처리는 추가 검증 과제입니다.'
   },
   {
     title: '문제 5: Job 기반 비동기 처리 (PodExecutor -> JobManager)',
@@ -364,7 +365,7 @@ func (r *KredisReconciler) reconcilePods(ctx context.Context, kredis *cachev1alp
   {
     title: '문제 7: 리밸런싱 시 슬롯이 없는 마스터 노드에서 발생하는 에러',
     description: '리밸런싱 작업을 할 때 슬롯이 없는 마스터가 있으면 "ERR Please use SETSLOT only with masters. error" 에러가 발생합니다. 이는 노드가 마스터에서 레플리카로 전환되는 과정에서 발생하는 문제입니다. 관련 이슈: https://github.com/redis/redis/issues/11104',
-    solution: '바로 rebalance를 실행하지 말고, reshard로 먼저 슬롯을 분배한 후 rebalance로 균등 분배하는 방식으로 진행하면 위 에러가 발생하지 않습니다.'
+    solution: '슬롯이 없는 마스터에는 reshard로 먼저 슬롯을 분배한 뒤 rebalance를 진행하는 순서를 적용했습니다. 역할 전환·재시도 중에도 같은 문제가 재발하지 않는지는 별도 검증이 필요합니다.'
   },
   {
     title: '문제 8: Status Update Conflict ("the object has been modified")',
@@ -372,7 +373,7 @@ func (r *KredisReconciler) reconcilePods(ctx context.Context, kredis *cachev1alp
     참고 링크:  
     https://hkpark130.p-e.kr/blog/88 
     https://alenkacz.medium.com/kubernetes-operators-best-practices-understanding-conflict-errors-d05353dff421`,
-    solution: 'retry.RetryOnConflict 안에서 최신 리소스를 매번 다시 Get한 뒤 delta를 merge해서 Status().Update를 수행하도록 변경. 충돌이 나면 최신 revision으로 자동 재시도되어 상태 유실 없이 수렴됩니다.',
+    solution: 'retry.RetryOnConflict 안에서 리소스를 다시 Get한 뒤 delta를 병합해 Status().Update를 재시도합니다. resourceVersion 충돌에 대응하는 방식이며, 이전 spec에서 계산한 delta의 유효성과 여러 상태 작성자 사이의 일관성은 추가 검증이 필요합니다.',
     code: `err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
     var res apiv1.MyResource
     err := r.Get(ctx, types.NamespacedName{

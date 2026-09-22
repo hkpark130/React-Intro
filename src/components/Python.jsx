@@ -1,116 +1,38 @@
 // src/components/projects/Python.jsx
-import React from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Container,
-  Stack,
-  Divider,
-  Grid,
-  Card,
-  CardContent,
-  Chip
-} from '@mui/material';
-import { motion } from 'framer-motion';
+
+import { Box, Typography, Stack, Card, CardContent } from '@mui/material';
+
 import TitleSection from '@/components/section/TitleSection';
-import ZoomableImageModal from '@/components/section/ZoomableImageModal'; 
+import ZoomableImageModal from '@/components/section/ZoomableImageModal';
 import TechStack from '@/components/section/TechStack';
 import Reference from '@/components/section/Reference';
-import BuildIcon from '@mui/icons-material/Build';
+
 import WebIcon from '@mui/icons-material/Web';
 import ArchitectureIcon from '@mui/icons-material/Architecture';
 import DataObjectIcon from '@mui/icons-material/DataObject';
 import StorageIcon from '@mui/icons-material/Storage';
 import CodeAccordion from '@/components/section/CodeAccordion';
 
-/* =======================
-   섹션 애니메이션 Variants 정의
-   ======================= */
-const sectionVariant = {
-  hidden: { opacity: 0, y: 40 },
-  visible: (i = 1) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.05 },
-  }),
-};
+
 
 export default function Python() {
   return (
-    <Container 
-      maxWidth="lg" 
-      sx={{
-        mx: "auto",               // 중앙 정렬
-        py: { xs: 3, sm: 4, md: 6 }, // 반응형 상하 패딩
-        px: { xs: 2, sm: 3, md: 1, lg: 2 }, // 반응형 좌우 패딩
-        display: 'flex', 
-        flexDirection: 'column'
-      }}
-    >
-      <Paper 
-        elevation={3} 
-        sx={{
-          borderRadius: 3, 
-          p: { xs: 2, sm: 3, md: 4 },
-          mb: { xs: 3, sm: 4 },
-          bgcolor: '#f9f9ff'
-        }}
-      >
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={sectionVariant}
-        >
-          {/* 한 모션으로 감싸고, 내부에서 각각 모션 적용 */}
-          <motion.div variants={sectionVariant} custom={0}>
-            <HeroSection />
-          </motion.div>
-          
-          <Divider sx={{ my: { xs: 2, sm: 3 } }} />
-          
-          <motion.div variants={sectionVariant} custom={1} style={{ marginTop: 32 }}>
-            <TechStackSection />
-          </motion.div>
-          
-          <motion.div variants={sectionVariant} custom={2} style={{ marginTop: 32 }}>
-            <OverviewSection />
-          </motion.div>
-          
-          <motion.div variants={sectionVariant} custom={3} style={{ marginTop: 32 }}>
-            <ProjectStructureSection />
-          </motion.div>
-
-          <motion.div variants={sectionVariant} custom={4} style={{ marginTop: 32 }}>
-            <DataFlowSection />
-          </motion.div>
-          
-          <motion.div variants={sectionVariant} custom={5} style={{ marginTop: 32 }}>
-            <CacheSection />
-          </motion.div>
-          
-          <motion.div variants={sectionVariant} custom={6} style={{ marginTop: 32 }}>
-            <ServerStructureSection />
-          </motion.div>
-          
-          <Divider sx={{ my: { xs: 2, sm: 3 } }} />
-          
-          <motion.div variants={sectionVariant} custom={7} style={{ marginTop: 32 }}>
-            <ReferenceSection />
-          </motion.div>
-        </motion.div>
-      </Paper>
-    </Container>
+    <article className="project-document project-document--python">
+      <div className="project-section-slot"><HeroSection /></div>
+      <div className="project-section-slot"><TechStackSection /></div>
+      <div className="project-section-slot"><OverviewSection /></div>
+      <div className="project-section-slot"><ProjectStructureSection /></div>
+      <div className="project-section-slot"><DataFlowSection /></div>
+      <div className="project-section-slot"><CacheSection /></div>
+      <div className="project-section-slot"><ServerStructureSection /></div>
+      <div className="project-section-slot"><ReferenceSection /></div>
+    </article>
   );
 }
 
 function HeroSection() {
   return (
-    <TitleSection
-      title="머신러닝 (Python)"
-      subtitle="도쿄 23구 집 값 예측(선형회귀) 프로젝트"
-      description="TensorFlow 기반 3층 신경망 모델을 활용한 월세 예측 서비스. 개인 학습용이라서 accuracy가 낮습니다."
-    />
+    <TitleSection title="머신러닝 (Python)" subtitle="도쿄 23구 월세 예측 프로젝트" description="TensorFlow 3층 신경망과 Laravel·Tornado로 만든 학습용 서비스" />
   );
 }
 
@@ -156,21 +78,14 @@ function TechStackSection() {
 
 function OverviewSection() {
   return (
-    <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-      <Typography variant="h5" 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1,
-          mb: 2
-        }}
-      >
+    <Box sx={{mb:{xs:2,sm:3}}}>
+      <Typography variant="h5" sx={{display:'flex',alignItems:'center',gap:1,mb:2}} component="h2" className="project-section-heading">
         <WebIcon color="primary" /> 프로젝트 개요
       </Typography>
-      <Typography variant="body1" component="p" sx={{ mb: 1.5 }}>
+      <Typography variant="body1" component="p" sx={{mb:1.5}}>
         이 프로젝트는 일본 도쿄 23구의 부동산 데이터를 크롤링하여 TensorFlow 기반의 신경망 모델로 
-        집 값을 예측하는 웹 서비스입니다. Laravel 프론트엔드와 Python/Tornado 백엔드로 구성되어 있으며,
-        Redis 캐싱을 통해 성능을 최적화했습니다.
+        월세를 예측하는 웹 서비스입니다. Laravel 프론트엔드와 Python/Tornado 백엔드로 구성되어 있으며,
+        동일 입력의 추론 결과를 재사용하기 위해 Redis 캐시를 연결했습니다.
       </Typography>
     </Box>
   );
@@ -178,42 +93,28 @@ function OverviewSection() {
 
 function ProjectStructureSection() {
   return (
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="h5" 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1,
-          mb: 1
-        }}
-      >
+    <Box sx={{mb:4}}>
+      <Typography variant="h5" sx={{display:'flex',alignItems:'center',gap:1,mb:1}} component="h2" className="project-section-heading">
         <ArchitectureIcon color="secondary" /> 프로젝트 구조
       </Typography>
       
-      <Typography variant="body1" sx={{ mb: 2 }}>
+      <Typography variant="body1" sx={{mb:2}}>
         이 프로젝트는 두 개의 주요 부분으로 구성되어 있습니다:
       </Typography>
       
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, mb: 3 }}>
+      <Box sx={{display:'flex',flexDirection:{xs:'column',md:'row'},gap:3,mb:3}}>
         {/* 프론트엔드 카드 */}
-        <Box sx={{ 
-          flex: 1, 
-          minWidth: 0,
-          display: 'flex'
-        }}>
-          <Card elevation={2} sx={{ 
-            width: '100%', 
-            borderLeft: '4px solid #f50057'
-          }}>
-            <CardContent>
-              <Typography variant="h6" color="primary" gutterBottom>
+        <Box sx={{flex:1,minWidth:0,display:'flex'}}>
+          <Card sx={{width:'100%'}} className="project-panel">
+            <CardContent className="project-panel-content">
+              <Typography variant="h6" color="primary" gutterBottom component="h3" className="project-subsection-heading">
                 <strong>Laravel [PHP]</strong> (프론트엔드)
               </Typography>
               <Typography variant="body2" component="div">
                 <ul style={{ paddingLeft: '20px', marginTop: '8px' }}>
                   <li>Laravel 프레임워크 기반 웹 인터페이스</li>
                   <li>사용자 입력을 받아 API 서버로 전달</li>
-                  <li>Redis 캐싱을 통한 성능 최적화</li>
+                  <li>Redis 캐싱을 통한 추론 결과 재사용</li>
                   <li>월세 예측 결과 표시</li>
                 </ul>
               </Typography>
@@ -222,17 +123,10 @@ function ProjectStructureSection() {
         </Box>
         
         {/* 백엔드 카드 */}
-        <Box sx={{ 
-          flex: 1, 
-          minWidth: 0,
-          display: 'flex'
-        }}>
-          <Card elevation={2} sx={{ 
-            width: '100%', 
-            borderLeft: '4px solid #3f51b5'
-          }}>
-            <CardContent>
-              <Typography variant="h6" color="secondary" gutterBottom>
+        <Box sx={{flex:1,minWidth:0,display:'flex'}}>
+          <Card sx={{width:'100%'}} className="project-panel">
+            <CardContent className="project-panel-content">
+              <Typography variant="h6" color="secondary" gutterBottom component="h3" className="project-subsection-heading">
                 <strong>Tornado [Python]</strong> (백엔드)
               </Typography>
               <Typography variant="body2" component="div">
@@ -253,40 +147,22 @@ function ProjectStructureSection() {
 
 function DataFlowSection() {
   return (
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="h5" 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1,
-          mb: 1 
-        }}
-      >
+    <Box sx={{mb:4}}>
+      <Typography variant="h5" sx={{display:'flex',alignItems:'center',gap:1,mb:1}} component="h2" className="project-section-heading">
         <DataObjectIcon color="success" /> 데이터 처리 흐름
       </Typography>
       
-      <Card 
-        elevation={2}
-        sx={{ 
-          borderRadius: 2,
-          background: 'linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%)'
-        }}
-      >
-        <CardContent>
-          <Grid container spacing={1} sx={{m: -1, mb: -2 }}>
-            <Grid item xs={12} sx={{ width: '100%' }}>
-              <Box sx={{ 
-                p: 1,
-                borderRadius: 2,
-                bgcolor: '#e3f2fd',
-                border: '1px solid #bbdefb'
-              }}>
+      <Card className="project-panel">
+        <CardContent className="project-panel-content">
+          <Box className="project-grid">
+            <Box className="project-grid-item">
+              <Box sx={{p:1}} className="project-note">
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Typography variant="subtitle1" fontWeight="bold">
                     1. 데이터 수집
                   </Typography>
                 </Stack>
-                <Typography variant="body2" sx={{ mt: 0, pl: 3 }}>
+                <Typography variant="body2" sx={{mt:0,pl:3}}>
                   - 일본 부동산 사이트에서 도쿄 23구 집 데이터 크롤링<br />
                   - 주소, 역까지 거리, 건축년도, 층수, 집 값, 화장실 분리 여부, 면적 데이터 수집<br />
                   - 수집 데이터를 house.csv 파일로 저장<br />
@@ -295,21 +171,16 @@ function DataFlowSection() {
                   </Typography>
                 </Typography>
               </Box>
-            </Grid>
+            </Box>
             
-            <Grid item xs={12} sx={{ width: '100%' }}>
-              <Box sx={{ 
-                p: 1,
-                borderRadius: 2,
-                bgcolor: '#fff8e1',
-                border: '1px solid #ffecb3'
-              }}>
+            <Box className="project-grid-item">
+              <Box sx={{p:1}} className="project-note">
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Typography variant="subtitle1" fontWeight="bold">
                     2. 모델 학습
                   </Typography>
                 </Stack>
-                <Typography variant="body2" sx={{ mt: 0, pl: 3 }}>
+                <Typography variant="body2" sx={{mt:0,pl:3}}>
                   - house.csv 데이터 로드 및 전처리<br />
                   - 주소를 더미변수로 변환하여 28개 특성으로 확장<br />
                   - TensorFlow를 사용한 3층 신경망 모델 구축 및 학습<br />
@@ -319,21 +190,16 @@ function DataFlowSection() {
                   </Typography>
                 </Typography>
               </Box>
-            </Grid>
+            </Box>
             
-            <Grid item xs={12} sx={{ width: '100%' }}>
-              <Box sx={{ 
-                p: 1, 
-                borderRadius: 2,
-                bgcolor: '#e8f5e9',
-                border: '1px solid #c8e6c9'
-              }}>
+            <Box className="project-grid-item">
+              <Box sx={{p:1}} className="project-note">
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Typography variant="subtitle1" fontWeight="bold">
                     3. 사용자 입력 처리 (프론트엔드)
                   </Typography>
                 </Stack>
-                <Typography variant="body2" sx={{ pl: 3 }}>
+                <Typography variant="body2" sx={{pl:3}}>
                   - public/js/app.js에서 사용자 입력 폼 처리<br />
                   - 입력값: 주소(address), 역까지 거리(dis_to_station), 건축년도(year_of_cons), 층수(floors), 면적(area)<br />
                   - AJAX를 통해 ServerController로 데이터 전송<br />
@@ -342,43 +208,33 @@ function DataFlowSection() {
                   </Typography>
                 </Typography>
               </Box>
-            </Grid>
+            </Box>
             
-            <Grid item xs={12} sx={{ width: '100%' }}>
-              <Box sx={{ 
-                p: 1, 
-                borderRadius: 2,
-                bgcolor: '#f3e5f5',
-                border: '1px solid #e1bee7'
-              }}>
+            <Box className="project-grid-item">
+              <Box sx={{p:1}} className="project-note">
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Typography variant="subtitle1" fontWeight="bold">
                     4. API 요청 처리
                   </Typography>
                 </Stack>
-                <Typography variant="body2" sx={{ pl: 3 }}>
-                  - ServerController.php에서 입력값 검증 후 백엔드 API 요청<br />
+                <Typography variant="body2" sx={{pl:3}}>
+                  - ServerController.php에서 요청값을 모아 백엔드 API에 전달<br />
                   - Redis 캐시 확인 후 없으면 API 호출하여 결과 획득<br />
                   <Typography variant="caption" color="textSecondary">
                     파일 경로: app/Http/Controllers/ServerController.php
                   </Typography>
                 </Typography>
               </Box>
-            </Grid>
+            </Box>
             
-            <Grid item xs={12} sx={{ width: '100%' }}>
-              <Box sx={{ 
-                p: 1, 
-                borderRadius: 2,
-                bgcolor: '#e8eaf6',
-                border: '1px solid #c5cae9'
-              }}>
+            <Box className="project-grid-item">
+              <Box sx={{p:1}} className="project-note">
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Typography variant="subtitle1" fontWeight="bold">
                     5. 예측 처리
                   </Typography>
                 </Stack>
-                <Typography variant="body2" sx={{ pl: 3 }}>
+                <Typography variant="body2" sx={{pl:3}}>
                   - Tornado 웹 서버에서 API 요청 수신<br />
                   - 입력 데이터 정규화<br />
                   - 학습된 신경망 모델 로드 및 예측 수행<br />
@@ -388,8 +244,8 @@ function DataFlowSection() {
                   </Typography>
                 </Typography>
               </Box>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
     </Box>
@@ -429,63 +285,34 @@ try { // 캐시에 있는지 확인
     saver.restore(sess, './learning_model/model/'+file + '.ckpt-0')`;
 
   return (
-    <Box sx={{ mb: 4 }}>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0 }}>
-        <Box
-          component="img"
-          src="/images/neural.png"
-          alt="Neural Network"
-          sx={{ 
-            width: 36, 
-            height: 36,
-            objectFit: 'contain'
-          }}
-        />
-        <Typography variant="h6">
+    <Box sx={{mb:4}}>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{mb:0}} className="project-heading-row">
+        <Box component="img" src="/images/neural.png" alt="Neural Network" sx={{width:36,height:36,objectFit:'contain'}} />
+        <Typography variant="h6" component="h2" className="project-section-heading">
           3 Layer Neural Network Code
         </Typography>
       </Stack>
 
-      <Box sx={{ mb: 1 }}>
-        <CodeAccordion 
-          title="훈련 모델 정의/학습 부분 - learning_model/neuralnet.py"
-          codeString={neuralnetCode}
-          language="python"
-        />
-        <CodeAccordion 
-          title="Tornado 에서 예측 시 사용하는 부분 - data_handler/house_handler.py"
-          codeString={handlerCode}
-          language="python"
-        />
+      <Box sx={{mb:1}}>
+        <CodeAccordion title="훈련 모델 정의/학습 부분 - learning_model/neuralnet.py" codeString={neuralnetCode} language="python" />
+        <CodeAccordion title="Tornado 에서 예측 시 사용하는 부분 - data_handler/house_handler.py" codeString={handlerCode} language="python" />
       </Box>
 
-      <Typography variant="h5" 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1,
-          mt: 2,
-          mb: 2
-        }}
-      >
+      <Typography variant="h5" sx={{display:'flex',alignItems:'center',gap:1,mt:2,mb:2}} component="h2" className="project-section-heading">
         <StorageIcon color="error" /> 캐시 최적화
       </Typography>
       
-      <Typography variant="body1" sx={{ mb: 1 }}>
-        Redis를 활용한 캐싱 전략으로 중복 API 호출을 줄이고 응답 속도를 향상시켰습니다. 
-        입력 파라미터의 해시값을 키로 사용하여 동일한 조건의 예측 결과를 효율적으로 재사용합니다.
+      <Typography variant="body1" sx={{mb:1}}>
+        Redis에서 입력 파라미터의 해시값으로 결과를 조회하고, 값이 없으면 Python API를 호출합니다.
+        동일 입력의 추론을 재사용하려는 구조이며 실제 응답 시간과 적중률의 전후 측정 결과는 남아 있지 않습니다.
       </Typography>
 
-      <Box sx={{ mb: 1 }}>
-        <CodeAccordion 
-          title="ServerController.php의 캐시 로직"
-          codeString={phpCode}
-          language="php"
-        />
+      <Box sx={{mb:1}}>
+        <CodeAccordion title="ServerController.php의 캐시 로직" codeString={phpCode} language="php" />
       </Box>
       
       <Typography variant="body2" color="textSecondary">
-        이 캐싱 방식으로 동일한 입력 파라미터에 대한 예측 결과를 캐싱함으로써 API 호출 횟수를 줄이고 응답 속도를 향상시켰습니다.
+        원본 미들웨어의 TTL은 500초입니다. 오류 응답의 캐시 방지와 모델 버전을 포함한 키 설계는 아래 개선 방향에 구분했습니다.
       </Typography>
     </Box>
   );
@@ -493,22 +320,17 @@ try { // 캐시에 있는지 확인
 
 function ServerStructureSection() {
   return (
-    <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-      <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+    <Box sx={{mb:{xs:2,sm:3}}}>
+      <Typography variant="h6" gutterBottom sx={{mt:3}} component="h2" className="project-section-heading">
         🖥️ 서버 구성도
       </Typography>
       
-      <Typography variant="body1" component="p" sx={{ mb: 1 }}>
+      <Typography variant="body1" component="p" sx={{mb:1}}>
         AWS EC2 위에서 Laravel이 메인 API 요청을 처리하고, 내부적으로는 Nginx를 통해 Python(Tornado) + Gunicorn 서버로 프록시됩니다.
         Redis는 캐시 저장소로 활용하며, Supervisord가 Gunicorn을 관리합니다.
       </Typography>
 
-      <ZoomableImageModal
-        imageSrc="/images/ml.png"
-        altText="머신러닝 서버 구성도"
-        caption="머신러닝 서버 구성도"
-        sx={{ border: '2px solid #ddd', borderRadius: 2, mb: 0 }}
-      />
+      <ZoomableImageModal imageSrc="/images/ml.png" altText="머신러닝 서버 구성도" caption="머신러닝 서버 구성도" sx={{mb:0}} />
     </Box>
   );
 }
@@ -516,9 +338,7 @@ function ServerStructureSection() {
 function ReferenceSection() {
   return (
     <Box>
-      <Reference
-        spaLinks={[]}
-        externalLinks={[
+      <Reference spaLinks={[]} externalLinks={[
           {
             prefix: '실제 프로젝트 페이지:',
             href: 'https://hkpark130.p-e.kr:8200',
@@ -535,8 +355,7 @@ function ReferenceSection() {
             href: 'https://github.com/hkpark130/Predict-Home-API',
             label: 'https://github.com/hkpark130/Predict-Home-API'
           }
-        ]}
-      />
+        ]} />
     </Box>
   );
 }

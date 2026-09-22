@@ -7,6 +7,9 @@ import {
   Typography, Link
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import CloseIcon from '@mui/icons-material/Close';
+import { IconButton } from '@mui/material';
+import '../blog/blog-support.css';
 
 export default function Login({ open, onClose, redirectTo = null }) {
   const [username, setUsername] = useState('');
@@ -94,9 +97,9 @@ export default function Login({ open, onClose, redirectTo = null }) {
       });
       
       // 회원가입 성공 후 로그인 모드로 전환
-      setSuccessMessage('회원가입이 성공적으로 완료되었습니다. 로그인해주세요.');
       setIsRegisterMode(false);
       resetForm();
+      setSuccessMessage('회원가입이 완료되었습니다. 로그인해 주세요.');
     } catch (err) {
       console.error('회원가입 실패:', err);
       if (err.response?.data?.message) {
@@ -118,15 +121,17 @@ export default function Login({ open, onClose, redirectTo = null }) {
   };
 
   return (
-    <Dialog open={open} onClose={loading ? null : handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>
+    <Dialog open={open} onClose={loading ? undefined : handleClose} maxWidth="xs" fullWidth aria-labelledby="account-dialog-title" className="account-dialog">
+      <DialogTitle id="account-dialog-title" className="account-title">
         {isRegisterMode ? '회원가입' : '로그인'}
+        <IconButton className="account-close" onClick={handleClose} disabled={loading} aria-label="로그인 창 닫기"><CloseIcon fontSize="small" /></IconButton>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent className="account-content">
+        <Typography className="account-description">{isRegisterMode ? '아이디와 비밀번호로 계정을 만듭니다.' : '계정으로 로그인해 주세요.'}</Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {successMessage && <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>}
         
-        <Box component="form" id="login-form" onSubmit={isRegisterMode ? handleRegister : handleLogin} sx={{ mt: 1 }}>
+        <Box component="form" id="login-form" className="account-form" onSubmit={isRegisterMode ? handleRegister : handleLogin}>
           <TextField
             margin="normal"
             required
@@ -134,6 +139,7 @@ export default function Login({ open, onClose, redirectTo = null }) {
             id="username"
             label="아이디"
             name="username"
+            autoComplete="username"
             autoFocus
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -147,6 +153,7 @@ export default function Login({ open, onClose, redirectTo = null }) {
             name="password"
             label="비밀번호"
             type="password"
+            autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -161,6 +168,7 @@ export default function Login({ open, onClose, redirectTo = null }) {
               name="confirmPassword"
               label="비밀번호 확인"
               type="password"
+              autoComplete="new-password"
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -169,33 +177,16 @@ export default function Login({ open, onClose, redirectTo = null }) {
           )}
         </Box>
       </DialogContent>
-      <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
-        <Box>
-          <Typography variant="body2">
-            <Link 
-              component="button"
-              variant="body2"
-              onClick={toggleMode}
-              underline="hover"
-            >
-              {isRegisterMode ? '로그인' : '회원가입'}
-            </Link>
-          </Typography>
-        </Box>
-        <Box>
-          <Button onClick={handleClose} disabled={loading} sx={{ mr: 1 }}>
-            취소
-          </Button>
-          <Button 
-            type="submit"
-            form="login-form"
-            variant="contained" 
-            disabled={loading}
-            startIcon={loading && <CircularProgress size={16} />}
-          >
-            {loading ? (isRegisterMode ? '처리 중...' : '로그인 중...') : (isRegisterMode ? '회원가입' : '로그인')}
-          </Button>
-        </Box>
+      <DialogActions className="account-actions">
+        <Button type="submit" form="login-form" variant="contained" fullWidth disabled={loading} startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}>
+          {loading ? (isRegisterMode ? '처리 중…' : '로그인 중…') : (isRegisterMode ? '회원가입' : '로그인')}
+        </Button>
+        <div className="account-footer">
+          <Link component="button" type="button" variant="body2" onClick={toggleMode} disabled={loading} underline="hover">
+            {isRegisterMode ? '로그인' : '회원가입'}
+          </Link>
+          <Button type="button" onClick={handleClose} disabled={loading}>취소</Button>
+        </div>
       </DialogActions>
     </Dialog>
   );

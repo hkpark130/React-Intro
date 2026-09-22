@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" viewBox="0 0 760 360" role="img" aria-labelledby="title desc">
+  <title id="title">Dijkstra 예제 1의 무방향 그래프</title>
+  <desc id="desc">정점 1에서 2까지 비용 5, 1에서 3까지 비용 4, 2에서 3까지 비용 1. 2와 3 사이의 중복 간선 비용 2는 제외한다. 시작점 1의 최단 거리는 0, 5, 4이다.</desc>
+  <rect width="760" height="360" rx="18" fill="#f5f7fb"/>
+  <g font-family="system-ui, sans-serif" fill="#14283f">
+    <text x="32" y="40" font-size="20" font-weight="700">무방향 그래프 · 시작 정점 1</text>
+    <g stroke="#61748a" stroke-width="4" fill="none"><path d="M160 160 L600 160 L380 280 Z"/></g>
+    <g font-size="22" text-anchor="middle"><rect x="352" y="142" width="56" height="34" rx="8" fill="#fff"/><text x="380" y="166">5</text><rect x="226" y="206" width="50" height="34" rx="8" fill="#fff"/><text x="251" y="231">4</text><rect x="484" y="206" width="50" height="34" rx="8" fill="#fff"/><text x="509" y="231">1</text></g>
+    <g text-anchor="middle" font-size="24" font-weight="700"><circle cx="160" cy="160" r="35" fill="#d9f0e9" stroke="#287961" stroke-width="3"/><text x="160" y="168">1</text><circle cx="600" cy="160" r="35" fill="#e5edfa" stroke="#5772a6" stroke-width="3"/><text x="600" y="168">2</text><circle cx="380" cy="280" r="35" fill="#e5edfa" stroke="#5772a6" stroke-width="3"/><text x="380" y="288">3</text></g>
+    <g font-size="17" text-anchor="middle"><text x="160" y="106">거리 0</text><text x="600" y="106">거리 5</text><text x="380" y="342">거리 4</text></g>
+    <text x="32" y="70" font-size="15" fill="#506078">중복 간선 2↔3: 비용 2와 1 중 1을 사용</text>
+  </g>
+</svg>

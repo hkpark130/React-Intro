@@ -1,0 +1,222 @@
+@font-face {
+  font-family: "Pretendard Variable";
+  font-style: normal;
+  font-weight: 45 920;
+  font-display: swap;
+  src: url("/fonts/PretendardVariable.woff2") format("woff2-variations");
+}
+
+html.blog-document {
+  height: auto;
+  min-height: 100%;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  background: #f6f8f7;
+}
+
+body.blog-document {
+  --canvas: #f6f8f7;
+  --surface: #fff;
+  --ink: #192d2e;
+  --muted: #5e716e;
+  --accent: #17685e;
+  --accent-strong: #105349;
+  --line: #dde5e2;
+  --soft: #eaf2ef;
+  height: auto;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  color: var(--ink);
+  background: var(--canvas);
+  font-family: "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body.blog-document #root {
+  height: auto;
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+body.blog-document #root .blog-application {
+  background: var(--canvas);
+}
+
+/* Body portals share the active blog's font and tokens. MUI owns their focus and scroll lock. */
+:where(body.blog-document) *,
+:where(body.blog-document) *::before,
+:where(body.blog-document) *::after {
+  box-sizing: border-box;
+}
+
+:where(body.blog-document) a {
+  color: inherit;
+}
+
+:where(body.blog-document) button,
+:where(body.blog-document) input,
+:where(body.blog-document) textarea,
+:where(body.blog-document) select {
+  font: inherit;
+}
+
+:where(body.blog-document) a,
+:where(body.blog-document) button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(body.blog-document) img,
+:where(body.blog-document) svg {
+  max-width: 100%;
+}
+
+:where(body.blog-document) ::selection {
+  color: #192d2e;
+  background: #d3e8df;
+}
+
+:where(body.blog-document) :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+:where(body.blog-document) .blog-application.MuiScopedCssBaseline-root {
+  container: blog / inline-size;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: calc(100vh - var(--portfolio-header-height, 64px));
+  width: 100%;
+  color: var(--ink);
+  font-family: "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+:where(body.blog-document) .blog-app-container {
+  width: min(1240px, calc(100% - 96px));
+  min-width: 0;
+  margin-inline: auto;
+}
+
+:where(body.blog-document) .blog-app-main {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  scroll-margin-top: calc(var(--portfolio-header-height, 64px) + 24px);
+}
+
+:where(body.blog-document) .blog-app-loading {
+  min-height: 50vh;
+  padding-block: 70px;
+  color: var(--muted);
+}
+
+/* Match the shared palette while preserving the renderer's reading layout. */
+:where(body.blog-document) .blog-application .blog-reader-content > .markdown-body > p:first-child {
+  color: #344d49;
+}
+
+:where(body.blog-document) .blog-application .markdown-body blockquote {
+  border-left-color: #abc8bc;
+  color: #34554c;
+}
+
+:where(body.blog-document) .blog-application .markdown-body code:not(pre code) {
+  color: #28594f;
+  background: var(--soft);
+}
+
+:where(body.blog-document) .blog-application .markdown-body .markdown-table-head,
+:where(body.blog-document) .blog-application .markdown-body .MuiAccordionSummary-root {
+  background: #edf3f0;
+}
+
+:where(body.blog-document) .blog-application .markdown-body .markdown-table-row:nth-of-type(even) {
+  background: #fafcfb;
+}
+
+:where(body.blog-document) .blog-application .markdown-body .MuiAlert-standardInfo {
+  color: #34554c;
+  background: var(--soft);
+}
+
+:where(body.blog-document) .blog-application .markdown-body .markdown-link {
+  text-decoration-color: #b7cfc5;
+}
+
+:where(body.blog-document) .blog-application .markdown-body .markdown-link:hover {
+  text-decoration-color: currentColor;
+}
+
+:where(body.blog-document) .blog-app-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+:where(body.blog-document) .blog-app-footer .blog-app-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  min-height: 98px;
+  padding-block: 25px;
+}
+
+:where(body.blog-document) .blog-app-footer p {
+  margin: 0;
+}
+
+:where(body.blog-document) .blog-app-footer nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+
+:where(body.blog-document) .blog-app-footer a {
+  text-decoration: none;
+}
+
+:where(body.blog-document) .blog-app-footer a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@container blog (max-width: 780px) {
+  :where(body.blog-document) .blog-app-container {
+    width: calc(100% - 40px);
+  }
+
+}
+
+@media (max-width: 600px) {
+  /* Override the original portfolio's global Container gutter only while a blog route is mounted. */
+  body.blog-document .MuiContainer-root {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+
+@container blog (max-width: 430px) {
+  :where(body.blog-document) .blog-app-footer .blog-app-container {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(body.blog-document) .blog-application * {
+    scroll-behavior: auto;
+  }
+}

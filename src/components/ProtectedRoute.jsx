@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { isAuthenticated } from '../api/auth';
+import { useAuth } from '../api/useAuth';
 import Login from './Login';
 
 export default function ProtectedRoute({ children }) {
@@ -8,16 +8,17 @@ export default function ProtectedRoute({ children }) {
   const [isAuth, setIsAuth] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const location = useLocation();
+  const currentUser = useAuth();
 
   useEffect(() => {
-    const auth = isAuthenticated();
+    const auth = currentUser !== null;
     setIsAuth(auth);
     setIsAuthChecked(true);
     
     if (!auth) {
       setShowLogin(true);
     }
-  }, []);
+  }, [currentUser]);
 
   if (!isAuthChecked) {
     return null; // 인증 확인 중

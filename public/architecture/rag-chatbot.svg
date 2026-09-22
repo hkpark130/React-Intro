@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 830" role="img" aria-labelledby="title desc">
+  <title id="title">블로그 자료 준비와 챗봇 질문 처리</title>
+  <desc id="desc">블로그 API 또는 content 파일 중 하나에서 본문을 읽어 prepare_portfolio.py로 정리하고 corpus.json을 만든다. build_index.py가 Ollama 임베딩을 만들어 SQLite에 저장한다. 질문이 들어오면 Python이 같은 모델로 질문을 변환하고 저장된 자료와 키워드·의미를 비교해 관련 글을 고른다. React에는 출처 링크를 안내하고, 선택적으로 소형 모델이 고른 본문 문구를 서버가 확인해 보여준다.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#52736c"/>
+    </marker>
+    <style>
+      text { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; fill: #213c37; }
+      .heading { font-size: 25px; font-weight: 700; }
+      .label { font-size: 22px; font-weight: 650; }
+      .body { font-size: 18px; }
+      .note { font-size: 17px; fill: #506963; }
+      .box { fill: #fff; stroke: #afc5be; stroke-width: 1.5; }
+      .flow { fill: none; stroke: #52736c; stroke-width: 2.2; marker-end: url(#arrow); }
+      .optional { stroke-dasharray: 7 5; }
+    </style>
+  </defs>
+  <rect width="1120" height="830" rx="14" fill="#f9fbfa"/>
+
+  <text x="40" y="51" class="heading">1. 글이 바뀌면 · 검색 자료 준비</text>
+  <rect class="box" x="40" y="110" width="260" height="114" rx="10"/>
+  <text x="170" y="147" class="label" text-anchor="middle">블로그 본문</text>
+  <text x="170" y="180" class="body" text-anchor="middle">로컬 API 또는 content 파일</text>
+  <text x="170" y="207" class="note" text-anchor="middle">두 입력 중 하나 선택</text>
+  <path class="flow" d="M300 167 H369"/>
+
+  <rect class="box" x="375" y="110" width="310" height="114" rx="10"/>
+  <text x="530" y="147" class="label" text-anchor="middle">본문 정리 · 나누기</text>
+  <text x="530" y="180" class="body" text-anchor="middle">prepare_portfolio.py</text>
+  <text x="530" y="207" class="note" text-anchor="middle">글 제목·ID도 함께 보관</text>
+  <path class="flow" d="M685 167 H784"/>
+
+  <rect x="790" y="110" width="290" height="114" rx="10" fill="#fff8e8" stroke="#c9b584" stroke-width="1.5"/>
+  <text x="935" y="147" class="label" text-anchor="middle">corpus.json</text>
+  <text x="935" y="180" class="body" text-anchor="middle">정리한 텍스트 조각</text>
+  <text x="935" y="207" class="note" text-anchor="middle">아직 벡터가 없는 자료</text>
+  <path class="flow" d="M935 224 V250 H530 V276"/>
+
+  <rect x="375" y="282" width="310" height="114" rx="10" fill="#eff5f2" stroke="#528a7b" stroke-width="1.5"/>
+  <text x="530" y="319" class="label" text-anchor="middle">Ollama로 벡터 만들기</text>
+  <text x="530" y="351" class="body" text-anchor="middle">build_index.py가 호출</text>
+  <text x="530" y="379" class="note" text-anchor="middle">embeddinggemma:300m · 768차원</text>
+  <path class="flow" d="M685 339 H784"/>
+  <rect x="790" y="282" width="290" height="114" rx="10" fill="#dceee6" stroke="#528a7b" stroke-width="1.5"/>
+  <text x="935" y="319" class="label" text-anchor="middle">SQLite 저장</text>
+  <text x="935" y="351" class="body" text-anchor="middle">blog.sqlite3</text>
+  <text x="935" y="379" class="note" text-anchor="middle">본문 + 벡터 + 글 정보</text>
+
+  <text x="40" y="465" class="heading">2. 질문이 오면 · 관련 글 찾기</text>
+  <path class="flow" d="M935 396 V460 H640 V499"/>
+  <text x="798" y="438" class="note">서버 시작 때 메모리로 읽기</text>
+  <rect class="box" x="40" y="519" width="260" height="96" rx="10"/>
+  <text x="170" y="557" class="label" text-anchor="middle">React 채팅 화면</text>
+  <text x="170" y="590" class="body" text-anchor="middle">사용자가 질문</text>
+  <path class="flow" d="M300 567 H369"/>
+
+  <rect x="375" y="505" width="310" height="126" rx="10" fill="#eff5f2" stroke="#528a7b" stroke-width="1.5"/>
+  <text x="530" y="543" class="label" text-anchor="middle">Python 검색 서버</text>
+  <text x="530" y="576" class="body" text-anchor="middle">질문도 같은 Ollama 모델로 변환</text>
+  <text x="530" y="607" class="body" text-anchor="middle">키워드와 의미로 글 찾기</text>
+  <path class="flow" d="M685 567 H784"/>
+  <rect x="790" y="505" width="290" height="126" rx="10" fill="#dceee6" stroke="#528a7b" stroke-width="1.5"/>
+  <text x="935" y="543" class="label" text-anchor="middle">채팅 화면에 안내</text>
+  <text x="935" y="576" class="body" text-anchor="middle">관련 글 최대 3개</text>
+  <text x="935" y="607" class="body" text-anchor="middle">본문 인용 · 출처 링크</text>
+
+  <path class="flow optional" d="M530 631 V670"/>
+  <rect class="box" x="375" y="676" width="310" height="95" rx="10"/>
+  <text x="530" y="714" class="label" text-anchor="middle">본문 발췌 선택 (선택적)</text>
+  <text x="530" y="747" class="body" text-anchor="middle">qwen2.5:0.5b</text>
+  <path class="flow optional" d="M685 723 H935 V637"/>
+  <text x="718" y="700" class="note">고른 문구를 서버가 확인</text>
+
+  <text x="40" y="807" class="note">점선: 소형 모델로 본문을 고르는 경우 · 선택하지 못하면 관련 글 링크만 안내</text>
+</svg>

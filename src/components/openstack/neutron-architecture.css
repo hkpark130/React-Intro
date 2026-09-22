@@ -1,0 +1,49 @@
+.neutron-architecture { min-width: 0; color: #192d2e; }
+.neutron-architecture * { box-sizing: border-box; }
+.neutron-architecture-title { margin: 0 0 10px; color: #192d2e; font-size: 20px; font-weight: 650; line-height: 1.6; word-break: keep-all; }
+.neutron-architecture-intro { margin: 0; max-width: 920px; font-size: 16px; line-height: 1.8; word-break: keep-all; }
+.neutron-architecture-snapshot { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 8px; margin: 14px 0; color: #5a6d69; font-size: 14px; line-height: 1.8; }
+.neutron-architecture-snapshot > span { margin-left: 10px; color: #17685e; font-weight: 600; }
+.neutron-architecture-legend { display: flex; flex-wrap: wrap; gap: 10px 24px; list-style: none; margin: 16px 0 8px; padding: 0; }
+.neutron-architecture-legend > li { display: flex; align-items: center; gap: 9px; color: #5a6d69; font-size: 13px; line-height: 1.7; }
+.neutron-legend-line { display: inline-block; width: 28px; height: 0; }
+.neutron-legend-control { border-top: 2px dashed #705394; }
+.neutron-legend-packet { border-top: 2px solid #087b75; }
+.neutron-legend-host { display: inline-block; width: 25px; height: 15px; border: 1px solid #94abc0; border-radius: 3px; background: #f6f9fc; }
+.neutron-architecture-scroll-hint { margin: 0 0 20px; color: #5a6d69; font-size: 13px; line-height: 1.8; word-break: keep-all; }
+.neutron-diagram { min-width: 0; max-width: 100%; margin: 0; container: neutron-diagram / inline-size; }
+.neutron-diagram + .neutron-diagram { margin-top: 28px; }
+.neutron-diagram-heading { margin-bottom: 10px; }
+.neutron-diagram-heading h4 { margin: 0; color: #192d2e; font-size: 18px; font-weight: 600; line-height: 1.6; word-break: keep-all; }
+.neutron-diagram-scroll { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden; border: 1px solid #dde5e2; border-radius: 5px; background: #fff; scrollbar-width: auto; overscroll-behavior-x: contain; }
+.neutron-diagram-scroll .zoomable-image-trigger:focus-visible { outline: 3px solid #17685e; outline-offset: -3px; }
+.neutron-diagram-scroll:focus-visible { outline: 3px solid #17685e; outline-offset: 3px; }
+.neutron-diagram figcaption { max-width: 1040px; margin-top: 10px; color: #5a6d69; font-size: 14px; line-height: 1.8; word-break: keep-all; }
+.neutron-architecture-reading { margin-top: 26px; padding-top: 20px; border-top: 1px solid #dde5e2; }
+.neutron-architecture-reading h4 { margin: 0 0 14px; font-size: 18px; line-height: 1.6; font-weight: 600; color: #192d2e; }
+.neutron-architecture-reading dl { margin: 0; }
+.neutron-architecture-reading dl > div { display: grid; grid-template-columns: 155px minmax(0, 1fr); gap: 18px; }
+.neutron-architecture-reading dl > div + div { margin-top: 14px; }
+.neutron-architecture-reading dt { color: #192d2e; font-size: 14px; font-weight: 600; line-height: 1.8; }
+.neutron-architecture-reading dd { margin: 0; color: #5a6d69; font-size: 14px; line-height: 1.8; word-break: keep-all; }
+.neutron-architecture-sources { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 20px; margin-top: 20px; padding-top: 14px; border-top: 1px solid #dde5e2; font-size: 13px; line-height: 1.8; }
+.neutron-architecture-sources > span { color: #5a6d69; }
+.neutron-architecture-sources > a { display: inline-flex; align-items: center; min-height: 38px; color: #17685e; text-decoration: underline; text-underline-offset: 3px; }
+.neutron-architecture-sources > a:focus-visible { outline: 3px solid #17685e; outline-offset: 3px; }
+
+@container neutron-diagram (max-width: 800px) {
+  .neutron-diagram-scroll .zoomable-image-trigger { min-width: 1100px; }
+}
+
+@media (max-width: 600px) {
+  .neutron-architecture-title { font-size: 19px; }
+  .neutron-architecture-intro { font-size: 16px; }
+  .neutron-architecture-snapshot > span { flex-basis: 100%; margin-left: 0; }
+  .neutron-architecture-legend { gap: 9px 17px; }
+  .neutron-diagram-heading h4 { font-size: 17px; }
+  .neutron-architecture-reading { margin-top: 24px; padding-top: 18px; }
+  .neutron-architecture-reading dl > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .neutron-architecture-reading dl > div + div { margin-top: 14px; }
+  .neutron-architecture-sources { gap: 0 17px; }
+  .neutron-architecture-sources > span { flex-basis: 100%; margin-bottom: 5px; }
+}

@@ -1,83 +1,212 @@
-name: Build and Deploy to EC2
+name: Build and release static portfolio artifact
 
 on:
   push:
     branches:
       - master
 
+permissions:
+  contents: read
+
+concurrency:
+  group: react-intro-production-release
+  cancel-in-progress: false
+
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    
+  build-upload-and-deploy:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      AWS_REGION: ap-northeast-2
+      RELEASE_ROOT: /home/ec2-user/portfolio-releases
+      CODEDEPLOY_ROOT: /home/ec2-user/portfolio-codedeploy
+      PIPELINE_NAME: react-intro-pipe
+      SOURCE_ACTION_NAME: Source
+
     steps:
-      - name: Checkout code
+      - name: Checkout the pinned source revision
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/notion-service/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-        env:
-          NODE_OPTIONS: '--max-old-space-size=4096'
-
-      - name: Setup SSH Key
+      - name: Build static artifact
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" | base64 -d > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          set -euo pipefail
+          npm ci
+          npm test
+          npm run lint
+          npm run build
+          test -s dist/index.html
 
-      - name: Configure AWS Credentials
+      - name: Install SSR production dependencies
+        working-directory: server/notion-service
+        run: |
+          set -euo pipefail
+          npm ci --omit=dev
+          npm test
+
+      - name: Create immutable release manifest
+        id: manifest
+        run: |
+          set -euo pipefail
+          artifact_dir="$RUNNER_TEMP/react-intro-release"
+          mkdir -p "$artifact_dir/dist" "$artifact_dir/ssr"
+          cp -a dist/. "$artifact_dir/dist/"
+          cp server/notion-service/package.json server/notion-service/package-lock.json "$artifact_dir/ssr/"
+          cp -a server/notion-service/src "$artifact_dir/ssr/src"
+          cp -a server/notion-service/node_modules "$artifact_dir/ssr/node_modules"
+          while IFS= read -r -d '' source_file; do
+            test -f "$source_file"
+            test ! -L "$source_file"
+            sha256sum "$source_file"
+          done < <(git ls-files -z | LC_ALL=C sort -z) > "$artifact_dir/source-files.sha256"
+          test -s "$artifact_dir/source-files.sha256"
+          source_tree_sha="$(sha256sum "$artifact_dir/source-files.sha256" | awk '{print $1}')"
+          (
+            cd "$artifact_dir/ssr"
+            LC_ALL=C find . -type f -print0 | LC_ALL=C sort -z | while IFS= read -r -d '' file; do
+              sha256sum "$file"
+            done
+          ) > "$artifact_dir/ssr-files.sha256"
+          test -s "$artifact_dir/ssr-files.sha256"
+          ssr_manifest_sha="$(sha256sum "$artifact_dir/ssr-files.sha256" | awk '{print $1}')"
+          (
+            cd "$artifact_dir/dist"
+            LC_ALL=C find . -type f -print0 | LC_ALL=C sort -z | while IFS= read -r -d '' file; do
+              sha256sum "$file"
+            done
+          ) > "$artifact_dir/dist-files.sha256"
+          test -s "$artifact_dir/dist-files.sha256"
+          manifest_sha="$(sha256sum "$artifact_dir/dist-files.sha256" | awk '{print $1}')"
+          file_count="$(wc -l < "$artifact_dir/dist-files.sha256" | tr -d '[:space:]')"
+          {
+            printf 'source_commit=%s\n' "$GITHUB_SHA"
+            printf 'source_tree_sha256=%s\n' "$source_tree_sha"
+            printf 'ssr_manifest_sha256=%s\n' "$ssr_manifest_sha"
+            printf 'dist_manifest_sha256=%s\n' "$manifest_sha"
+            printf 'file_count=%s\n' "$file_count"
+            printf 'require_portfolio_rag_health=1\n'
+          } > "$artifact_dir/release-manifest.env"
+          printf 'artifact_dir=%s\n' "$artifact_dir" >> "$GITHUB_OUTPUT"
+          printf 'manifest_sha=%s\n' "$manifest_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Get Runner IP and Open SSH Port
-        id: ip
+      - name: Resolve the sole production instance by tag
+        id: instance
         run: |
-          RUNNER_IP=$(curl -s https://checkip.amazonaws.com)
-          echo "runner_ip=$RUNNER_IP" >> $GITHUB_OUTPUT
-          
+          set -euo pipefail
+          mapfile -t instance_ids < <(aws ec2 describe-instances \
+            --filters 'Name=tag:name,Values=ec2-server-hkpark' 'Name=instance-state-name,Values=running' \
+            --query 'Reservations[].Instances[].InstanceId' --output text | tr '\t' '\n' | sed '/^$/d')
+          test "${#instance_ids[@]}" -eq 1
+          read -r host security_group_id < <(aws ec2 describe-instances --instance-ids "${instance_ids[0]}" \
+            --query 'Reservations[0].Instances[0].[PublicIpAddress,SecurityGroups[0].GroupId]' --output text)
+          test -n "$host"
+          test -n "$security_group_id"
+          printf '::add-mask::%s\n' "$host"
+          printf '::add-mask::%s\n' "$security_group_id"
+          printf 'host=%s\n' "$host" >> "$GITHUB_OUTPUT"
+          printf 'security_group_id=%s\n' "$security_group_id" >> "$GITHUB_OUTPUT"
+
+      - name: Create ephemeral SSH access for this runner
+        id: ssh_access
+        run: |
+          set -euo pipefail
+          runner_ip="$(curl --fail --silent --show-error https://checkip.amazonaws.com | tr -d '[:space:]')"
+          test -n "$runner_ip"
+          printf '::add-mask::%s\n' "$runner_ip"
           aws ec2 authorize-security-group-ingress \
-            --group-id ${{ secrets.EC2_SG_ID }} \
-            --protocol tcp \
-            --port 22 \
-            --cidr ${RUNNER_IP}/32 \
-            --tag-specifications 'ResourceType=security-group-rule,Tags=[{Key=Name,Value=github-actions-temp}]' || true
-          
-          echo "Opened port 22 for $RUNNER_IP"
-          sleep 5
+            --group-id '${{ steps.instance.outputs.security_group_id }}' \
+            --protocol tcp --port 22 --cidr "${runner_ip}/32" \
+            --tag-specifications "ResourceType=security-group-rule,Tags=[{Key=Name,Value=github-actions-${GITHUB_RUN_ID}}]" \
+            --query 'SecurityGroupRules[0].SecurityGroupRuleId' --output text > "$RUNNER_TEMP/portfolio-ssh-rule-id" 2> "$RUNNER_TEMP/portfolio-ssh-rule-error" || {
+              if ! grep -q InvalidPermission.Duplicate "$RUNNER_TEMP/portfolio-ssh-rule-error"; then
+                cat "$RUNNER_TEMP/portfolio-ssh-rule-error" >&2
+                exit 1
+              fi
+            }
+          if test -s "$RUNNER_TEMP/portfolio-ssh-rule-id"; then
+            printf 'rule_id=%s\n' "$(cat "$RUNNER_TEMP/portfolio-ssh-rule-id")" >> "$GITHUB_OUTPUT"
+          fi
+          printf 'runner_ip=%s\n' "$runner_ip" >> "$GITHUB_OUTPUT"
 
-      - name: Sync dist to EC2
+      - name: Install temporary SSH key
+        env:
+          EC2_HOST: ${{ steps.instance.outputs.host }}
         run: |
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" \
-            ./dist/ \
-            ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/react-dist/
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s' '${{ secrets.EC2_SSH_KEY }}' | base64 -d > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
-      - name: Close SSH Port
-        if: always()
+      - name: Upload or verify the immutable release
+        env:
+          EC2_HOST: ${{ steps.instance.outputs.host }}
+          ARTIFACT_DIR: ${{ steps.manifest.outputs.artifact_dir }}
+        run: |
+          set -euo pipefail
+          release_dir="${RELEASE_ROOT}/${GITHUB_SHA}"
+          incoming_dir="${RELEASE_ROOT}/.incoming-${GITHUB_SHA}-${GITHUB_RUN_ID}"
+          ssh_cmd=(ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes "ec2-user@${EC2_HOST}")
+          rsync_ssh='ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes'
+          "${ssh_cmd[@]}" "install -d -m 0755 '${RELEASE_ROOT}' '${CODEDEPLOY_ROOT}'"
+          if "${ssh_cmd[@]}" "test -f '${release_dir}/release-manifest.env'"; then
+            scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes "ec2-user@${EC2_HOST}:${release_dir}/release-manifest.env" "$RUNNER_TEMP/existing-release-manifest.env"
+            cmp --silent "$ARTIFACT_DIR/release-manifest.env" "$RUNNER_TEMP/existing-release-manifest.env"
+          else
+            "${ssh_cmd[@]}" "test ! -e '${release_dir}' && mkdir -m 0755 '${incoming_dir}'"
+            rsync -a --delete -e "$rsync_ssh" "$ARTIFACT_DIR/" "ec2-user@${EC2_HOST}:${incoming_dir}/"
+            "${ssh_cmd[@]}" "test ! -e '${release_dir}' && mv '${incoming_dir}' '${release_dir}'"
+          fi
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes "$ARTIFACT_DIR/release-manifest.env" "ec2-user@${EC2_HOST}:${CODEDEPLOY_ROOT}/.expected-release-${GITHUB_RUN_ID}.env"
+          "${ssh_cmd[@]}" "mv '${CODEDEPLOY_ROOT}/.expected-release-${GITHUB_RUN_ID}.env' '${CODEDEPLOY_ROOT}/expected-release.env'"
+
+      - name: Start CodePipeline with the exact source commit
+        run: |
+          set -euo pipefail
+          pipeline_execution_id="$(aws codepipeline start-pipeline-execution \
+            --name "$PIPELINE_NAME" \
+            --source-revisions "actionName=${SOURCE_ACTION_NAME},revisionType=COMMIT_ID,revisionValue=${GITHUB_SHA}" \
+            --query 'pipelineExecutionId' --output text)"
+          test -n "$pipeline_execution_id"
+          printf 'CodePipeline execution: `%s`\n' "$pipeline_execution_id" >> "$GITHUB_STEP_SUMMARY"
+          for attempt in $(seq 1 90); do
+            status="$(aws codepipeline get-pipeline-execution --pipeline-name "$PIPELINE_NAME" \
+              --pipeline-execution-id "$pipeline_execution_id" --query 'pipelineExecution.status' --output text)"
+            case "$status" in
+              Succeeded) exit 0 ;;
+              Failed|Stopped|Superseded|Cancelled) printf 'Pipeline ended: %s\n' "$status" >&2; exit 1 ;;
+            esac
+            sleep 10
+          done
+          printf 'Pipeline verification timed out\n' >&2
+          exit 1
+
+      - name: Close ephemeral SSH access
+        if: always() && steps.ssh_access.outputs.rule_id != ''
         run: |
           aws ec2 revoke-security-group-ingress \
-            --group-id ${{ secrets.EC2_SG_ID }} \
-            --protocol tcp \
-            --port 22 \
-            --cidr ${{ steps.ip.outputs.runner_ip }}/32 || true
-          echo "Closed port 22"
+            --group-id '${{ steps.instance.outputs.security_group_id }}' \
+            --security-group-rule-ids '${{ steps.ssh_access.outputs.rule_id }}'
 
-      - name: Cleanup SSH Key
+      - name: Remove temporary SSH key
         if: always()
         run: rm -f ~/.ssh/id_rsa
-
-      - name: Trigger CodePipeline
-        run: |
-          aws codepipeline start-pipeline-execution --name react-intro-pipe
-          echo "CodePipeline triggered successfully!"

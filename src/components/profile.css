@@ -1,0 +1,68 @@
+.profile-page { max-width: 1060px; margin-inline: auto; }
+.profile-page h1, .profile-page h2, .profile-page h3 { margin: 0; color: var(--ink); font-weight: 700; letter-spacing: -.035em; }
+.profile-page h2 { font-size: 24px; line-height: 1.4; }
+.profile-page h3 { font-size: 20px; line-height: 1.5; }
+.profile-hero { display: grid; grid-template-columns: minmax(0, 1fr) 285px; gap: 64px; align-items: center; padding: 8px 0 40px; }
+.profile-role { margin: 0 0 10px; color: var(--accent); font-size: 14px; font-weight: 600; }
+.profile-page h1 { font-size: clamp(36px, 4vw, 48px); line-height: 1.2; }
+.profile-introduction .support-lead { max-width: 610px; margin: 20px 0 0; color: var(--muted); font-size: 18px; line-height: 1.85; word-break: keep-all; overflow-wrap: anywhere; }
+.profile-work-link { display: inline-block; margin-top: 18px; font-size: 14px; font-weight: 600; }
+.profile-contact { display: flex; flex-direction: column; align-items: flex-start; padding: 8px 0 8px 28px; border-left: 1px solid var(--line); }
+.profile-contact h2 { font-size: 16px; }
+.profile-contact p { margin: 10px 0 18px; color: var(--muted); font-size: 14px; line-height: 1.75; }
+.profile-contact a { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; text-decoration: none; overflow-wrap: anywhere; }
+.profile-contact a:hover { color: var(--accent); text-decoration: underline; }
+.profile-socials { display: flex; gap: 22px; margin-top: 15px; }
+.profile-career { padding: 24px 0 30px; border-top: 1px solid var(--line); }
+.profile-career-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.profile-career h2 { font-size: 20px; }
+.profile-career-heading > p { margin: 0; color: var(--muted); font-size: 12px; }
+.profile-career ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 24px 0 0; padding: 0; list-style: none; }
+.profile-career li { position: relative; padding: 12px 0 0 16px; border-left: 2px solid var(--line); }
+.profile-career li:last-child { border-color: var(--accent); }
+.profile-career li > span { color: var(--muted); font-size: 13px; }
+.profile-career li h3 { margin-top: 5px; font-size: 17px; }
+.profile-experience, .profile-records { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 48px; padding: 32px 0; border-top: 1px solid var(--line); }
+.profile-page .support-section-heading p { margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+.profile-experience-list { min-width: 0; }
+.profile-experience-item { padding: 25px 0; border-bottom: 1px solid var(--line); }
+.profile-experience-item:first-child { padding-top: 0; }
+.profile-experience-item:last-child { border: 0; padding-bottom: 0; }
+.profile-experience-item > p { margin: 12px 0 0; color: var(--muted); font-size: 16px; line-height: 1.85; word-break: keep-all; overflow-wrap: anywhere; }
+.profile-experience-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; margin-top: 16px; }
+.profile-experience-meta ul { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; }
+.profile-experience-meta li { color: var(--muted); font-size: 13px; }
+.profile-experience-meta a { font-size: 13px; font-weight: 600; }
+.profile-credentials { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 24px; }
+.profile-credential { display: flex; align-items: flex-start; gap: 14px; min-width: 0; }
+.profile-credential-image { flex: 0 0 84px; min-width: 0; padding: 3px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
+.profile-credential-image:hover { border-color: var(--accent); }
+.profile-credential h3 { margin: 5px 0 7px; font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
+.profile-credential p, .profile-credential span { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.75; }
+.profile-credential a { display: inline-block; margin-top: 8px; font-size: 12px; }
+.profile-next { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px 0 0; border-top: 1px solid var(--line); }
+.profile-next h2 { font-size: 20px; }
+.profile-next p { margin: 10px 0 0; color: var(--muted); font-size: 15px; line-height: 1.8; }
+.profile-next > a { flex-shrink: 0; font-size: 14px; font-weight: 600; }
+
+@media (max-width: 900px) {
+  .profile-hero { grid-template-columns: minmax(0, 1fr) 240px; gap: 36px; }
+  .profile-experience, .profile-records { grid-template-columns: 150px minmax(0, 1fr); gap: 28px; }
+  .profile-credentials { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .profile-hero { grid-template-columns: 1fr; gap: 28px; padding-block: 0 28px; }
+  .profile-contact { padding: 20px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+  .profile-introduction .support-lead { font-size: 16px; }
+  .profile-career-heading { display: block; }
+  .profile-career-heading > p { margin-top: 7px; }
+  .profile-career ol { grid-template-columns: 1fr; gap: 0; }
+  .profile-career li { display: grid; grid-template-columns: 130px 1fr; align-items: baseline; gap: 12px; padding: 9px 0 9px 12px; }
+  .profile-career li > span { font-size: 12px; }
+  .profile-career li h3 { margin: 0; font-size: 15px; }
+  .profile-experience, .profile-records { grid-template-columns: 1fr; gap: 24px; padding-block: 28px; }
+  .profile-page .support-section-heading h2 { font-size: 22px; }
+  .profile-desktop-break { display: none; }
+  .profile-experience-item h3 { font-size: 18px; }
+  .profile-next { align-items: flex-start; flex-direction: column; gap: 16px; }
+}

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Fab,
@@ -15,84 +15,102 @@ import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
+import { Link as RouterLink } from 'react-router-dom';
 import { sendChatMessage } from '../api/api';
+import { projectNavigation } from '../layout/projectNavigation';
 
-// URL을 감지하여 클릭 가능한 링크로 변환
-const renderMessageWithLinks = (text) => {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = text.split(urlRegex);
-  
-  return parts.map((part, index) => {
-    if (part.match(urlRegex)) {
-      return (
-        <Link
-          key={index}
-          href={part}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{
-            color: '#667eea',
-            fontWeight: 500,
-            textDecoration: 'underline',
-            '&:hover': {
-              color: '#764ba2',
-            },
-          }}
-        >
-          {part}
-        </Link>
-      );
-    }
-    return part;
-  });
-};
+const MAX_QUESTION = 500;
+const MAX_MESSAGES = 40;
+const PAGE_LINKS = new Map([
+  ['/profile', '소개 페이지에서 자세히 보기'],
+  ...projectNavigation.map(project => [project.path, `${project.title || project.label} 프로젝트 보기`]),
+]);
+
+function pageLinks(links) {
+  if (!Array.isArray(links)) return [];
+  return [...new Set(links.map(link => link?.url))]
+    .filter(url => PAGE_LINKS.has(url)).slice(0, 3)
+    .map(url => ({ url, title: PAGE_LINKS.get(url) }));
+}
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       type: 'bot',
-      text: '안녕하세요! 포트폴리오에 대해 궁금한 점이 있으시면 물어보세요 😊',
+      text: '프로젝트나 궁금한 기술을 알려 주세요. 프로젝트 페이지와 관련 블로그 글을 안내합니다. 예: RAG 챗봇 링크 어딨어?',
     },
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const launcherRef = useRef(null);
+  const inputRef = useRef(null);
+  const requestRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isOpen) scrollToBottom();
+  }, [messages, isOpen]);
+
+  useEffect(() => {
+    const input = inputRef.current;
+    // 로그인 등 다른 모달이 가린 화면에서 답변 완료가 초점을 빼앗지 않게 한다.
+    if (isOpen && !input?.closest('[aria-hidden="true"], [inert]')) input?.focus();
+  }, [isOpen, isLoading]);
+
+  useEffect(() => () => requestRef.current?.abort(), []);
+
+  const closeChat = () => {
+    setIsOpen(false);
+    launcherRef.current?.focus();
+  };
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || requestRef.current) return;
 
     const userMessage = input.trim();
     setInput('');
-    setMessages((prev) => [...prev, { type: 'user', text: userMessage }]);
+    setMessages((prev) => [...prev, { type: 'user', text: userMessage }].slice(-MAX_MESSAGES));
     setIsLoading(true);
+    const controller = new AbortController();
+    requestRef.current = controller;
 
     try {
-      const response = await sendChatMessage(userMessage);
+      const response = await sendChatMessage(userMessage, { signal: controller.signal });
+      if (controller.signal.aborted) return;
+      if (typeof response.data?.answer !== 'string') throw new Error('Invalid chat response');
       setMessages((prev) => [
         ...prev,
-        { type: 'bot', text: response.data.answer },
-      ]);
+        { type: 'bot', text: response.data.answer, degraded: response.data.degraded,
+          pageLinks: pageLinks(response.data.links),
+          sources: (Array.isArray(response.data.sources) ? response.data.sources : [])
+            .filter(source => Number.isSafeInteger(source.post_id) && source.post_id > 0 && typeof source.title === 'string').slice(0, 3) },
+      ].slice(-MAX_MESSAGES));
     } catch (error) {
-      console.error('Chat error:', error);
+      if (controller.signal.aborted) return;
+      const message = error.response?.status === 404
+        ? '현재 연결된 환경에서는 챗봇을 사용할 수 없습니다.'
+        : error.response?.status === 429
+        ? '다른 질문을 처리 중입니다. 잠시 후 다시 시도해 주세요.'
+        : error.code === 'ECONNABORTED'
+        ? '응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.'
+        : '죄송합니다. 잠시 후 다시 시도해주세요.';
       setMessages((prev) => [
         ...prev,
-        { type: 'bot', text: '죄송합니다. 잠시 후 다시 시도해주세요.' },
-      ]);
+        { type: 'bot', text: message },
+      ].slice(-MAX_MESSAGES));
     } finally {
+      requestRef.current = null;
       setIsLoading(false);
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -103,40 +121,54 @@ export default function ChatWidget() {
     <>
       {/* 채팅 버튼 */}
       <Fab
-        onClick={() => setIsOpen(!isOpen)}
+        ref={launcherRef}
+        aria-label={isOpen ? 'AI 챗봇 닫기' : 'AI 챗봇 열기'}
+        aria-expanded={isOpen}
+        aria-controls="portfolio-chat"
+        onClick={() => isOpen ? closeChat() : setIsOpen(true)}
         sx={{
           position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 9999,
-          width: 60,
-          height: 60,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important',
-          boxShadow: '0 6px 25px rgba(102, 126, 234, 0.6) !important',
-          color: 'white !important',
+          bottom: 20,
+          right: 20,
+          zIndex: 1100,
+          width: 48,
+          height: 48,
+          bgcolor: 'primary.main',
+          boxShadow: '0 3px 12px #192d2e24',
+          color: 'white',
           '&:hover': {
-            background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%) !important',
-            transform: 'scale(1.1)',
-            boxShadow: '0 8px 30px rgba(102, 126, 234, 0.7) !important',
+            bgcolor: 'primary.dark',
+            boxShadow: '0 3px 12px #192d2e24',
           },
-          transition: 'all 0.3s ease-in-out',
         }}
       >
-        {isOpen ? <CloseIcon sx={{ fontSize: 28 }} /> : <ChatIcon sx={{ fontSize: 28 }} />}
+        {isOpen ? <CloseIcon sx={{ fontSize: 23 }} /> : <ChatIcon sx={{ fontSize: 23 }} />}
       </Fab>
 
       {/* 채팅창 */}
       <Fade in={isOpen}>
         <Paper
-          elevation={8}
+          id="portfolio-chat"
+          role="dialog"
+          aria-labelledby="portfolio-chat-title"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              closeChat();
+            }
+          }}
+          elevation={0}
           sx={{
             position: 'fixed',
-            bottom: 90,
-            right: 24,
-            width: { xs: 'calc(100vw - 48px)', sm: 360 },
+            bottom: 80,
+            right: 20,
+            width: { xs: 'calc(100vw - 40px)', sm: 360 },
             maxWidth: 360,
-            height: 480,
-            zIndex: 9998,
+            height: 'min(480px, calc(100dvh - 160px))',
+            zIndex: 1101,
+            border: '1px solid',
+            borderColor: 'divider',
+            boxShadow: '0 12px 48px #192d2e24',
             display: isOpen ? 'flex' : 'none',
             flexDirection: 'column',
             borderRadius: 3,
@@ -146,8 +178,10 @@ export default function ChatWidget() {
           {/* 헤더 */}
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
+              bgcolor: 'background.paper',
+              color: 'text.primary',
+              borderBottom: '1px solid',
+              borderColor: 'divider',
               p: 2,
               display: 'flex',
               alignItems: 'center',
@@ -155,13 +189,14 @@ export default function ChatWidget() {
             }}
           >
             <SmartToyIcon />
-            <Typography variant="h6" sx={{ fontWeight: 600, flexGrow: 1 }}>
-              AI 챗봇
+            <Typography id="portfolio-chat-title" variant="h6" sx={{ fontWeight: 600, flexGrow: 1 }}>
+              포트폴리오 챗봇
             </Typography>
             <IconButton
               size="small"
-              onClick={() => setIsOpen(false)}
-              sx={{ color: 'white' }}
+              onClick={closeChat}
+              aria-label="AI 챗봇 닫기"
+              sx={{ color: 'text.secondary', width: 40, height: 40 }}
             >
               <CloseIcon />
             </IconButton>
@@ -169,6 +204,9 @@ export default function ChatWidget() {
 
           {/* 메시지 영역 */}
           <Box
+            role="log"
+            aria-live="polite"
+            aria-busy={isLoading}
             sx={{
               flexGrow: 1,
               overflowY: 'auto',
@@ -176,7 +214,8 @@ export default function ChatWidget() {
               display: 'flex',
               flexDirection: 'column',
               gap: 1.5,
-              bgcolor: '#f8f9fa',
+              bgcolor: 'background.default',
+              minHeight: 0,
             }}
           >
             {messages.map((msg, idx) => (
@@ -195,7 +234,7 @@ export default function ChatWidget() {
                       width: 28,
                       height: 28,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      bgcolor: 'primary.main',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -213,14 +252,29 @@ export default function ChatWidget() {
                     borderRadius: msg.type === 'user' 
                       ? '16px 16px 4px 16px' 
                       : '16px 16px 16px 4px',
-                    bgcolor: msg.type === 'user' ? '#667eea' : 'white',
+                    bgcolor: msg.type === 'user' ? 'primary.main' : 'background.paper',
                     color: msg.type === 'user' ? 'white' : 'inherit',
                     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                   }}
                 >
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {msg.type === 'bot' ? renderMessageWithLinks(msg.text) : msg.text}
+                    {msg.text}
                   </Typography>
+                  {msg.sources?.length > 0 && <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
+                    {msg.sources.map(source => <Box component="li" key={source.post_id} sx={{ mt: 0.75 }}>
+                      <Link component={RouterLink} to={`/blog/${source.post_id}`} onClick={closeChat} sx={{ fontSize: '0.875rem' }}>
+                        {source.title}
+                      </Link>
+                    </Box>)}
+                  </Box>}
+                  {msg.pageLinks?.map(link => <Box key={link.url} sx={{ mt: 1 }}>
+                    <Link component={RouterLink} to={link.url} onClick={closeChat} sx={{ fontSize: '0.875rem' }}>
+                      {link.title}
+                    </Link>
+                  </Box>)}
+                  {msg.degraded && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                    의미 검색을 사용할 수 없어 입력한 키워드로 찾았습니다.
+                  </Typography>}
                 </Paper>
                 {msg.type === 'user' && (
                   <Box
@@ -247,7 +301,7 @@ export default function ChatWidget() {
                     width: 28,
                     height: 28,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    bgcolor: 'primary.main',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -264,7 +318,8 @@ export default function ChatWidget() {
                     boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                   }}
                 >
-                  <CircularProgress size={16} />
+                  <CircularProgress size={16} aria-label="관련 글 검색과 답변 준비 중" />
+                  <Typography variant="caption" sx={{ ml: 1 }}>관련 글을 찾아 답변을 준비하고 있습니다.</Typography>
                 </Paper>
               </Box>
             )}
@@ -284,13 +339,14 @@ export default function ChatWidget() {
             <TextField
               fullWidth
               size="small"
-              placeholder="메시지를 입력하세요..."
+              placeholder="찾고 싶은 글이나 문제 상황을 입력하세요"
               value={input}
+              inputRef={inputRef}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               disabled={isLoading}
-              inputProps={{ maxLength: 50 }}
-              helperText={input.length > 0 ? `${input.length}/50` : ''}
+              inputProps={{ maxLength: MAX_QUESTION, 'aria-label': '챗봇 메시지' }}
+              helperText={input.length > 0 ? `${input.length}/${MAX_QUESTION}` : ''}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 3,
@@ -303,7 +359,7 @@ export default function ChatWidget() {
                   fontSize: '0.7rem',
                   minHeight: '18px',
                   lineHeight: 1,
-                  color: input.length >= 40 ? '#f44336' : '#999',
+                  color: input.length >= MAX_QUESTION - 50 ? '#f44336' : '#999',
                 },
               }}
             />
@@ -319,17 +375,17 @@ export default function ChatWidget() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                bgcolor: 'primary.main',
                 color: 'white',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%)',
+                  bgcolor: 'primary.dark',
                 },
                 '&:disabled': {
                   bgcolor: '#e0e0e0',
                   color: '#999',
                 },
               }}
-              aria-label="send"
+              aria-label="메시지 전송"
             >
               <SendIcon sx={{ fontSize: 20 }} />
             </IconButton>
@@ -339,4 +395,3 @@ export default function ChatWidget() {
     </>
   );
 }
-

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^[A-Z_]", "argsIgnorePattern": "^_" }] */
+import React, { useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkToc from 'remark-toc';
@@ -7,19 +8,26 @@ import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
+import rehypeMarkdownPolicy from './rehypeMarkdownPolicy';
+import { sanitizeMarkdownUrl } from './urlPolicy';
 import ZoomableImageModal from '../section/ZoomableImageModal';
 import CodeAccordion from '../section/CodeAccordion';
 import Bookmark from './Bookmark';
 import AlertBlock from './AlertBlock';
 import { Box, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { prepareMarkdown, parseAttributes } from './prepareMarkdown';
+import { markdownColorStyle } from '../../../server/notion-service/src/markdown/colorPolicy.js';
 
 import './markdown-styles.css';
 
-// ===== 상수 =====
-const CUSTOM_TAGS = ['CodeAccordion', 'ZoomableImageModal', 'Bookmark', 'Alert', 'AlertBlock'];
-
 // ===== 유틸리티 함수 =====
+
+const BLOCK_TAGS = new Set(['p', 'div', 'pre', 'code', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+const REMARK_PLUGINS = [remarkBreaks, remarkToc, remarkGfm];
+// Only trusted highlighters and heading helpers run after author HTML is clean.
+const REHYPE_PLUGINS = [rehypeRaw, rehypeMarkdownPolicy, rehypeHighlight, rehypeSlug, rehypeAutolinkHeadings];
+const transformUrl = (url, name) => sanitizeMarkdownUrl(url, { kind: name === 'href' ? 'link' : 'media' }) || undefined;
 
 /** React 노드에서 순수 텍스트만 추출 */
 const toPlainText = (nodes) => {
@@ -29,9 +37,8 @@ const toPlainText = (nodes) => {
     if (Array.isArray(n)) return n.map(walk).join('');
     const { type, props } = n;
     const inner = walk(props?.children);
-    const blockTags = new Set(['p', 'div', 'pre', 'code', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
     if (type === 'br') return '\n';
-    if (typeof type === 'string' && blockTags.has(type)) {
+    if (typeof type === 'string' && BLOCK_TAGS.has(type)) {
       return type === 'li' ? `- ${inner}\n` : `${inner}\n`;
     }
     return inner;
@@ -49,107 +56,35 @@ const toBoolean = (value, defaultValue = false) => {
   return defaultValue;
 };
 
-/** HTML 속성 문자열을 파싱하여 객체로 변환 */
-const parseAttributes = (attrString) => {
-  const attrs = {};
-  if (!attrString) return attrs;
-  const regex = /(\w+)(?:=(?:"([^"]*)"|'([^']*)'|(\S+)))?/g;
-  let match;
-  while ((match = regex.exec(attrString)) !== null) {
-    attrs[match[1].toLowerCase()] = match[2] ?? match[3] ?? match[4] ?? true;
-  }
-  return attrs;
-};
-
-/** 커스텀 컴포넌트 태그를 추출하고 플레이스홀더로 교체 */
-const extractCustomComponents = (markdown) => {
-  if (!markdown || typeof markdown !== 'string') return { text: '', components: [] };
-  
-  const components = [];
-  let text = markdown;
-  
-  CUSTOM_TAGS.forEach(tagName => {
-    // 열림/닫힘 태그 처리
-    text = text.replace(
-      new RegExp(`<(${tagName})([^>]*)>([\\s\\S]*?)<\\/${tagName}>`, 'gi'),
-      (_, tag, attrs, inner) => {
-        const id = `__CUSTOM_COMPONENT_${components.length}__`;
-        components.push({ id, tagName: tag, attributes: attrs.trim(), content: inner });
-        return `\n\n<div data-custom-placeholder="${id}"></div>\n\n`;
-      }
-    );
-    // Self-closing 태그 처리
-    text = text.replace(
-      new RegExp(`<(${tagName})([^>]*?)\\s*/>`, 'gi'),
-      (_, tag, attrs) => {
-        const id = `__CUSTOM_COMPONENT_${components.length}__`;
-        components.push({ id, tagName: tag, attributes: attrs.trim(), content: '' });
-        return `\n\n<div data-custom-placeholder="${id}"></div>\n\n`;
-      }
-    );
-  });
-  
-  return { text, components };
-};
-
-/** 허용되지 않은 HTML 태그를 이스케이프 */
-const sanitizeUnknownTags = (markdown) => {
-  const allowedTags = `custom|section|p|div|span|h[1-6]|a|ul|ol|li|pre|code|em|strong|br|hr|blockquote|table|thead|tbody|tr|th|td|img|figure|figcaption|details|summary|video|source|u|small|mark|b`;
-  return markdown.replace(
-    new RegExp(`<(?!\\/?(?:${allowedTags})\\b)([a-zA-Z][\\w\\d-]*)([^>]*)>`, 'g'),
-    match => match.replace(/</g, "&lt;").replace(/>/g, "&gt;")
-  );
-};
-
-/** 마크다운 전처리 - <b> 태그 공백 처리 */
-const preprocessMarkdown = (content) => {
-  if (!content || typeof content !== 'string') return '';
-  return content
-    .replace(/(<b>)([^<]*?)(\s+)([^<]*?)(<\/b>)/g, '$1$2&nbsp;$4$5')
-    .replace(/(\s+)(<b>)/g, '$1$2')
-    .replace(/(<\/b>)(\s+)/g, '$1$2');
-};
-
 // ===== 공통 스타일 상수 =====
-const LIST_STYLE = { paddingLeft: '20px', paddingTop: 0, paddingBottom: 0, lineHeight: '0.3', listStylePosition: 'outside' };
-const LIST_ITEM_STYLE = { marginTop: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0, lineHeight: '1.3' };
-const CODE_BLOCK_STYLE = { marginTop: 0, marginBottom: 0, backgroundColor: 'rgb(224, 224, 224)', padding: '10px', borderRadius: '4px', overflowX: 'auto' };
+const LIST_STYLE = { paddingLeft: '1.6em', margin: '0.8em 0', lineHeight: 'inherit', listStylePosition: 'outside' };
+const LIST_ITEM_STYLE = { margin: '0.25em 0', lineHeight: 'inherit' };
+const CODE_BLOCK_STYLE = { margin: '1.25em 0', backgroundColor: '#f5f6f8', padding: '16px', borderRadius: '6px', overflowX: 'auto' };
 
 
 // ===== 메인 컴포넌트 =====
 export default function MarkdownRenderer({ content }) {
-  const [processedContent, setProcessedContent] = useState('');
-  const [extractedComponents, setExtractedComponents] = useState([]);
-  const [error, setError] = useState(null);
-  
-  // 컨텐츠 처리
-  useEffect(() => {
+  const { text: processedContent, components: extractedComponents, error } = useMemo(() => {
     try {
-      const processed = preprocessMarkdown(content || '');
-      const { text, components } = extractCustomComponents(processed);
-      const safeContent = sanitizeUnknownTags(text);
-      
-      setProcessedContent(safeContent);
-      setExtractedComponents(components);
-      setError(null);
+      return prepareMarkdown(content);
     } catch (err) {
       console.error('렌더링 처리 오류:', err);
-      setError('렌더링 중 오류가 발생했습니다.');
-      setProcessedContent(String(content || ''));
-      setExtractedComponents([]);
+      return { text: '', components: [], error: '렌더링 중 오류가 발생했습니다.' };
     }
   }, [content]);
+  const componentLookup = useMemo(() => new Map(extractedComponents.map(component => [
+    component.id, { ...component, attrs: parseAttributes(component.attributes) },
+  ])), [extractedComponents]);
 
   // 추출된 컴포넌트를 실제 React 컴포넌트로 렌더링
   const renderExtractedComponent = useCallback((componentData) => {
     if (!componentData) return null;
     
-    const { tagName, attributes, content: innerContent } = componentData;
-    const attrs = parseAttributes(attributes);
-    const normalizedTag = tagName.toLowerCase();
-    
-    const componentMap = {
-      codeaccordion: () => (
+    const { tagName, attrs, content: innerContent } = componentData;
+    switch (tagName.toLowerCase()) {
+      case 'inlinecode': return <code>{innerContent}</code>;
+      case 'literalcode': return <pre className="markdown-code-block" style={CODE_BLOCK_STYLE}><code>{innerContent}</code></pre>;
+      case 'codeaccordion': return (
         <CodeAccordion
           codeString={innerContent.replace(/^\n+|\n+$/g, '')}
           title={attrs.title}
@@ -158,33 +93,36 @@ export default function MarkdownRenderer({ content }) {
           wrapLines={toBoolean(attrs.wraplines ?? attrs.wrapLines, true)}
           defaultExpanded={toBoolean(attrs.defaultexpanded ?? attrs.defaultExpanded, false)}
         />
-      ),
-      zoomableimagemodal: () => (
-        <ZoomableImageModal
-          imageSrc={attrs.src || ''}
-          altText={attrs.alt || ''}
-          caption={attrs.caption || ''}
-        />
-      ),
-      bookmark: () => (
+      );
+      case 'zoomableimagemodal': {
+        const src = sanitizeMarkdownUrl(attrs.src, { kind: 'media' });
+        if (!src) return <figure><span>{attrs.alt || ''}</span>{attrs.caption && <figcaption>{attrs.caption}</figcaption>}</figure>;
+        return (
+          <ZoomableImageModal
+            imageSrc={src}
+            altText={attrs.alt || ''}
+            caption={attrs.caption || ''}
+          />
+        );
+      }
+      case 'bookmark': return (
         <Bookmark
-          url={attrs.url || ''}
+          url={sanitizeMarkdownUrl(attrs.url)}
           title={attrs.title || ''}
           description={attrs.description || ''}
-          imageUrl={attrs.imageurl || attrs.imageUrl || ''}
+          imageUrl={sanitizeMarkdownUrl(attrs.imageurl, { kind: 'media' })}
         />
-      ),
-      alert: () => <AlertBlock severity={attrs.severity || 'info'}>{innerContent}</AlertBlock>,
-      alertblock: () => <AlertBlock severity={attrs.severity || 'info'}>{innerContent}</AlertBlock>
-    };
-    
-    return componentMap[normalizedTag]?.() ?? null;
+      );
+      case 'alert':
+      case 'alertblock': return <AlertBlock severity={attrs.severity || 'info'}><MarkdownRenderer content={innerContent} /></AlertBlock>;
+      default: return null;
+    }
   }, []);
 
   // ReactMarkdown components 객체 - useMemo로 최적화
   const components = useMemo(() => ({
     // Summary - MUI disclosure icon 삽입
-    summary: ({ children, ...props }) => (
+    summary: ({ children, node: _node, ...props }) => (
       <summary {...props}>
         <PlayArrowIcon className="mui-disclosure-icon" fontSize="medium" />
         {children}
@@ -192,62 +130,66 @@ export default function MarkdownRenderer({ content }) {
     ),
     
     // 링크 - [bookmark](url) 패턴 지원
-    a: ({ href, children, ...props }) => {
+    a: ({ href, children, node: _node, ...props }) => {
+      const safeHref = sanitizeMarkdownUrl(href);
       try {
         const text = (toPlainText(children) || '').trim().toLowerCase();
-        if (text === 'bookmark' && href) {
-          return <Bookmark url={href} />;
+        if (text === 'bookmark' && safeHref) {
+          return <Bookmark url={safeHref} />;
         }
       } catch { /* 파싱 실패 무시 */ }
-      return <a href={href} target="_blank" rel="noopener noreferrer" className="markdown-link" {...props}>{children}</a>;
+      const external = /^https?:\/\//i.test(safeHref);
+      return <a {...props} href={safeHref || undefined} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined} className="markdown-link">{children}</a>;
     },
 
     // 커스텀 컴포넌트 플레이스홀더 처리
-    div: ({ children, ...props }) => {
-      const placeholderId = props['data-custom-placeholder'];
-      if (placeholderId) {
-        const componentData = extractedComponents.find(c => c.id === placeholderId);
-        if (componentData) return renderExtractedComponent(componentData);
-      }
-      return <div {...props}>{children}</div>;
+    div: ({ children, node: _node, 'data-custom-placeholder': placeholderId, ...props }) => {
+      const componentData = componentLookup.get(placeholderId);
+      return componentData ? renderExtractedComponent(componentData) : <div {...props}>{children}</div>;
+    },
+    span: ({ children, node: _node, 'data-custom-placeholder': placeholderId, 'data-text-color': textColor, 'data-background-color': backgroundColor, ...props }) => {
+      const componentData = componentLookup.get(placeholderId);
+      if (componentData) return renderExtractedComponent(componentData);
+      const style = markdownColorStyle(textColor, backgroundColor);
+      return <span {...props} data-text-color={textColor} data-background-color={backgroundColor} style={style}>{children}</span>;
     },
 
     // 테이블 컴포넌트
-    table: ({ children, ...props }) => (
-      <TableContainer>
+    table: ({ children, node: _node, ...props }) => (
+      <TableContainer className="markdown-table-container" tabIndex={0}>
         <Table className="markdown-table" sx={{ minWidth: 500, width: 'auto' }} {...props}>{children}</Table>
       </TableContainer>
     ),
-    thead: ({ children }) => <TableHead className="markdown-table-head">{children}</TableHead>,
-    tbody: ({ children }) => <TableBody>{children}</TableBody>,
-    tr: ({ children }) => <TableRow className="markdown-table-row">{children}</TableRow>,
-    th: ({ children }) => <TableCell className="markdown-table-header" sx={{ fontWeight: 'bold' }}>{children}</TableCell>,
-    td: ({ children }) => <TableCell className="markdown-table-cell">{children}</TableCell>,
+    thead: ({ children, node: _node, ...props }) => <TableHead {...props} className="markdown-table-head">{children}</TableHead>,
+    tbody: ({ children, node: _node, ...props }) => <TableBody {...props}>{children}</TableBody>,
+    tr: ({ children, node: _node, ...props }) => <TableRow {...props} className="markdown-table-row">{children}</TableRow>,
+    th: ({ children, node: _node, align, style, ...props }) => <TableCell {...props} className="markdown-table-header" sx={{ fontWeight: 'bold' }} style={{ textAlign: style?.textAlign || align }}>{children}</TableCell>,
+    td: ({ children, node: _node, align, style, ...props }) => <TableCell {...props} className="markdown-table-cell" style={{ textAlign: style?.textAlign || align }}>{children}</TableCell>,
     
     // 코드 블록
-    pre: ({ children, ...props }) => (
+    pre: ({ children, node: _node, ...props }) => (
       <pre className="markdown-code-block" style={CODE_BLOCK_STYLE} {...props}>{children}</pre>
     ),
     
     // 리스트 - 공통 스타일 사용
-    ul: ({ children }) => <ul style={LIST_STYLE}>{children}</ul>,
-    ol: ({ children }) => <ol style={LIST_STYLE}>{children}</ol>,
-    li: ({ children }) => <li style={LIST_ITEM_STYLE}>{children}</li>,
+    ul: ({ children, node: _node, ...props }) => <ul {...props} style={LIST_STYLE}>{children}</ul>,
+    ol: ({ children, node: _node, ...props }) => <ol {...props} style={LIST_STYLE}>{children}</ol>,
+    li: ({ children, node: _node, ...props }) => <li {...props} style={LIST_ITEM_STYLE}>{children}</li>,
     
     // 인라인 스타일 요소
-    u: ({ children }) => <span style={{ textDecoration: 'underline' }}>{children}</span>,
-    b: ({ children }) => <span style={{ fontWeight: 'bold', whiteSpace: 'pre-wrap' }}>{children}</span>,
-    mark: ({ children }) => <span style={{ backgroundColor: '#ffff00', padding: '0.1em 0.2em', borderRadius: '0.2em' }}>{children}</span>,
-    small: ({ children }) => <span style={{ fontSize: '0.8em' }}>{children}</span>,
+    u: ({ children, node: _node, ...props }) => <span {...props} style={{ textDecoration: 'underline' }}>{children}</span>,
+    b: ({ children, node: _node, ...props }) => <span {...props} style={{ fontWeight: 'bold', whiteSpace: 'pre-wrap' }}>{children}</span>,
+    mark: ({ children, node: _node, ...props }) => <span {...props} style={{ backgroundColor: '#ffff00', padding: '0.1em 0.2em', borderRadius: '0.2em' }}>{children}</span>,
+    small: ({ children, node: _node, ...props }) => <span {...props} style={{ fontSize: '0.8em' }}>{children}</span>,
 
     // 비디오 요소
-    video: ({ children, ...props }) => (
-      <Box sx={{ mb: 1 }}>
+    video: ({ children, node: _node, ...props }) => (
+      <Box component="span" sx={{ display: 'block', mb: 1 }}>
         <video style={{ height: 'auto', borderRadius: '4px' }} {...props}>{children}</video>
       </Box>
     ),
-    source: (props) => <source {...props} />,
-  }), [extractedComponents, renderExtractedComponent]);
+    source: ({ node: _node, ...props }) => <source {...props} />,
+  }), [componentLookup, renderExtractedComponent]);
 
   // 에러 표시
   if (error) {
@@ -255,11 +197,12 @@ export default function MarkdownRenderer({ content }) {
   }
 
   return (
-    <Box sx={{ wordBreak: 'break-word', '& .markdown-body': { fontFamily: 'inherit' } }} className="markdown-body">
+    <Box className="markdown-body">
       <ReactMarkdown
-        remarkPlugins={[remarkBreaks, remarkToc, remarkGfm]}
-        rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeSlug, rehypeAutolinkHeadings]}
+        remarkPlugins={REMARK_PLUGINS}
+        rehypePlugins={REHYPE_PLUGINS}
         components={components}
+        urlTransform={transformUrl}
         skipHtml={false}
       >
         {processedContent}

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// const API_BASE = 'http://backend-spring-app:8100';
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const editorial = import.meta.env.MODE === 'editorial';
+const API_BASE = editorial ? '' : import.meta.env.VITE_API_URL || '';
 
 export const api = axios.create({
     baseURL: `${API_BASE}/api`,
@@ -11,29 +11,20 @@ export const api = axios.create({
 // Notion SSR API uses separate prefix (/notion) proxied by Nginx/Vite directly to SSR service
 export const notionApi = axios.create({
   baseURL: '',
-  withCredentials: true
+  withCredentials: true,
+  timeout: 45000,
 });
 
-// Allow overriding Notion API key per user via localStorage
+// Remove only the legacy Notion integration secret; blog login storage is separate.
 const NOTION_KEY_STORAGE = 'notion.apiKey';
-export function setNotionApiKey(key) {
-  if (key && typeof key === 'string') {
-    localStorage.setItem(NOTION_KEY_STORAGE, key);
-  } else {
-    localStorage.removeItem(NOTION_KEY_STORAGE);
-  }
-}
-export function getNotionApiKey() {
-  return localStorage.getItem(NOTION_KEY_STORAGE) || '';
-}
+try { localStorage.removeItem(NOTION_KEY_STORAGE); } catch { /* Storage may be disabled. */ }
 
 notionApi.interceptors.request.use(config => {
-  const key = getNotionApiKey();
-  if (key) {
-    config.headers['x-notion-api-key'] = key;
-  } else {
-    delete config.headers['x-notion-api-key'];
-  }
+  if (editorial) throw new Error('로컬 편집 모드에서는 Notion 외부 조회를 사용하지 않습니다.');
+  const token = localStorage.getItem('accessToken');
+  if (!token) throw new Error('블로그에 로그인한 뒤 Notion을 가져올 수 있습니다.');
+  config.headers.Authorization = `Bearer ${token}`;
+  delete config.headers['x-notion-api-key'];
   return config;
 });
 
@@ -47,6 +38,28 @@ api.interceptors.request.use(config => {
     }
     return config;
 }, error => Promise.reject(error));
+
+// access token은 30분이라 긴 글을 쓰는 동안 만료될 수 있다. 저장 요청이 401로 끝나면
+// refresh 쿠키로 한 번 갱신한 뒤 같은 요청을 다시 보내, 작성 중인 내용을 지키게 한다.
+const REFRESH_PATH = '/users/refresh';
+
+api.interceptors.response.use(response => response, async error => {
+  const request = error?.config;
+  const unauthorized = error?.response?.status === 401;
+  if (!unauthorized || !request || request._retriedAfterRefresh || request.url === REFRESH_PATH) {
+    return Promise.reject(error);
+  }
+
+  const { refreshAccessToken } = await import('./auth');
+  try {
+    await refreshAccessToken();
+  } catch {
+    return Promise.reject(error);
+  }
+
+  request._retriedAfterRefresh = true;
+  return api.request(request);
+});
 
 // 회원가입 함수 추가
 export const register = async (userData) => {
@@ -104,8 +117,9 @@ export const createCategory = categoryData => api.post('/categories', categoryDa
 export const deleteCategory = id => api.delete(`/categories/${id}`);
 export const updateCategory = (id, categoryData) => api.put(`/categories/${id}`, categoryData);
 
-export const notionConvert = (data) => notionApi.post('/notion/convert', data);
+export const notionConvert = (data, options = {}) => notionApi.post('/notion/convert', data, options);
 export const getNotionPageMeta = (pageId) => notionApi.get(`/notion/page/${pageId}`);
 
-// Chat API - AI 어시스턴트
-export const sendChatMessage = (question) => api.post('/chat', { question });
+// Chat stays on this origin and does not use blog tokens or its refresh interceptor.
+export const chatApi = axios.create({ baseURL: '/api', timeout: 65000, withCredentials: false });
+export const sendChatMessage = (question, options = {}) => chatApi.post('/chat', { question }, options);

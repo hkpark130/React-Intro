@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="370" viewBox="0 0 920 370" role="img" aria-labelledby="title desc">
+  <title id="title">허브와 full-duplex 스위치의 충돌 범위 비교</title>
+  <desc id="desc">왼쪽의 세 호스트는 허브에 연결되어 하나의 half-duplex 매체를 공유한다. 오른쪽의 세 호스트는 스위치의 독립 full-duplex 링크에 연결되어 정상 동작 중 충돌이 없다.</desc>
+  <rect width="920" height="370" rx="18" fill="#f5f7fb"/>
+  <g font-family="system-ui, sans-serif" fill="#14283f" text-anchor="middle">
+    <rect x="24" y="72" width="420" height="242" rx="16" fill="#fff1df" stroke="#ba8040" stroke-dasharray="7 5" stroke-width="2"/>
+    <text x="234" y="40" font-size="21" font-weight="700">허브 · Half-duplex</text>
+    <text x="686" y="40" font-size="21" font-weight="700">스위치 · Full-duplex</text>
+    <g stroke="#b7864e" stroke-width="4" fill="none"><path d="M124 244 L234 158 L344 244 M234 158 V268"/></g>
+    <g stroke="#287961" stroke-width="4" fill="none"><path d="M576 244 L686 158 L796 244 M686 158 V268"/></g>
+    <g font-size="18"><rect x="173" y="113" width="122" height="58" rx="9" fill="#fff" stroke="#ba8040" stroke-width="2"/><text x="234" y="149">Hub</text><rect x="625" y="113" width="122" height="58" rx="9" fill="#e1f1eb" stroke="#287961" stroke-width="2"/><text x="686" y="149">Switch</text></g>
+    <g fill="#fff" stroke="#75879b" stroke-width="2"><rect x="82" y="244" width="84" height="46" rx="8"/><rect x="192" y="268" width="84" height="36" rx="8"/><rect x="302" y="244" width="84" height="46" rx="8"/><rect x="534" y="244" width="84" height="46" rx="8"/><rect x="644" y="268" width="84" height="36" rx="8"/><rect x="754" y="244" width="84" height="46" rx="8"/></g>
+    <g font-size="17"><text x="124" y="273">Host A</text><text x="234" y="292">Host B</text><text x="344" y="273">Host C</text><text x="576" y="273">Host A</text><text x="686" y="292">Host B</text><text x="796" y="273">Host C</text></g>
+    <text x="234" y="97" font-size="16" fill="#885a28">하나의 공유 매체 · 동시 송신 시 충돌 가능</text>
+    <text x="686" y="97" font-size="16" fill="#287961">호스트마다 독립 링크 · 양방향 동시 송수신</text>
+    <text x="234" y="344" font-size="16">점선 안이 하나의 충돌 가능 범위</text>
+    <text x="686" y="344" font-size="16">정상 full-duplex 링크는 충돌 검출 미사용</text>
+  </g>
+</svg>

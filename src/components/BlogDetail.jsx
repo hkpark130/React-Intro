@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Typography, Container, Paper, Box, Button, Stack, Divider, 
-  TextField, CircularProgress, Chip, Avatar, IconButton, 
+  Typography, Paper, Box, Button, Stack,
+  TextField, CircularProgress, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions, Alert,
   Pagination, FormControl, InputLabel, Select, MenuItem 
 } from '@mui/material';
-import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -15,9 +14,11 @@ import {
   updateGuestComment, updateUserComment, deleteGuestComment, deleteUserComment,
   fetchCategories
 } from '../api/api';
-import { isAuthenticated, getCurrentUser } from '../api/auth';
+import { useAuth } from '../api/useAuth';
 import Login from './Login';
-import MarkdownRenderer from './markdown/MarkdownRenderer';
+import BlogReader from './BlogReader';
+import './blog.css';
+import { linkifyComment } from './commentLinks';
 
 export default function BlogDetail() {
   const { id } = useParams();
@@ -28,6 +29,9 @@ export default function BlogDetail() {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [commentsError, setCommentsError] = useState(null);
+  const requestVersion = useRef(0);
+  const activePostId = useRef(null);
   const [newComment, setNewComment] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editedPost, setEditedPost] = useState({ title: '', content: '', categoryId: '' });
@@ -51,15 +55,17 @@ export default function BlogDetail() {
   const [commentsPerPage] = useState(5); // 페이지당 표시할 댓글 수
   
   // 현재 로그인한 사용자 정보
-  const currentUser = getCurrentUser();
-  
-  // 인증 상태 확인 함수
-  const isAuth = () => {
-    return isAuthenticated();
-  };
+  const currentUser = useAuth();
 
   useEffect(() => {
+    activePostId.current = id;
+    setPost(null);
+    setComments([]);
+    setCommentPage(1);
     loadPostDetails();
+    return () => {
+      activePostId.current = null;
+    };
   }, [id]);
   
   // 카테고리 목록 로드
@@ -78,27 +84,43 @@ export default function BlogDetail() {
   
   // 게시글 및 댓글 불러오기
   const loadPostDetails = async () => {
+    if (activePostId.current !== id) return [];
+    const version = ++requestVersion.current;
+    const isCurrent = () => version === requestVersion.current && activePostId.current === id;
+    setLoading(true);
+    setError(null);
+    setCommentsError(null);
     try {
-      setLoading(true);
       const postResponse = await fetchPost(id);
+      if (!isCurrent()) return [];
       setPost(postResponse.data);
-      
-      // 댓글 불러오기
-      const commentsResponse = await fetchComments(id);
-      const commentsData = commentsResponse.data.comments || [];
-      
-      setComments(commentsData);
-      // 댓글 개수가 변경되었을 때 마지막 페이지로 이동 여부 결정
-      const totalPages = Math.ceil(commentsData.length / commentsPerPage);
-      if (commentPage > totalPages && totalPages > 0) {
-        setCommentPage(totalPages);
-      }
-      setError(null);
     } catch (error) {
-      console.error('게시글 또는 댓글을 불러오는 중 오류 발생:', error);
-      setError('게시글을 불러올 수 없습니다.');
+      if (isCurrent()) {
+        console.error('게시글을 불러오는 중 오류 발생:', error);
+        setPost(null);
+        setError('게시글을 불러올 수 없습니다.');
+      }
+      return [];
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
+    }
+
+    // 댓글의 실패나 지연은 이미 받은 본문을 가리지 않는다.
+    try {
+      const commentsResponse = await fetchComments(id);
+      if (!isCurrent()) return [];
+      const commentsData = commentsResponse.data.comments || [];
+      setComments(commentsData);
+      const totalPages = Math.max(1, Math.ceil(commentsData.length / commentsPerPage));
+      setCommentPage(current => Math.min(current, totalPages));
+      return commentsData;
+    } catch (error) {
+      if (isCurrent()) {
+        console.error('댓글을 불러오는 중 오류 발생:', error);
+        setComments([]);
+        setCommentsError('댓글을 불러올 수 없습니다. 본문은 계속 읽을 수 있습니다.');
+      }
+      return [];
     }
   };
   
@@ -146,7 +168,7 @@ export default function BlogDetail() {
       let commentData = { content: newComment };
       
       // 비로그인 상태라면 게스트 댓글로 처리
-      if (!isAuth()) {
+      if (!currentUser) {
         commentData = {
           ...commentData,
           guestName: guestName || '익명' // 이름이 없으면 '익명'으로 설정
@@ -164,16 +186,13 @@ export default function BlogDetail() {
       setCommentPassword('');
       
       // 댓글을 다시 불러옵니다
-      await loadPostDetails();
-      
-      // 새 댓글이 추가된 후 마지막 페이지로 이동
-      const updatedComments = await fetchComments(id);
-      const commentsData = updatedComments.data.comments || [];
-      const totalPages = Math.ceil(commentsData.length / commentsPerPage);
-      setCommentPage(totalPages);
+      const commentsData = await loadPostDetails();
+      if (activePostId.current === id) {
+        setCommentPage(Math.max(1, Math.ceil(commentsData.length / commentsPerPage)));
+      }
     } catch (error) {
       console.error('댓글 작성 중 오류 발생:', error);
-      setError('댓글을 작성할 수 없습니다.');
+      if (activePostId.current === id) setCommentsError('댓글을 작성할 수 없습니다.');
     }
   };
   
@@ -233,7 +252,7 @@ export default function BlogDetail() {
       await loadPostDetails();
     } catch (error) {
       console.error('게스트 댓글 수정 중 오류 발생:', error);
-      setError('비밀번호가 일치하지 않거나 댓글을 수정할 수 없습니다.');
+      if (activePostId.current === id) setCommentsError('비밀번호가 일치하지 않거나 댓글을 수정할 수 없습니다.');
     }
   };
   
@@ -251,7 +270,7 @@ export default function BlogDetail() {
       await loadPostDetails();
     } catch (error) {
       console.error('댓글 수정 중 오류 발생:', error);
-      setError('댓글을 수정할 수 없습니다.');
+      if (activePostId.current === id) setCommentsError('댓글을 수정할 수 없습니다.');
     }
   };
 
@@ -278,7 +297,7 @@ export default function BlogDetail() {
       await loadPostDetails();
     } catch (error) {
       console.error('게스트 댓글 삭제 중 오류 발생:', error);
-      setError('비밀번호가 일치하지 않거나 댓글을 삭제할 수 없습니다.');
+      if (activePostId.current === id) setCommentsError('비밀번호가 일치하지 않거나 댓글을 삭제할 수 없습니다.');
     }
   };
   
@@ -292,49 +311,51 @@ export default function BlogDetail() {
       await loadPostDetails();
     } catch (error) {
       console.error('댓글 삭제 중 오류 발생:', error);
-      setError('댓글을 삭제할 수 없습니다.');
+      if (activePostId.current === id) setCommentsError('댓글을 삭제할 수 없습니다.');
     }
   };
 
   // 로딩 중 표시
   if (loading && !post) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', pt: 10 }}>
-        <CircularProgress />
-      </Container>
+      <div className="blog-detail-state blog-status" role="status"><CircularProgress size={28} /><p>글을 불러오는 중입니다.</p></div>
     );
   }
   
   // 에러 표시
   if (error) {
     return (
-      <Container>
-        <Alert severity="error" sx={{ mt: 4 }}>{error}</Alert>
-        <Button variant="contained" onClick={loadPostDetails} sx={{ mt: 2 }}>다시 시도</Button>
-        <Button variant="outlined" onClick={handleBackToList} sx={{ ml: 2, mt: 2 }}>목록으로</Button>
-      </Container>
+      <div className="blog-detail-state">
+        <h1>글을 불러오지 못했습니다.</h1>
+        <Alert severity="error">{error}</Alert>
+        <div className="blog-state-actions">
+          <Button variant="contained" onClick={loadPostDetails}>다시 시도</Button>
+          <Button variant="outlined" onClick={handleBackToList}>목록으로</Button>
+        </div>
+      </div>
     );
   }
   
   // 게시글 없음
   if (!post) {
     return (
-      <Container>
-        <Typography>게시글이 존재하지 않습니다.</Typography>
+      <div className="blog-detail-state">
+        <h1>게시글이 존재하지 않습니다.</h1>
+        <p>목록에서 다른 글을 찾아보세요.</p>
         <Button variant="outlined" onClick={handleBackToList}>목록으로</Button>
-      </Container>
+      </div>
     );
   }
   
   // 메인 렌더링
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+    <div className="blog-detail" id="article-top">
+      <article aria-labelledby="article-title">
+        <div className="blog-detail-toolbar">
           <Button 
             startIcon={<ArrowBackIcon />} 
             onClick={handleBackToList}
-            variant="outlined"
+            variant="text"
           >
             목록으로
           </Button>
@@ -360,110 +381,58 @@ export default function BlogDetail() {
               </Button>
             </Stack>
           )}
-        </Box>
+        </div>
         
         {/* 게시글 본문 */}
-        <Paper
-          elevation={3}
-          sx={{ p: { xs: 2, sm: 3, md: 4 }, mb: 4 }}
-        >
-          <Typography variant="h4" gutterBottom>
-            {post.title}
-          </Typography>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Chip 
-                avatar={<Avatar>{post.author?.substring(0, 1) || 'U'}</Avatar>}
-                label={post.author || '익명'}
-                variant="outlined"
-              />
-              {post.category && (
-                <Chip
-                  label={post.category}
-                  color="primary"
-                  variant="outlined"
-                  size="small"
-                  sx={{ ml: 1 }}
-                />
-              )}
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              {new Date(post.createdAt).toLocaleString()}
-            </Typography>
-          </Box>
-          
-          <Divider sx={{ my: 2 }} />
-          
-          {/* 마크다운으로 렌더링된 게시글 내용 */}
-          <Box sx={{ 
-            mb: 1,
-            overflow: 'hidden',   // 내용이 넘치면 숨김
-            width: '100%',        // 너비 100%
-            '& img': {            // 이미지에 대한 스타일
-              maxWidth: '100%',   // 이미지가 부모보다 크지 않도록
-              height: 'auto'      // 이미지 비율 유지
-            },
-            '& pre, & code': {    // 코드 블록 스타일
-              whiteSpace: 'pre-wrap', // 긴 코드 줄 바꿈
-              wordBreak: 'break-word', // 단어 중간에서도 줄 바꿈 가능
-              overflowX: 'auto'    // 가로 스크롤만 필요할 때 표시
-            },
-            '& table': {          // 표 스타일
-              width: '100%',
-              maxWidth: '100%',
-              overflowX: 'auto',
-              display: 'block'
-            },
-            '& *': {              // 모든 요소에 적용
-              maxWidth: '100%',   // 최대 너비 제한
-              boxSizing: 'border-box' // 패딩과 테두리를 너비에 포함
-            },
-            wordWrap: 'break-word',
-          }}>
-            <MarkdownRenderer content={post.content} />
-          </Box>
-        </Paper>
+        <header className="blog-article-heading">
+          {post.category && <span className="blog-topic">{post.category === 'Work Experience' ? '실무 경험' : post.category}</span>}
+          <h1 id="article-title">{post.title}</h1>
+          <div className="blog-article-meta">
+            <span className="blog-article-author">{post.author || '익명'}</span>
+            <time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+            <a href="#article-comments">댓글{commentsError ? '' : ` ${comments.length}`}</a>
+          </div>
+        </header>
+        <BlogReader key={id} content={post.content} />
+      </article>
         
         {/* 댓글 섹션 */}
-        <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, mb: 4 }}>
-          <Typography variant="h5" gutterBottom>
-            댓글 {comments.length}개
-          </Typography>
+        <Paper component="section" className="blog-comments" id="article-comments" elevation={0} aria-labelledby="comments-title">
+          <div className="blog-comments-heading">
+            <Typography variant="h5" component="h2" id="comments-title">
+              댓글{commentsError ? '' : <span>{comments.length}</span>}
+            </Typography>
+            <p>경험과 질문을 나눠 주세요.</p>
+          </div>
           
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {commentsError && <Alert severity="warning" sx={{ mb: 2 }}>{commentsError}</Alert>}
           
           {/* 댓글 작성 영역 */}
-          <Box sx={{ 
-            mb: 3, 
-            p: 2, 
-            borderRadius: 1, 
-            bgcolor: '#f5f7fa' 
-          }}>
+          <Box className="blog-comment-composer">
             <Typography variant="subtitle1" gutterBottom fontWeight="medium">
-              댓글 작성
+              댓글 남기기
             </Typography>
 
             <TextField
               fullWidth
               multiline
               rows={3}
-              placeholder="댓글을 작성해주세요."
+              placeholder="이 글에 대한 생각을 남겨 주세요."
+              inputProps={{ 'aria-label': '댓글 내용' }}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               sx={{ mb: 2 }}
             />
             
             {/* 비로그인 상태일 때 이름과 비밀번호 입력 필드 표시 */}
-            {!isAuth() && (
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            {!currentUser && (
+              <Box className="blog-comment-guest-fields">
                 <TextField
                   size="small"
                   label="이름"
                   placeholder="익명"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  sx={{ flex: 1 }}
                 />
                 <TextField
                   size="small"
@@ -472,7 +441,6 @@ export default function BlogDetail() {
                   placeholder="비밀번호"
                   value={commentPassword}
                   onChange={(e) => setCommentPassword(e.target.value)}
-                  sx={{ flex: 1 }}
                 />
               </Box>
             )}
@@ -486,29 +454,18 @@ export default function BlogDetail() {
             </Button>
           </Box>
           
-          <Divider sx={{ my: 2 }} />
-          
           {/* 댓글 목록 부분 */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              댓글 {comments.length}개
-            </Typography>
-            
             {comments.length > 0 ? (
               comments
                 .slice((commentPage - 1) * commentsPerPage, commentPage * commentsPerPage) // 페이지네이션 적용
                 .map((comment) => (
-                  <Box key={comment.id} sx={{ mb: 2, pb: 2, borderBottom: '1px solid #eee' }}>
+                  <Box key={comment.id} className="blog-comment">
                     {/* 댓글 헤더 */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Chip 
-                          size="small"
-                          avatar={<Avatar sx={{ width: 24, height: 24 }}>{comment.author?.substring(0, 1) || 'U'}</Avatar>}
-                          label={comment.author || '익명'}
-                          variant="outlined"
-                        />
-                        <Typography variant="caption" color="text.secondary">
+                    <Box className="blog-comment-heading">
+                      <Box className="blog-comment-meta">
+                        <span className="blog-comment-author">{comment.author || '익명'}</span>
+                        <Typography component="time" dateTime={comment.createdAt} variant="caption" color="text.secondary">
                           {new Date(comment.createdAt).toLocaleString()}
                         </Typography>
                       </Box>
@@ -523,6 +480,7 @@ export default function BlogDetail() {
                             size="small" 
                             onClick={() => handleEditComment(comment)}
                             title={comment.guest ? "비밀번호 필요" : "댓글 수정"}
+                            aria-label="댓글 수정"
                           >
                             <EditIcon fontSize="small" />
                           </IconButton>
@@ -530,6 +488,7 @@ export default function BlogDetail() {
                             size="small" 
                             onClick={() => handleDeleteClick(comment)}
                             title={comment.guest ? "비밀번호 필요" : "댓글 삭제"}
+                            aria-label="댓글 삭제"
                             color="error"
                           >
                             <DeleteIcon fontSize="small" />
@@ -547,6 +506,7 @@ export default function BlogDetail() {
                           size="small"
                           value={editedCommentContent}
                           onChange={(e) => setEditedCommentContent(e.target.value)}
+                          inputProps={{ 'aria-label': '수정할 댓글 내용' }}
                           sx={{ mb: 1 }}
                         />
                         
@@ -632,13 +592,13 @@ export default function BlogDetail() {
                       </Box>
                     ) : (
                       // 일반 댓글 내용 표시
-                      <Typography variant="body2">{comment.content}</Typography>
+                      <Typography variant="body1" className="blog-comment-body" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{linkifyComment(comment.content)}</Typography>
                     )}
                   </Box>
                 ))
-            ) : (
+            ) : !commentsError && (
               <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-                아직 댓글이 없습니다. 첫 댓글을 작성해보세요!
+                아직 댓글이 없습니다. 이 글에 대한 경험이나 질문을 남겨 주세요.
               </Typography>
             )}
           </Box>
@@ -657,7 +617,6 @@ export default function BlogDetail() {
             </Box>
           )}
         </Paper>
-      </motion.div>
       
       {/* 게시글 수정 다이얼로그 */}
       <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="md" fullWidth>
@@ -722,6 +681,6 @@ export default function BlogDetail() {
         open={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 
       />
-    </Container>
+    </div>
   );
 }

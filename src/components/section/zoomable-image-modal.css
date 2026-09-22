@@ -1,0 +1,172 @@
+.zoomable-image-trigger {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid #dde5e2;
+  border-radius: 5px;
+  box-sizing: border-box;
+  object-fit: contain;
+  cursor: zoom-in;
+}
+
+.zoomable-image-trigger:hover {
+  border-color: #17685e;
+}
+
+.zoomable-image-trigger:focus-visible {
+  outline: 3px solid #17685e;
+  outline-offset: 3px;
+}
+
+.zoomable-image-caption.MuiTypography-root {
+  margin: 10px 0 0;
+  color: #5a6d69;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.zoomable-image-dialog.MuiModal-root {
+  z-index: 10000;
+}
+
+.zoomable-image-dialog .zoomable-image-paper {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  margin: 12px;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid #dde5e2;
+  border-radius: 8px;
+  background: #fff;
+  color: #192d2e;
+  box-shadow: 0 18px 60px rgb(25 45 46 / 20%);
+}
+
+.zoomable-image-dialog .zoomable-image-close {
+  position: absolute;
+  top: 10px;
+  right: 32px;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  color: #192d2e;
+  background: #fff;
+}
+
+.zoomable-image-stage {
+  position: absolute;
+  inset: 46px 20px 76px;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.zoomable-image-stage .react-transform-wrapper {
+  touch-action: none;
+  cursor: grab;
+}
+
+.zoomable-image-stage .react-transform-wrapper:active {
+  cursor: grabbing;
+}
+
+.zoomable-image-content {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.zoomable-image-controls {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  transform: translateX(-50%);
+  border: 1px solid #dde5e2;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.zoomable-image-controls .MuiIconButton-root {
+  width: 36px;
+  height: 36px;
+  color: #17685e;
+}
+
+.zoomable-image-dialog .zoomable-image-resize {
+  position: absolute;
+  z-index: 4;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 3px;
+  color: #617974;
+  touch-action: none;
+  user-select: none;
+}
+
+.zoomable-image-resize svg {
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.zoomable-image-resize--nw { top: 0; left: 0; cursor: nwse-resize; }
+.zoomable-image-resize--ne { top: 0; right: 0; cursor: nesw-resize; }
+.zoomable-image-resize--sw { bottom: 0; left: 0; cursor: nesw-resize; }
+.zoomable-image-resize--se { bottom: 0; right: 0; cursor: nwse-resize; }
+
+.zoomable-image-dialog .zoomable-image-resize--n,
+.zoomable-image-dialog .zoomable-image-resize--s {
+  left: calc(50% - 22px);
+  width: 44px;
+  cursor: ns-resize;
+}
+
+.zoomable-image-resize--n { top: 0; }
+.zoomable-image-resize--s { bottom: 0; }
+
+.zoomable-image-dialog .zoomable-image-resize--w,
+.zoomable-image-dialog .zoomable-image-resize--e {
+  top: calc(50% - 22px);
+  height: 44px;
+  cursor: ew-resize;
+}
+
+.zoomable-image-resize--w { left: 0; }
+.zoomable-image-resize--e { right: 0; }
+
+.zoomable-image-dialog .MuiIconButton-root:focus-visible {
+  outline: 2px solid #17685e;
+  outline-offset: -2px;
+}
+
+@media (max-width: 480px) {
+  .zoomable-image-dialog .zoomable-image-resize {
+    width: 32px;
+    height: 32px;
+  }
+
+  .zoomable-image-dialog .zoomable-image-resize--n,
+  .zoomable-image-dialog .zoomable-image-resize--s {
+    width: 44px;
+  }
+
+  .zoomable-image-dialog .zoomable-image-resize--w,
+  .zoomable-image-dialog .zoomable-image-resize--e {
+    height: 44px;
+  }
+}
