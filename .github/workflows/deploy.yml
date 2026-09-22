@@ -189,8 +189,19 @@ jobs:
           test -n "$pipeline_execution_id"
           printf 'CodePipeline execution: `%s`\n' "$pipeline_execution_id" >> "$GITHUB_STEP_SUMMARY"
           for attempt in $(seq 1 90); do
-            status="$(aws codepipeline get-pipeline-execution --pipeline-name "$PIPELINE_NAME" \
-              --pipeline-execution-id "$pipeline_execution_id" --query 'pipelineExecution.status' --output text)"
+            status=''
+            if ! status="$(aws codepipeline get-pipeline-execution --pipeline-name "$PIPELINE_NAME" \
+              --pipeline-execution-id "$pipeline_execution_id" --query 'pipelineExecution.status' --output text \
+              2>"$RUNNER_TEMP/codepipeline-status-error")"; then
+              # start-pipeline-execution can return before the execution is readable.
+              # Do not turn that short CodePipeline read-after-write gap into a failed deployment.
+              if [[ "$attempt" -eq 90 ]]; then
+                cat "$RUNNER_TEMP/codepipeline-status-error" >&2
+                exit 1
+              fi
+              sleep 10
+              continue
+            fi
             case "$status" in
               Succeeded) exit 0 ;;
               Failed|Stopped|Superseded|Cancelled) printf 'Pipeline ended: %s\n' "$status" >&2; exit 1 ;;
